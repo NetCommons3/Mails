@@ -1,13 +1,30 @@
-CakePHP 3
+# CakePHP無視ファイル設定
+tmp/*
+[Cc]onfig/core.php
+[Cc]onfig/database.php
+app/tmp/*
+app/[Cc]onfig/core.php
+app/[Cc]onfig/database.php
+!empty
 
-/vendor/*
-/config/app.php
-/tmp/*
-/logs/*
+# PhpStrom無視ファイル設定
+.idea
 
-CakePHP 2
+# Eclipse無視ファイル設定
+.settings
+.buildpath
+.project
 
-/app/tmp/*
-/app/Config/core.php
-/app/Config/database.php
-/vendors/*
+# MacOSXシステムファイル無視設定
+.DS_Store
+__MACOSX
+thumbs.db
+._*
+.Spotlight-V100
+.Trashes
+
+# Windowsシステムファイル無視設定
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
