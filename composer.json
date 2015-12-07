@@ -1,0 +1,42 @@
+{
+    "name": "netcommons/mails",
+    "description": "Mails Plugin for NetCommons",
+    "homepage": "http://www.netcommons.org/",
+    "extra": {
+        "installer-paths": {
+            "app/Plugin/{$name}": ["type:cakephp-plugin"]
+        }
+    },
+    "require": {
+        "cakephp/cakephp":              "~2.6",
+        "cakephp/debug_kit":            "~2.2",
+        "cakedc/migrations":            "~2.2",
+        "components/jquery":            "~2.1",
+        "josegonzalez/cakephp-upload":  "~1.1",
+        "phpunit/phpunit":              "~3.7.38",
+        "twbs/bootstrap":               "~3.1"
+    },
+    "require-dev": {
+        "mustangostang/spyc":           "dev-master",
+        "netcommons/net-commons":       "dev-master",
+        "satooshi/php-coveralls":       "dev-master"
+    },
+    "license": "NetCommons License",
+    "authors": [
+        {
+          "name": "Mitsuru Mutaguchi(OpenSource WorkShop)",
+          "email": "mutaguchi@opensource-workshop.jp",
+          "homepage": "https://github.com/akagane99",
+          "role": "Developer"
+        },
+        {
+            "name": "NetCommons Community",
+            "homepage": "https://github.com/NetCommons3/OnlineStatuses/graphs/contributors"
+        }
+    ],
+    "type":        "cakephp-plugin",
+    "keywords":    ["cakephp", "mails"],
+    "config": {
+        "vendor-dir": "vendors"
+    }
+}
