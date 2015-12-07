@@ -1,7 +1,4 @@
 # Mails
-
-=======
-
 Mails Plugin for NetCommons
 
 [![Build Status](https://travis-ci.org/NetCommons3/Mails.svg?branch=master)](https://travis-ci.org/NetCommons3/Mails)
