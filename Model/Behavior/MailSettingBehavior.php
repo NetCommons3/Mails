@@ -27,6 +27,16 @@ class MailSettingBehavior extends ModelBehavior {
 	}
 
 /**
+ * 複数人の送信先ユーザ取得する
+ * ※まだ決められない実装
+ */
+	public function setSendMailUsers(Model $model, $blockKey) {
+  		// blockeyをセットしたら、複数人を取得して、セットするまでやる。
+		//$users = $this->getSendMailUsers($wwww, $zzzz);
+		//$this->setSendMailUsers($blockKey);
+	}
+
+/**
  * メール送信する定型文をセットする
  */
 	public function setSendMailSetting(Model $model, $blockKey = null, $typeKey = 'contents') {
