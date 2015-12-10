@@ -333,11 +333,14 @@ class MailSettingBehavior extends ModelBehavior {
  * @param Model $Model モデル
  * @return void
  */
-	public function saveQueue(Model $model, $contentKey, $languageId, $roomId = null, $sendTime = new DateTime()) {
+	public function saveQueue(Model $model, $contentKey, $languageId, $roomId = null, $sendTime = null) {
 		// TODO $sendTime、時間取得って何か共通メソッドありませんでしたっけ？
 		// メールキューの送信依頼テーブル(mail_queue_send_requests)保存
 		// メールキュー送信先テーブル(mail_queue_delivers)保存
-		
+		if ($sendTime === null) {
+			$sendTime = new DateTime();
+		}
+
 		// ブロックキー、プラグインキーを取得する
 		$blockKey = $this->getMailSettingBlockKey();
 		$plaginKey = $this->getMailSettingPlaginKey();
