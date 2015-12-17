@@ -105,13 +105,6 @@ class Mails extends CakeMigration {
 	);
 
 /**
- * Records keyed by model name.
- *
- * @var array $records
- */
-	public $records = array();
-
-/**
  * Before migration callback
  *
  * @param string $direction Direction of migration process (up or down)
@@ -128,35 +121,6 @@ class Mails extends CakeMigration {
  * @return bool Should process continue
  */
 	public function after($direction) {
-		if ($direction === 'down') {
-			return true;
-		}
-
-		foreach ($this->records as $model => $records) {
-			if (!$this->updateRecords($model, $records)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-/**
- * Update model records
- *
- * @param string $model model name to update
- * @param string $records records to be stored
- * @return bool Should process continue
- */
-	public function updateRecords($model, $records) {
-		$Model = $this->generateModel($model);
-		foreach ($records as $record) {
-			$Model->create();
-			if (!$Model->save($record, false)) {
-				return false;
-			}
-		}
-
 		return true;
 	}
 }
