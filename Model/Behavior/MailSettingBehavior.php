@@ -69,14 +69,6 @@ class MailSettingBehavior extends ModelBehavior {
 
 			// 返信先アドレスをセットする
 			$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
-
-			// その他に通知するメールアドレスをセットする
-			$etcToAddresses = explode(',', $mailSetting["etc_to_address"]);
-			foreach ($etcToAddresses as $etcToAddress) {
-
-				// 送信先ユーザのメール追加
-				$this->addToUserMail($etcToAddress);
-			}
 		}
 	}
 
