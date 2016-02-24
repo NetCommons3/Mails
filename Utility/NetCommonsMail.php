@@ -38,6 +38,7 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定
  *
  * @return void
+ * @see CakeEmail::$charset
  */
 	public function init() {
 		// 仮対応
@@ -82,19 +83,20 @@ class NetCommonsMail extends CakeEmail {
 		$fromName = Hash::get($siteSettingData['Mail.from_name'], '2.value');	//仮：日本語
 		$config['from'] = array($from => $fromName);
 
-		//		$config['host'] = 'osws.sakura.ne.jp';		// 初期ドメイン
+		//		$config['host'] = '____.sakura.ne.jp';		// 初期ドメイン
 		//		$config['port'] = 587;
-		//		$config['username'] = 'mutaguchi@osws.sakura.ne.jp';
+		//		$config['username'] = 'username@____.sakura.ne.jp';
 		//		$config['password'] = 'secret';
 		//		$config['transport'] = 'Smtp';
 		$transport = Hash::get($siteSettingData['Mail.transport'], '0.value');
-		$smtpHost = Hash::get($siteSettingData['Mail.smtp.host'], '0.value');
-		$smtpPort = Hash::get($siteSettingData['Mail.smtp.port'], '0.value');
-		$smtpUser = Hash::get($siteSettingData['Mail.smtp.user'], '0.value');
-		$smtpPass = Hash::get($siteSettingData['Mail.smtp.pass'], '0.value');
 
 		// SMTP, SMTPAuth
 		if ($transport == $SiteSetting::MAIL_TRANSPORT_SMTP) {
+			$smtpHost = Hash::get($siteSettingData['Mail.smtp.host'], '0.value');
+			$smtpPort = Hash::get($siteSettingData['Mail.smtp.port'], '0.value');
+			$smtpUser = Hash::get($siteSettingData['Mail.smtp.user'], '0.value');
+			$smtpPass = Hash::get($siteSettingData['Mail.smtp.pass'], '0.value');
+
 			$config['transport'] = 'Smtp';
 			$config['host'] = $smtpHost;
 			$config['port'] = $smtpPort;
@@ -105,6 +107,10 @@ class NetCommonsMail extends CakeEmail {
 				$config['username'] = $smtpUser;
 				$config['password'] = $smtpPass;
 			}
+
+			// phpmail
+		} elseif ($transport == $SiteSetting::MAIL_TRANSPORT_PHPMAIL) {
+			$config['transport'] = 'Mail';
 		}
 
 		//CakeLog::debug(print_r($config, true));
