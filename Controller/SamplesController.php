@@ -47,4 +47,15 @@ class SamplesController extends AppController {
 
 		//		MailSend::MailSend();
 	}
+
+/**
+ * メール送信サンプル３
+ *
+ * @return CakeResponse
+ */
+	public function mailtest3() {
+		$mail = new NetCommonsMail();
+		$blockKey = '47d26e7ca2e7d92327935b5af4971fb0';
+		$mail->send3($blockKey);
+	}
 }

@@ -21,6 +21,13 @@ App::uses('CakeEmail', 'Network/Email');
 class NetCommonsMail extends CakeEmail {
 
 /**
+ * 変換タグ
+ *
+ * @var array
+ */
+	public $assignTags = array();
+
+/**
  * Constructor
  *
  * @param array|string $config Array of configs, or string to load configs from email.php
@@ -166,6 +173,65 @@ class NetCommonsMail extends CakeEmail {
 		//		}
 	}
 
+/**
+ * メール送信する定型文をセットする
+ *
+ * @return void
+ */
+	public function setSendMailSetting($blockKey, $typeKey = 'contents') {
+	//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
+		// $pluginKey = $Model->plugin();
+		// 'plugin_key' => Inflector::underscore($model->plugin),
+		//$pluginKey = Inflector::underscore($model->plugin);
+
+		// 定型文を取得する
+//		if (isset($blockKey)) {
+			// 通常のプラグインはこちら
+			$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
+//		} else {
+//			// システム管理系はこちら
+//			$mailSetting = $this->getMailSettingSystem($pluginKey, $typeKey);
+//		}
+
+		// メール通知フラグをセットする
+		//$this->setIsMailSend($mailSetting['mail_setting']['is_mail_send']);
+		$isMailSend = Hash::get($mailSetting, 'mail_setting.is_mail_send');
+
+		// 通知する場合
+		//if ($this->getIsMailSend()) {
+		if ($isMailSend) {
+			// ブロックキー、プラグインキーをセットする
+//			$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
+//			$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
+
+			// 定型文をセットする
+			$this->setMailSubject($mailSetting['mail_setting']['mail_fixed_phrase_subject']);
+			$this->setMailBody($mailSetting['mail_setting']['mail_fixed_phrase_body']);
+
+			// 返信先アドレスをセットする
+//			$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
+			$this->replyTo($mailSetting['mail_setting']['replay_to']);
+		}
+	}
+
+/**
+ * プラグインの定型文を取得する
+ *
+ * @return array メール設定データ配列
+ */
+	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
+		// $blockKey, $typeKeyで、mail_settings を SELECT する
+		$MailSetting = ClassRegistry::init('Mails.MailSetting', true);
+		$mailSettingData = $MailSetting->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'block_key' => $blockKey,
+				'type_key' => $typeKey,
+			)
+		));
+		return $mailSettingData;
+	}
+
 	//	/**
 	//	 * Fromアドレスをセットする
 	//	 *
@@ -234,8 +300,7 @@ class NetCommonsMail extends CakeEmail {
 	//	}
 
 /**
- * メールを送信する2
- * debug用
+ * メールを送信する2 debug用
  */
 	public function send2() {
 		// 仮
@@ -247,6 +312,98 @@ class NetCommonsMail extends CakeEmail {
 		$this->subject('メールタイトル');						// メールタイトル
 
 		$this->send('メール本文');								// メール送信
+	}
+
+/**
+ * メールを送信する3 debug用
+ */
+	public function send3($blockKey, $typeKey = 'contents') {
+		// 仮
+		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
+
+		// 通常のプラグインはこちら
+		$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
+
+		// メール通知フラグ
+		$isMailSend = Hash::get($mailSetting, 'mail_setting.is_mail_send');
+		// 通知する場合
+		//if ($this->getIsMailSend()) {
+		if (! $isMailSend) {
+			return;
+		}
+//		// ブロックキー、プラグインキーをセットする
+//		$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
+//		$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
+//
+//		// 定型文をセットする
+//		$this->setMailSubject($mailSetting['mail_setting']['mail_fixed_phrase_subject']);
+//		$this->setMailBody($mailSetting['mail_setting']['mail_fixed_phrase_body']);
+//
+//		// 返信先アドレスをセットする
+//		$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
+
+		$subject = $mailSetting['mail_setting']['mail_fixed_phrase_subject'];
+		$body = $mailSetting['mail_setting']['mail_fixed_phrase_body'];
+
+		// 返信先アドレスをセットする
+		$this->replyTo($mailSetting['mail_setting']['replay_to']);
+
+		$config = $this->config();
+		//$config['from'] = array('mutaguchi@opensource-workshop.jp' => 'NetCommons管理者');
+		$fromEmail = key($config['from']);
+		$fromName = current($config['from']);
+
+		$this->assignTag("X-FROM_EMAIL", $fromEmail);
+		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
+		//$this->assignTag("X-SITE_NAME", htmlspecialchars($confs["conf_value"]));
+		//$this->assign("X-SITE_URL", BASE_URL.INDEX_FILE_NAME);
+		$this->assignTag("X-SITE_NAME", htmlspecialchars('サイト名称')); //仮
+		$this->assignTag("X-SITE_URL", Router::fullbaseUrl());
+
+		//		if (!isset($this->_assignedTags['X-ROOM'])) {
+		//			$request =& $container->getComponent("Request");
+		//			$pageView =& $container->getComponent("pagesView");
+		//			$roomId = $request->getParameter("room_id");
+		//			$pages = $pageView->getPageById($roomId);
+		//
+		//			$this->assign("X-ROOM", htmlspecialchars($pages["page_name"]));
+		//		}
+
+		if ($this->assignTag("X-USER") == null) {
+			$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
+		}
+
+
+		//		$commonMain =& $container->getComponent("commonMain");
+		//		$convertHtml =& $commonMain->registerClass(WEBAPP_DIR.'/components/convert/Html.class.php', "Convert_Html", "convertHtml");
+		//		foreach ($this->_assignedTags as $k => $v) {
+		//			if (substr($k, 0, 4) == "X-TO" || $k == "X-URL") {
+		//				continue;
+		//			}
+		//
+		//			$this->body = str_replace("{".$k."}", $v, $this->body);
+		//			$this->subject = str_replace("{".$k."}", $convertHtml->convertHtmlToText($v), $this->subject);
+		//		}
+		//		$this->body = str_replace("\r\n", "\n", $this->body);
+		//		$this->body = str_replace("\r", "\n", $this->body);
+		//		$this->body = str_replace("\n", $this->_LE, $this->body);
+		//		$this->body = $this->_insertNewLine($this->body);
+		//	if(isset($this->_assignedTags["X-URL"])) {
+		//			$this->body = str_replace("{X-URL}", "<a href=\"". $this->_assignedTags["X-URL"]. "\">". $this->_assignedTags["X-URL"]. "</a>", $this->body);
+		//			$mobile_body = str_replace("{X-URL}", $this->_assignedTags["X-URL"], $this->body);
+		//			unset($this->_assignedTags["X-URL"]);
+		//		} else {
+		//			$mobile_body = $this->body;
+		//		}
+		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
+		//		$mobile_body = $this->_insertNewLine($mobile_body);
+
+//		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
+//		$this->subject('メールタイトル');						// メールタイトル
+//		$this->send('メール本文');								// メール送信
+		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
+		$this->subject($subject);						// メールタイトル
+		$this->send($body);								// メール送信
 	}
 
 	//	/**
@@ -405,30 +562,39 @@ class NetCommonsMail extends CakeEmail {
 	//		return true;
 	//	}
 
-	//	/**
-	//	 * 変換タグの追加
-	//	 *
-	//	 * @param	string	$tag	タグ名称
-	//	 * @param	string	$value	変換する値
-	//	 *
-	//	 * @access	public
-	//	 */
-	//	function assign($tag, $value = null)
-	//	{
-	//		if (is_array($tag)) {
-	//			foreach ($tag as $k => $v) {
-	//				$this->assign($k, $v);
-	//			}
-	//		} else {
-	//			if (!empty($tag) && isset($value)) {
-	//				$tag = strtoupper(trim($tag));
-	//
-	//				if (substr($tag, 0, 2) == "X-") {
-	//					$this->_assignedTags[$tag] = $value;
-	//				}
-	//			}
-	//		}
-	//	}
+/**
+ * 変換タグの追加
+ *
+ * @param string $tag タグ
+ * @param string $value 変換する値
+ * @return array タグ
+ */
+	public function assignTag($tag, $value = null) {
+		if (empty($tag)) {
+			return;
+		}
+		if ($value === null) {
+			return Hash::get($this->assignTag, $tag);
+		}
+		// タグの両端空白なくして、大文字に変換。おおよそいらない処理
+		//$tag = strtoupper(trim($tag));
+
+		if (substr($tag, 0, 2) == "X-") {
+			$this->assignTags[$tag] = $value;
+		}
+	}
+
+/**
+ * 変換タグを配列で追加
+ *
+ * @param array $tags タグ配列
+ * @return void
+ */
+	public function assignTags($tags) {
+		foreach ($tags as $key => $value) {
+			$this->assignTag($key, $value);
+		}
+	}
 
 	//	/**
 	//	 * ヘッダの追加
