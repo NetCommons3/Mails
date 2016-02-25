@@ -50,40 +50,76 @@ if (! isset($cancelUrl)) {
 					),
 				)); ?>
 
-				<?php echo $this->NetCommonsForm->input('', array(
-					'type' => 'text',
-					'label' => __d('mails', '返信を受けるメールアドレス'),
-				)); ?>
-				<div><p class="help-block"><?php echo __d('mails', '返信を受けるメールアドレスを変えたい場合に指定できます。'); ?></p></div>
+				<div class="form-group">
+					<?php echo $this->NetCommonsForm->input('', array(
+						'type' => 'text',
+						'label' => __d('mails', '返信を受けるメールアドレス'),
+						'div' => '',
+					)); ?>
+					<p class="help-block"><?php echo __d('mails', '返信を受けるメールアドレスを変えたい場合に指定できます。'); ?></p>
+				</div>
 
 				<?php echo $this->NetCommonsForm->input('', array(
 					'type' => 'text',
 					'label' => __d('mails', '件名'),
+					'value' => '[{X-SITE_NAME}]{X-PLUGIN_NAME}投稿({X-ROOM} {X-CHANNEL_NAME})',
 				)); ?>
 
-				<?php echo $this->NetCommonsForm->input('', array(
-					'type' => 'textarea',
-					'label' => __d('mails', '本文'),
-				)); ?>
-				<div>
+				<div class="form-group">
+					<?php echo $this->NetCommonsForm->input('', array(
+						'type' => 'textarea',
+						'label' => __d('mails', '本文'),
+						'div' => '',
+						'value' => '{X-PLUGIN_NAME}に投稿されたのでお知らせします。
+ルーム名称:{X-ROOM}
+チャンネル名:{X-CHANNEL_NAME}
+動画タイトル:{X-SUBJECT}
+投稿者:{X-USER}
+投稿日時:{X-TO_DATE}
+
+
+{X-BODY}
+
+この投稿内容を確認するには下記のリンクをクリックして下さい。
+{X-URL}',
+					)); ?>
 					<p class="help-block">
-						件名と本文には、
-						{X-SITE_NAME}、{X-PLUGIN_NAME}、{X-ROOM}、
-						{X-CHANNEL_NAME}、{X-SUBJECT}、{X-USER}
-						{X-TO_DATE}、{X-BODY}、{X-APPROVAL_COMMENT}
-						{X-URL}
-						というキーワードを使えます。
-						それぞれのキーワードは、
-						サイト名称、ルーム名称、プラグイン名
-						チャンネル名、動画タイトル、投稿者
-						投稿日時、登録内容、承認コメント
-						登録内容のURL
-						に変換されて送信されます。
+						<?php echo __d('mails', '件名と本文にはキーワードが使えます。'); ?>
+						<a tabindex="0" id="nc-mail-body-<?php echo Current::read('Frame.id'); ?>" data-toggle="popover" data-placement="bottom" title="<?php echo __d('mails', 'キーワードとは？'); ?>" data-content="<?php echo __d('videos', 'それぞれのキーワードは、対応する内容に変換されて送信されます。<br />{X-SITE_NAME} : サイト名称<br />{X-PLUGIN_NAME} : プラグイン名称<br />{X-ROOM} : ルーム名称<br />{X-CHANNEL_NAME} : チャンネル名<br />{X-SUBJECT} : 動画タイトル<br />{X-USER} : 投稿者<br />{X-TO_DATE} : 投稿日時<br />{X-BODY} : 登録内容<br />{X-URL} : 登録内容のURL'); ?>"><span class="glyphicon glyphicon-question-sign"></span></a>
+						<br />
+						--------------------<br />
+						件名と本文にはキーワードが使えます。それぞれのキーワードは、対応する内容に変換されて送信されます。<br />
+						{X-SITE_NAME} : サイト名称<br />
+						{X-PLUGIN_NAME} : プラグイン名称<br />
+						{X-ROOM} : ルーム名称<br />
+						{X-CHANNEL_NAME} : チャンネル名<br />
+						{X-SUBJECT} : 動画タイトル<br />
+						{X-USER} : 投稿者<br />
+						{X-TO_DATE} : 投稿日時<br />
+						{X-BODY} : 登録内容<br />
+						{X-URL} : 登録内容のURL<br />
+						--------------------<br />
+						件名と本文にはキーワードが使えます。それぞれのキーワードは、対応する内容に変換されて送信されます。
+						{X-SITE_NAME} : サイト名称、
+						{X-PLUGIN_NAME} : プラグイン名称、
+						{X-ROOM} : ルーム名称、
+						{X-CHANNEL_NAME} : チャンネル名、
+						{X-SUBJECT} : 動画タイトル、
+						{X-USER} : 投稿者、
+						{X-TO_DATE} : 投稿日時、
+						{X-BODY} : 登録内容、
+						{X-URL} : 登録内容のURL
 					</p>
 				</div>
+				<script>
+					$(function() {
+						$('#nc-mail-body-<?php echo Current::read('Frame.id'); ?>').popover({
+							html: true
+						});
+					});
+				</script>
 			</div>
 		</div>
-
 
 		<div class="panel-footer text-center">
 			<?php echo $this->Button->cancelAndSave(__d('net_commons', 'Cancel'), __d('net_commons', 'OK'), $cancelUrl); ?>
