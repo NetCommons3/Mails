@@ -11,6 +11,7 @@
  */
 
 App::uses('CakeEmail', 'Network/Email');
+App::uses('ConvertHtml', 'Mails.Utility');
 
 /**
  * NetCommonsメール Utility
@@ -27,6 +28,10 @@ class NetCommonsMail extends CakeEmail {
  */
 	public $assignTags = array();
 
+	// 仮
+	public $body;
+	public $subject;
+
 /**
  * Constructor
  *
@@ -36,7 +41,7 @@ class NetCommonsMail extends CakeEmail {
 	public function __construct($config = null) {
 		parent::__construct($config);
 
-		if ($config != null) {
+		if ($config == null) {
 			$this->init();
 		}
 	}
@@ -120,12 +125,14 @@ class NetCommonsMail extends CakeEmail {
 			$config['transport'] = 'Mail';
 		}
 
+		//$config['transport'] = 'Debug';	//送信しない（デバッグ用）
 		//CakeLog::debug(print_r($config, true));
 		$this->config($config);
 
 		// html or text
 		$messageType = Hash::get($siteSettingData['Mail.messageType'], '0.value');
 		$this->emailFormat($messageType);
+//$this->emailFormat('html');
 
 		//		$this->fromEmail = "";
 		//		$this->fromName = "";
@@ -195,7 +202,7 @@ class NetCommonsMail extends CakeEmail {
 
 		// メール通知フラグをセットする
 		//$this->setIsMailSend($mailSetting['mail_setting']['is_mail_send']);
-		$isMailSend = Hash::get($mailSetting, 'mail_setting.is_mail_send');
+		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
 
 		// 通知する場合
 		//if ($this->getIsMailSend()) {
@@ -204,13 +211,19 @@ class NetCommonsMail extends CakeEmail {
 //			$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
 //			$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
 
-			// 定型文をセットする
-			$this->setMailSubject($mailSetting['mail_setting']['mail_fixed_phrase_subject']);
-			$this->setMailBody($mailSetting['mail_setting']['mail_fixed_phrase_body']);
+			$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+			$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+			$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
 
-			// 返信先アドレスをセットする
+			// 定型文をセットする
+			$this->setMailSubject($subject);
+			$this->setMailBody($body);
+
+			// 返信先アドレス
 //			$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
-			$this->replyTo($mailSetting['mail_setting']['replay_to']);
+			if (! empty($replyTo)) {
+				$this->replyTo($replyTo);
+			}
 		}
 	}
 
@@ -222,7 +235,7 @@ class NetCommonsMail extends CakeEmail {
 	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
 		$MailSetting = ClassRegistry::init('Mails.MailSetting', true);
-		$mailSettingData = $MailSetting->find('all', array(
+		$mailSettingData = $MailSetting->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'block_key' => $blockKey,
@@ -325,12 +338,15 @@ class NetCommonsMail extends CakeEmail {
 		$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
 
 		// メール通知フラグ
-		$isMailSend = Hash::get($mailSetting, 'mail_setting.is_mail_send');
-		// 通知する場合
+		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
+//var_dump($mailSetting);
+//var_dump($isMailSend);
+		// 通知しない
 		//if ($this->getIsMailSend()) {
 		if (! $isMailSend) {
 			return;
 		}
+//var_dump(222);
 //		// ブロックキー、プラグインキーをセットする
 //		$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
 //		$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
@@ -342,16 +358,20 @@ class NetCommonsMail extends CakeEmail {
 //		// 返信先アドレスをセットする
 //		$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
 
-		$subject = $mailSetting['mail_setting']['mail_fixed_phrase_subject'];
-		$body = $mailSetting['mail_setting']['mail_fixed_phrase_body'];
+		$subject =  Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
 
-		// 返信先アドレスをセットする
-		$this->replyTo($mailSetting['mail_setting']['replay_to']);
+		// 返信先アドレス
+		if (! empty($replyTo)) {
+			$this->replyTo($replyTo);
+		}
 
 		$config = $this->config();
 		//$config['from'] = array('mutaguchi@opensource-workshop.jp' => 'NetCommons管理者');
 		$fromEmail = key($config['from']);
 		$fromName = current($config['from']);
+//var_dump($config, $fromEmail, $fromName);
 
 		$this->assignTag("X-FROM_EMAIL", $fromEmail);
 		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
@@ -372,6 +392,15 @@ class NetCommonsMail extends CakeEmail {
 		if ($this->assignTag("X-USER") == null) {
 			$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
 		}
+
+		$this->assignTag("X-PLUGIN_NAME", '動画');
+		$this->assignTag("X-ROOM", 'グループルーム');
+		$this->assignTag("X-CHANNEL_NAME", '運動会');
+		$this->assignTag("X-SUBJECT", 'タイトル');
+		$this->assignTag("X-TO_DATE", '2099/01/01');
+		$this->assignTag("X-BODY", '本文１\n本文２\n本文３');
+		$this->assignTag("X-APPROVAL_COMMENT", '承認コメント１\n承認コメント２\n承認コメント３');
+		$this->assignTag("X-URL", 'http://localhost');
 
 
 		//		$commonMain =& $container->getComponent("commonMain");
@@ -398,12 +427,29 @@ class NetCommonsMail extends CakeEmail {
 		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
 		//		$mobile_body = $this->_insertNewLine($mobile_body);
 
+		// タグ変換
+		$this->assignTagReplace($body, $subject);
+		// 仮
+		$body = $this->body;
+		$subject = $this->subject;
+
 //		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
 //		$this->subject('メールタイトル');						// メールタイトル
 //		$this->send('メール本文');								// メール送信
 		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
 		$this->subject($subject);						// メールタイトル
-		$this->send($body);								// メール送信
+
+		// メール送信
+		if ($this->emailFormat() == 'text') {
+			$body = explode('\n', $body);
+			$messages = $this->send($body);
+		} else {
+			$body = str_replace('\n', '<br />', $body);
+			//$body = nl2br($body);
+			$messages = $this->send($body);
+		}
+
+		var_dump($messages);
 	}
 
 	//	/**
@@ -574,7 +620,7 @@ class NetCommonsMail extends CakeEmail {
 			return;
 		}
 		if ($value === null) {
-			return Hash::get($this->assignTag, $tag);
+			return Hash::get($this->assignTags, $tag);
 		}
 		// タグの両端空白なくして、大文字に変換。おおよそいらない処理
 		//$tag = strtoupper(trim($tag));
@@ -594,6 +640,48 @@ class NetCommonsMail extends CakeEmail {
 		foreach ($tags as $key => $value) {
 			$this->assignTag($key, $value);
 		}
+	}
+
+/**
+ * タグ変換
+ *
+ * @param string $body 本文
+ * @return array タグ
+ */
+	public function assignTagReplace($body, $subject) {
+		// 仮
+		$this->body = $body;
+		$this->subject = $subject;
+		$convertHtml = new ConvertHtml();
+
+		foreach ($this->assignTags as $key => $value) {
+			if (substr($value, 0, 4) == "X-TO" || $key == "X-URL") {
+				continue;
+			}
+			$this->body = str_replace("{".$key."}", $value, $this->body);
+			$this->subject = str_replace("{".$key."}", $convertHtml->convertHtmlToText($value), $this->subject);
+		}
+
+		$this->body = str_replace("\r\n", "\n", $this->body);
+		$this->body = str_replace("\r", "\n", $this->body);
+		//$this->body = str_replace("\n", $this->_LE, $this->body);
+		$this->body = $this->insertNewLine($this->body);
+
+		if ($this->emailFormat() == 'text') {
+			$this->body = str_replace("{X-URL}", $this->assignTags["X-URL"], $this->body);
+		} else {
+			$this->body = str_replace("{X-URL}", "<a href=\"". $this->assignTags["X-URL"]. "\">". $this->assignTags["X-URL"]. "</a>", $this->body);
+		}
+
+//		if(isset($this->assignTags["X-URL"])) {
+//			$this->body = str_replace("{X-URL}", "<a href=\"". $this->assignTags["X-URL"]. "\">". $this->assignTags["X-URL"]. "</a>", $this->body);
+//			$mobile_body = str_replace("{X-URL}", $this->assignTags["X-URL"], $this->body);
+//			unset($this->assignTags["X-URL"]);
+//		} else {
+//			$mobile_body = $this->body;
+//		}
+//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
+//		$mobile_body = $this->insertNewLine($mobile_body);
 	}
 
 	//	/**
@@ -632,28 +720,31 @@ class NetCommonsMail extends CakeEmail {
 	//		$this->toUsers[] = $user;
 	//	}
 
-	//	/**
-	//	 * 改行コード挿入
-	//	 */
-	//	function _insertNewLine($body)
-	//	{
-	//		$lines = explode($this->_LE, $body);
-	//		$pos = 0;
-	//		$max_line_length = 300;
-	//
-	//		while(list(,$line) = @each($lines)) {
-	//			while(mb_strlen($line) > $max_line_length) {
-	//				$pos = strrpos(mb_substr($line, 0, $max_line_length), '<');
-	//				if ($pos > 0) {
-	//					$lines_out[] = substr($line, 0, $pos);
-	//					$line = substr($line, $pos);
-	//				} else {
-	//					$lines_out[] = mb_substr($line, 0, $max_line_length);
-	//					$line = mb_substr($line,  $max_line_length);
-	//				}
-	//			}
-	//			$lines_out[] = $line;
-	//		}
-	//		return implode($this->_LE, $lines_out);
-	//	}
+/**
+ * 改行コード挿入
+ * 必要？？？
+ */
+	public function insertNewLine($body) {
+		//$lines = explode($this->_LE, $body);
+		$lines = explode('\n', $body);
+		//$pos = 0;
+		$max_line_length = 300;
+		$lines_out = array();
+
+		while(list(,$line) = @each($lines)) {
+			while(mb_strlen($line) > $max_line_length) {
+				$pos = strrpos(mb_substr($line, 0, $max_line_length), '<');
+				if ($pos > 0) {
+					$lines_out[] = substr($line, 0, $pos);
+					$line = substr($line, $pos);
+				} else {
+					$lines_out[] = mb_substr($line, 0, $max_line_length);
+					$line = mb_substr($line,  $max_line_length);
+				}
+			}
+			$lines_out[] = $line;
+		}
+		//return implode($this->_LE, $lines_out);
+		return implode('\n', $lines_out);
+	}
 }
