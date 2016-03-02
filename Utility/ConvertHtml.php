@@ -12,12 +12,13 @@
 class ConvertHtml {
 	//var $_className = "Convert_Html";
 
-	/**
-	 * HtmlからText変換処理
-	 * @param string Html文字列
-	 * @return string	Plain Text文字列
-	 **/
-	function convertHtmlToText($str) {
+/**
+ * HtmlからText変換処理
+ *
+ * @param string $str Html文字列
+ * @return string Plain Text文字列
+ **/
+	public function convertHtmlToText($str) {
 		$patterns = array();
 		$replacements = array();
 		//\nを削除
@@ -167,8 +168,7 @@ class ConvertHtml {
 		return preg_replace($patterns, $replacements, $str);
 	}
 
-	function _getIndentStr($indent_cnt = 0)
-	{
+	public function _getIndentStr($indent_cnt = 0) {
 		$indent_str = "";
 		$tab_str = "";
 		for($i = 0; $i < $indent_cnt; $i++) {
@@ -178,13 +178,13 @@ class ConvertHtml {
 		return $tab_str.$indent_str;
 	}
 
-	/**
-	 * HtmlからText変換処理
-	 * @param string Html文字列
-	 * @return string	Plain Text文字列
-	 **/
-	function convertMobileHtml($str, $convert=false)
-	{
+/**
+ * HtmlからText変換処理
+ *
+ * @param string Html文字列
+ * @return string	Plain Text文字列
+ **/
+	public function convertMobileHtml($str, $convert=false) {
 		$container =& DIContainerFactory::getContainer();
 		$session =& $container->getComponent("Session");
 		$mobile_flag = $session->getParameter("_mobile_flag");
@@ -227,23 +227,22 @@ class ConvertHtml {
 		return $str;
 	}
 
-	/**
-	 * HtmlからText変換処理
-	 * @param string Html文字列
-	 * @return string	Plain Text文字列
-	 **/
-	function _replaceRelative2Absolute($matches)
-	{
+/**
+ * HtmlからText変換処理
+ * @param string Html文字列
+ * @return string	Plain Text文字列
+ **/
+	public function _replaceRelative2Absolute($matches) {
 		return $matches[1].$matches[2].BASE_URL.INDEX_FILE_NAME.$matches[4];
 	}
 
-	/**
-	 * HtmlからText変換処理
-	 * @param string Html文字列
-	 * @return string	Plain Text文字列
-	 **/
-	function _replaceSesion($matches)
-	{
+/**
+ * HtmlからText変換処理
+ *
+ * @param string Html文字列
+ * @return string	Plain Text文字列
+ **/
+	public function _replaceSesion($matches) {
 		$session_value = session_name()."=".session_id();
 		if (preg_match("/".$session_value."/", $matches[5])) {
 			return $matches[0];
