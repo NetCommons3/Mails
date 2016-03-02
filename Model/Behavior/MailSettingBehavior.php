@@ -332,37 +332,37 @@ class MailSettingBehavior extends ModelBehavior {
 		$this->toUsers[] = $user;
 	}
 
-/**
- * キューに保存する
- */
-	public function saveQueue(Model $model, $contentKey, $languageId, $roomId = null, $sendTime = null) {
-		// TODO $sendTime、時間取得って何か共通メソッドありませんでしたっけ？
-		// メールキューの送信依頼テーブル(mail_queue_send_requests)保存
-		// メールキュー送信先テーブル(mail_queue_delivers)保存
-		if ($sendTime === null) {
-			$sendTime = new DateTime();
-		}
-
-		// ブロックキー、プラグインキーを取得する
-		$blockKey = $this->getMailSettingBlockKey();
-		$plaginKey = $this->getMailSettingPlaginKey();
-
-		// 返信先アドレスを取得する
-		$mailReplayTo = $this->getMailReplayTo();
-
-		// 件名、本文を取得する
-		$mailSubject = $this->getMailSubject();
-		$mailBody = $this->getMailBody();
-
-		// ※ 通知する権限は、block_role_permissionにもつ想定
-		// ※ mail_queue_delivers 値をセットするパターンが３つある。いずれかをセットする
-		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
-		// 　　　⇒ $this->toUsersに情報あるだろう。
-		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
-		// 　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
-		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
-		// 　　　⇒ $this->toUsersにセットしてる
-	}
+	///**
+	// * キューに保存する
+	// */
+	//	public function saveQueue(Model $model, $contentKey, $languageId, $roomId = null, $sendTime = null) {
+	//		// TODOO $sendTime、時間取得って何か共通メソッドありませんでしたっけ？
+	//		// メールキューの送信依頼テーブル(mail_queue_send_requests)保存
+	//		// メールキュー送信先テーブル(mail_queue_delivers)保存
+	//		if ($sendTime === null) {
+	//			$sendTime = new DateTime();
+	//		}
+	//
+	//		// ブロックキー、プラグインキーを取得する
+	//		$blockKey = $this->getMailSettingBlockKey();
+	//		$plaginKey = $this->getMailSettingPlaginKey();
+	//
+	//		// 返信先アドレスを取得する
+	//		$mailReplayTo = $this->getMailReplayTo();
+	//
+	//		// 件名、本文を取得する
+	//		$mailSubject = $this->getMailSubject();
+	//		$mailBody = $this->getMailBody();
+	//
+	//		// ※ 通知する権限は、block_role_permissionにもつ想定
+	//		// ※ mail_queue_delivers 値をセットするパターンが３つある。いずれかをセットする
+	//		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
+	//		// 　　　⇒ $this->toUsersに情報あるだろう。
+	//		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
+	//		// 　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
+	//		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
+	//		// 　　　⇒ $this->toUsersにセットしてる
+	//	}
 
 /**
  * メールを送信する
