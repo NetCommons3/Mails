@@ -12,7 +12,7 @@
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * MailQueue Model
+ * メールキュー
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model

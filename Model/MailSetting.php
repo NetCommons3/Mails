@@ -12,7 +12,7 @@
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * MailSetting Model
+ * メールセッティング
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model

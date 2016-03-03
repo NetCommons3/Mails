@@ -12,7 +12,11 @@
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * MailQueueUser Model
+ * メールキュー送信先
+ * セットするパターンが３つ。いずれかをセットする
+ * ・room_id + ロール（block_role_permission）　：　複数人パターン
+ * ・user_id 　　：　個別パターン1。パスワード再発行等 (NCにいる人イメージ)
+ * ・to_address　：　個別パターン2。メールアドレスのみで通知する (NCにいない人イメージ)
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model
