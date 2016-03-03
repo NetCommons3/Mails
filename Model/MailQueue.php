@@ -1,22 +1,23 @@
 <?php
 /**
- * MailQueueSendRequest Model
+ * MailQueue Model
  *
- * @property MailQueueDeliver $MailQueueDeliver
- *
-* @author Noriko Arai <arai@nii.ac.jp>
-* @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
-* @link http://www.netcommons.org NetCommons Project
-* @license http://www.netcommons.org/license.txt NetCommons License
-* @copyright Copyright 2014, NetCommons Project
+ * @author Noriko Arai <arai@nii.ac.jp>
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @link http://www.netcommons.org NetCommons Project
+ * @license http://www.netcommons.org/license.txt NetCommons License
+ * @copyright Copyright 2014, NetCommons Project
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * Summary for MailQueueSendRequest Model
+ * MailQueue Model
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Model
  */
-class MailQueueSendRequest extends MailsAppModel {
+class MailQueue extends MailsAppModel {
 
 /**
  * Use database config
@@ -111,9 +112,9 @@ class MailQueueSendRequest extends MailsAppModel {
  * @var array
  */
 	public $hasMany = array(
-		'MailQueueDeliver' => array(
-			'className' => 'MailQueueDeliver',
-			'foreignKey' => 'mail_queue_send_request_id',
+		'MailQueueUser' => array(
+			'className' => 'MailQueueUser',
+			'foreignKey' => 'mail_queue_id',
 			'dependent' => false,
 			'conditions' => '',
 			'fields' => '',

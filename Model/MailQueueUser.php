@@ -1,24 +1,23 @@
 <?php
 /**
- * MailQueueDeliver Model
+ * MailQueueUser Model
  *
- * @property MailQueueSendRequest $MailQueueSendRequest
- * @property User $User
- * @property Room $Room
- *
-* @author Noriko Arai <arai@nii.ac.jp>
-* @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
-* @link http://www.netcommons.org NetCommons Project
-* @license http://www.netcommons.org/license.txt NetCommons License
-* @copyright Copyright 2014, NetCommons Project
+ * @author Noriko Arai <arai@nii.ac.jp>
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @link http://www.netcommons.org NetCommons Project
+ * @license http://www.netcommons.org/license.txt NetCommons License
+ * @copyright Copyright 2014, NetCommons Project
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * Summary for MailQueueDeliver Model
+ * MailQueueUser Model
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Model
  */
-class MailQueueDeliver extends MailsAppModel {
+class MailQueueUser extends MailsAppModel {
 
 /**
  * Use database config
@@ -53,7 +52,7 @@ class MailQueueDeliver extends MailsAppModel {
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
-		'mail_queue_send_request_id' => array(
+		'mail_queue_id' => array(
 			'numeric' => array(
 				'rule' => array('numeric'),
 				//'message' => 'Your custom message here',
@@ -93,9 +92,9 @@ class MailQueueDeliver extends MailsAppModel {
  * @var array
  */
 	public $belongsTo = array(
-		'MailQueueSendRequest' => array(
-			'className' => 'MailQueueSendRequest',
-			'foreignKey' => 'mail_queue_send_request_id',
+		'MailQueue' => array(
+			'className' => 'MailQueue',
+			'foreignKey' => 'mail_queue_id',
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''

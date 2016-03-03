@@ -2,7 +2,6 @@
 /**
  * MailSetting Model
  *
- *
  * @author Noriko Arai <arai@nii.ac.jp>
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @link http://www.netcommons.org NetCommons Project
@@ -13,7 +12,10 @@
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * Summary for MailSetting Model
+ * MailSetting Model
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Model
  */
 class MailSetting extends MailsAppModel {
 

@@ -16,6 +16,10 @@ App::uses('AppModel', 'Model');
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model
+ * @property MailQueue $MailQueue
+ * @property MailQueueUser $MailQueueUser
+ * @property User $User
+ * @property Room $Room
  */
 class MailsAppModel extends AppModel {
 }
