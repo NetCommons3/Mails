@@ -58,6 +58,9 @@ class NetCommonsMail extends CakeEmail {
 
 		if ($config == null) {
 			$this->init();
+
+			$blockKey = Current::read('Block.key');
+			$this->setSendMailSetting($blockKey);
 		}
 	}
 
@@ -124,10 +127,14 @@ class NetCommonsMail extends CakeEmail {
 		$config = array();
 		//$config['from'] = array('username@domain' => '管理者');
 		$config['from'] = array($from => $fromName);
+
+		// タグセット
 		$this->assignTag("X-FROM_EMAIL", $from);
 		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
 		$this->assignTag("X-SITE_NAME", htmlspecialchars($siteName));
 		$this->assignTag("X-SITE_URL", Router::fullbaseUrl());
+		$this->assignTag("X-PLUGIN_NAME", htmlspecialchars(Current::read('Plugin.name')));
+		$this->assignTag("X-BLOCK_NAME", htmlspecialchars(Current::read('Block.name')));
 
 		//		$config['host'] = '____.sakura.ne.jp';		// 初期ドメイン
 		//		$config['port'] = 587;
@@ -224,30 +231,25 @@ class NetCommonsMail extends CakeEmail {
  * @param string $typeKey メールの種類
  * @return void
  */
-	public function setSendMailSetting($blockKey, $typeKey = 'contents') {
+	public function setSendMailSetting($blockKey = null, $typeKey = 'contents') {
 		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
 		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
-		// $pluginKey = $Model->plugin();
-		// 'plugin_key' => Inflector::underscore($model->plugin),
-		//$pluginKey = Inflector::underscore($model->plugin);
-		//$blockKey = Current::read('Block.key');
 
 		// 定型文を取得
-//		if (isset($blockKey)) {
+		if (isset($blockKey)) {
 			// 通常のプラグインはこちら
 			$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
-//		} else {
-//			// システム管理系はこちら
-//			$mailSetting = $this->getMailSettingSystem($pluginKey, $typeKey);
-//		}
+		} else {
+			// システム管理系はこちら
+			$pluginKey = Current::read('Plugin.key');
+			//$mailSetting = $this->getMailSettingSystem($pluginKey, $typeKey);
+		}
+		if (empty($mailSetting)) {
+			return;
+		}
 
 		// メール通知フラグをセット
-		//$this->setIsMailSend($mailSetting['mail_setting']['is_mail_send']);
 		$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
-
-		// ブロックキー、プラグインキーをセット
-//		$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
-//		$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
 
 		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
 		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
@@ -355,10 +357,10 @@ class NetCommonsMail extends CakeEmail {
 		//		$this->_mailer->subject('メールタイトル');						// メールタイトル
 		//
 		//		$this->_mailer->send('メール本文');								// メール送信
-		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
-		$this->subject('メールタイトル');						// メールタイトル
+		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先
+		parent::subject('メールタイトル');						// メールタイトル
 
-		$this->send('メール本文');								// メール送信
+		parent::send('メール本文');								// メール送信
 	}
 
 /**
@@ -398,7 +400,7 @@ class NetCommonsMail extends CakeEmail {
 
 		$this->assignTag("X-PLUGIN_NAME", '動画');
 		$this->assignTag("X-ROOM", 'グループルーム');
-		$this->assignTag("X-CHANNEL_NAME", '運動会');
+		$this->assignTag("X-BLOCK_NAME", '運動会');
 		$this->assignTag("X-SUBJECT", 'タイトル');
 		$this->assignTag("X-TO_DATE", '2099/01/01');
 		$this->assignTag("X-BODY", '本文１\n本文２\n本文３');
@@ -412,10 +414,10 @@ class NetCommonsMail extends CakeEmail {
 //		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
 //		$this->subject('メールタイトル');						// メールタイトル
 //		$this->send('メール本文');								// メール送信
-		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
-		$this->subject($this->subject);						// メールタイトル
+		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
+		parent::subject($this->subject);						// メールタイトル
 
-		$messages = $this->send($this->body);
+		$messages = parent::send($this->body);
 		if (self::IS_DEBUG) {
 			var_dump($this->subject, $messages);
 		}
@@ -574,19 +576,6 @@ class NetCommonsMail extends CakeEmail {
 //			}
 //		}
 
-		$config = $this->config();
-		//$config['from'] = array('_____@domain' => '管理者');
-		$fromEmail = key($config['from']);
-		$fromName = current($config['from']);
-		//var_dump($config, $fromEmail, $fromName);
-
-		$this->assignTag("X-FROM_EMAIL", $fromEmail);
-		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
-		//$this->assignTag("X-SITE_NAME", htmlspecialchars($confs["conf_value"]));
-		//$this->assign("X-SITE_URL", BASE_URL.INDEX_FILE_NAME);
-		$this->assignTag("X-SITE_NAME", htmlspecialchars('サイト名称')); //仮
-		$this->assignTag("X-SITE_URL", Router::fullbaseUrl());
-
 		// ルーム名
 		//		if (!isset($this->_assignedTags['X-ROOM'])) {
 		//			$request =& $container->getComponent("Request");
@@ -606,7 +595,7 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 //		$this->assignTag("X-PLUGIN_NAME", '動画');
-//		$this->assignTag("X-CHANNEL_NAME", '運動会');
+//		$this->assignTag("X-BLOCK_NAME", '運動会');
 //		$this->assignTag("X-SUBJECT", 'タイトル');
 //		$this->assignTag("X-TO_DATE", '2099/01/01');
 //		$this->assignTag("X-BODY", '本文１\n本文２\n本文３');
@@ -640,6 +629,7 @@ class NetCommonsMail extends CakeEmail {
 		if (empty($tag)) {
 			return;
 		}
+		// $tagあり、$valueなしで、タグの値取得
 		if ($value === null) {
 			return Hash::get($this->assignTags, $tag);
 		}
@@ -801,7 +791,6 @@ class NetCommonsMail extends CakeEmail {
  * キューに保存する
  */
 	public function saveQueue($contentKey, $languageId, $roomId = null, $sendTime = null) {
-		// TODO $sendTime、時間取得って何か共通メソッドありませんでしたっけ？
 		// メールキューの送信依頼テーブル(mail_queue_send_requests)保存
 		// メールキュー送信先テーブル(mail_queue_delivers)保存
 		if ($sendTime === null) {
