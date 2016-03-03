@@ -85,7 +85,6 @@ class NetCommonsMail extends CakeEmail {
 				'Mail.smtp.port',
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
-				'Config.language',
 				'App.site_name',
 			)
 		));
@@ -107,18 +106,19 @@ class NetCommonsMail extends CakeEmail {
 		//		));
 		//CakeLog::debug(print_r($siteSettingData, true));
 
-		$languageCode = Hash::get($siteSettingData['Config.language'], '0.value');
+//		$languageCode = Hash::get($siteSettingData['Config.language'], '0.value');
 
 		// Language.id取得
-		/** @see Language */
-		$Language = ClassRegistry::init('M17n.Language', true);
-		$languageData = $Language->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'Language.code' => $languageCode,
-			)
-		));
-		$languageId = Hash::get($languageData, 'Language.id');
+//		/** @see Language */
+//		$Language = ClassRegistry::init('M17n.Language', true);
+//		$languageData = $Language->find('first', array(
+//			'recursive' => -1,
+//			'conditions' => array(
+//				'Language.code' => $languageCode,
+//			)
+//		));
+//		$languageId = Hash::get($languageData, 'Language.id');
+		$languageId = Current::read('Language.id');		//仮
 
 		$from = Hash::get($siteSettingData['Mail.from'], '0.value');
 		$fromName = Hash::get($siteSettingData['Mail.from_name'], $languageId . '.value');
@@ -798,23 +798,23 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		// ブロックキー、プラグインキーを取得する
-		$blockKey = $this->getMailSettingBlockKey();
-		$plaginKey = $this->getMailSettingPlaginKey();
+		$blockKey = Current::read('Block.key');
+		$plaginKey = Current::read('Plagin.key');
 
 		// 返信先アドレスを取得する
-		$mailReplayTo = $this->getMailReplayTo();
+		$replayTo = parent::replyTo();
 
 		// 件名、本文を取得する
-		$mailSubject = $this->getMailSubject();
-		$mailBody = $this->getMailBody();
+		$subject = $this->subject;
+		$body = $this->body;
 
 		// ※ 通知する権限は、block_role_permissionにもつ想定
-		// ※ mail_queue_delivers 値をセットするパターンが３つある。いずれかをセットする
-		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
-		// 　　　⇒ $this->toUsersに情報あるだろう。
+		// ※ mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
 		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
-		// 　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
+		// 　　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
+		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
+		// 　　　　⇒ $this->toUsersに情報あるだろう。
 		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
-		// 　　　⇒ $this->toUsersにセットしてる
+		// 　　　　⇒ $this->toUsersにセットしてる
 	}
 }
