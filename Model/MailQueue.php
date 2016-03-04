@@ -37,27 +37,47 @@ class MailQueue extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
-		'content_key' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
+		//		'block_key' => array(
+		//			'notBlank' => array(
+		//				'rule' => array('notBlank'),
+		//				//'message' => 'Your custom message here',
+		//				//'allowEmpty' => false,
+		//				//'required' => false,
+		//				//'last' => false, // Stop validation after this rule
+		//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+		//			),
+		//		),
+		'replay_to' => array(
+			'email' => array(
+				'rule' => array('email'),
 				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
+				'allowEmpty' => true,
 				//'required' => false,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
+		//		'content_key' => array(
+		//			'notBlank' => array(
+		//				'rule' => array('notBlank'),
+		//				//'message' => 'Your custom message here',
+		//				//'allowEmpty' => false,
+		//				//'required' => false,
+		//				//'last' => false, // Stop validation after this rule
+		//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+		//			),
+		//		),
 		'mail_subject' => array(
 			'notBlank' => array(
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
@@ -67,7 +87,7 @@ class MailQueue extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
@@ -77,7 +97,7 @@ class MailQueue extends MailsAppModel {
 				'rule' => array('datetime'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),

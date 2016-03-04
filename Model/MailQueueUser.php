@@ -37,26 +37,36 @@ class MailQueueUser extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
-		'block_key' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				//'required' => false,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
-			),
-		),
+		//		'block_key' => array(
+		//			'notBlank' => array(
+		//				'rule' => array('notBlank'),
+		//				//'message' => 'Your custom message here',
+		//				//'allowEmpty' => false,
+		//				//'required' => false,
+		//				//'last' => false, // Stop validation after this rule
+		//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+		//			),
+		//		),
 		'mail_queue_id' => array(
 			'numeric' => array(
 				'rule' => array('numeric'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
+				'required' => true,
+				//'last' => false, // Stop validation after this rule
+				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			),
+		),
+		'user_id' => array(
+			'numeric' => array(
+				'rule' => array('numeric'),
+				//'message' => 'Your custom message here',
+				'allowEmpty' => true,
 				//'required' => false,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
@@ -66,17 +76,17 @@ class MailQueueUser extends MailsAppModel {
 			'numeric' => array(
 				'rule' => array('numeric'),
 				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
+				'allowEmpty' => true,
 				//'required' => false,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
 		'to_address' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
+			'email' => array(
+				'rule' => array('email'),
 				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
+				'allowEmpty' => true,
 				//'required' => false,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
