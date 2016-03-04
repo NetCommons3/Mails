@@ -135,6 +135,37 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag("X-SITE_URL", Router::fullbaseUrl());
 		$this->assignTag("X-PLUGIN_NAME", htmlspecialchars(Current::read('Plugin.name')));
 		$this->assignTag("X-BLOCK_NAME", htmlspecialchars(Current::read('Block.name')));
+		$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
+		$this->assignTag("X-TO_DATE", date('Y/m/d H:i:s'));
+
+		// ルーム名
+		//		if (!isset($this->_assignedTags['X-ROOM'])) {
+		//			$request =& $container->getComponent("Request");
+		//			$pageView =& $container->getComponent("pagesView");
+		//			$roomId = $request->getParameter("room_id");
+		//			$pages = $pageView->getPageById($roomId);
+		//
+		//			$this->assign("X-ROOM", htmlspecialchars($pages["page_name"]));
+		//		}
+
+		$RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage', true);
+		$roomId = Current::read('Room.id');
+		//$roomId = 1;
+		$roomsLanguageData = $RoomsLanguage->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'room_id' => $roomId,
+				'language_id' => $languageId,
+			)
+		));
+//var_dump($roomId);
+//debug(print_r($languageId, true));
+//debug(print_r($roomsLanguageData, true));
+
+		//$this->assignTag("X-ROOM", 'グループルーム');
+		$roomName = Hash::get($roomsLanguageData, 'RoomsLanguage.name');
+		$this->assignTag("X-ROOM", htmlspecialchars($roomName));
+
 
 		//		$config['host'] = '____.sakura.ne.jp';		// 初期ドメイン
 		//		$config['port'] = 587;
@@ -576,46 +607,24 @@ class NetCommonsMail extends CakeEmail {
 //			}
 //		}
 
-		// ルーム名
-		//		if (!isset($this->_assignedTags['X-ROOM'])) {
-		//			$request =& $container->getComponent("Request");
-		//			$pageView =& $container->getComponent("pagesView");
-		//			$roomId = $request->getParameter("room_id");
-		//			$pages = $pageView->getPageById($roomId);
-		//
-		//			$this->assign("X-ROOM", htmlspecialchars($pages["page_name"]));
-		//		}
-		$this->assignTag("X-ROOM", 'グループルーム');
-
-		if ($this->assignTag("X-USER") == null) {
-			$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
-		}
-		if ($this->assignTag("X-TO_DATE") == null) {
-			$this->assignTag("X-TO_DATE", date('Y/m/d H:i:s'));
-		}
-
-//		$this->assignTag("X-PLUGIN_NAME", '動画');
-//		$this->assignTag("X-BLOCK_NAME", '運動会');
-//		$this->assignTag("X-SUBJECT", 'タイトル');
-//		$this->assignTag("X-TO_DATE", '2099/01/01');
-//		$this->assignTag("X-BODY", '本文１\n本文２\n本文３');
-//		$this->assignTag("X-APPROVAL_COMMENT", '承認コメント１\n承認コメント２\n承認コメント３');
-//		$this->assignTag("X-URL", 'http://localhost');
 
 
 		// タグ変換
 		//$this->assignTagReplace($body, $subject);
 		$this->assignTagReplace();
 
-//		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
-//		$this->subject('メールタイトル');						// メールタイトル
-//		$this->send('メール本文');								// メール送信
-		//$this->to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
-		$this->subject($this->subject);						// メールタイトル
-		$messages = $this->send($this->body);
-//		var_dump($messages);
+		// 改行対応
+		if (parent::emailFormat() == 'text') {
+			// text形式は配列にすると改行される
+			$this->body = explode('\n', $this->body);
+		} else {
+			$this->body = str_replace('\n', '<br />', $this->body);
+		}
 
-		return true;
+		parent::subject($this->subject);
+		$messages = parent::send($this->body);
+//		var_dump($messages);
+		return $messages;
 	}
 
 /**
@@ -642,17 +651,17 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-/**
- * 変換タグを配列で追加
- *
- * @param array $tags タグ配列
- * @return void
- */
-	public function assignTags($tags) {
-		foreach ($tags as $key => $value) {
-			$this->assignTag($key, $value);
-		}
-	}
+	///**
+	// * 変換タグを配列で追加
+	// *
+	// * @param array $tags タグ配列
+	// * @return void
+	// */
+	//	public function assignTags($tags) {
+	//		foreach ($tags as $key => $value) {
+	//			$this->assignTag($key, $value);
+	//		}
+	//	}
 
 /**
  * タグ変換
@@ -661,20 +670,6 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function assignTagReplace() {
 	//public function assignTagReplace($body, $subject) {
-		//		$commonMain =& $container->getComponent("commonMain");
-		//		$convertHtml =& $commonMain->registerClass(WEBAPP_DIR.'/components/convert/Html.class.php', "Convert_Html", "convertHtml");
-		//		foreach ($this->_assignedTags as $k => $v) {
-		//			if (substr($k, 0, 4) == "X-TO" || $k == "X-URL") {
-		//				continue;
-		//			}
-		//
-		//			$this->body = str_replace("{".$k."}", $v, $this->body);
-		//			$this->subject = str_replace("{".$k."}", $convertHtml->convertHtmlToText($v), $this->subject);
-		//		}
-		//		$this->body = str_replace("\r\n", "\n", $this->body);
-		//		$this->body = str_replace("\r", "\n", $this->body);
-		//		$this->body = str_replace("\n", $this->_LE, $this->body);
-		//		$this->body = $this->_insertNewLine($this->body);
 
 		$convertHtml = new ConvertHtml();
 
@@ -701,16 +696,10 @@ class NetCommonsMail extends CakeEmail {
 //		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
 //		$mobile_body = $this->insertNewLine($mobile_body);
 
-		if ($this->emailFormat() == 'text') {
+		if (parent::emailFormat() == 'text') {
 			$this->body = str_replace("{X-URL}", $this->assignTags["X-URL"], $this->body);
-
-			// 改行対応. text形式は配列にすると改行される
-			$this->body = explode('\n', $this->body);
 		} else {
 			$this->body = str_replace("{X-URL}", "<a href=\"". $this->assignTags["X-URL"]. "\">". $this->assignTags["X-URL"]. "</a>", $this->body);
-
-			// 改行対応
-			$this->body = str_replace('\n', '<br />', $this->body);
 		}
 
 		// URLの置換は一度きり
@@ -754,7 +743,7 @@ class NetCommonsMail extends CakeEmail {
 	//	}
 
 /**
- * 本文を1行の最大文字数で整形（改行コード挿入）
+ * 1行の最大文字数で、改行入れて本文整形
  *
  * @param string $body 本文
  * @return string 整形した本文
@@ -789,32 +778,87 @@ class NetCommonsMail extends CakeEmail {
 
 /**
  * キューに保存する
+ * ・メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
+ * ・メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
+ *
+ * まだ仮
  */
-	public function saveQueue($contentKey, $languageId, $roomId = null, $sendTime = null) {
-		// メールキューの送信依頼テーブル(mail_queue_send_requests)保存
-		// メールキュー送信先テーブル(mail_queue_delivers)保存
+	public function saveQueue($contentKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+		//public function saveQueue($contentKey, $languageId, $roomId = null, $sendTime = null) {
 		if ($sendTime === null) {
 			$sendTime = new DateTime();
 		}
-
-		// ブロックキー、プラグインキーを取得する
 		$blockKey = Current::read('Block.key');
 		$plaginKey = Current::read('Plagin.key');
 
 		// 返信先アドレスを取得する
-		$replayTo = parent::replyTo();
+		//$replayTo = parent::replyTo();
+
+		// タグ変換
+		// メール定型文をタグ変換して、生文に変換する
+		$this->assignTagReplace();
 
 		// 件名、本文を取得する
-		$subject = $this->subject;
-		$body = $this->body;
+CakeLog::debug(print_r($sendTime, true));
+//CakeLog::debug(print_r(1111, true));
+//debug($this->subject);
+//debug($this->body);
 
-		// ※ 通知する権限は、block_role_permissionにもつ想定
+		$MailQueue = ClassRegistry::init('Mails.MailQueue', true);
+		$data = array(
+			'MailQueue' => array(
+				'plugin_key' => $plaginKey,
+				'block_key' => $blockKey,
+				'replay_to' => parent::replyTo(),
+				'content_key' => $contentKey,
+				'mail_subject' => $this->subject,
+				'mail_body' => $this->body,
+				'send_time' => $sendTime,
+			)
+		);
+
+		// メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
+		/** @see MailQueue::saveMailQueue() */
+		if (! $mailQueue = $MailQueue->saveMailQueue($data)) {
+			// エラー
+			//$this->NetCommons->handleValidationError($MailQueue->validationErrors);
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
+			CakeLog::debug(print_r($MailQueue->validationErrors, true));
+			return $MailQueue->validationErrors;
+		}
+CakeLog::debug(print_r($mailQueue, true));
+
 		// ※ mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
+		// ※ 通知する権限は、block_role_permissionにもつ想定
 		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
 		// 　　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
 		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
 		// 　　　　⇒ $this->toUsersに情報あるだろう。
 		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
 		// 　　　　⇒ $this->toUsersにセットしてる
+
+		$MailQueueUser = ClassRegistry::init('MailQueue.MailQueueUser', true);
+		$data = array(
+			'MailQueueUser' => array(
+				'plugin_key' => $plaginKey,
+				'block_key' => $blockKey,
+				'mail_queue_id' => $mailQueue['MailQueue']['id'],
+				'user_id' => $roomId,
+				'room_id' => $userId,
+				'to_address' => $toAddress,
+			)
+		);
+
+		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
+		/** @see MailQueueUser::saveMailQueueUser() */
+		if (! $mailQueueUser = $MailQueueUser->saveMailQueue($data)) {
+			// エラー
+			//$this->NetCommons->handleValidationError($MailQueue->validationErrors);
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
+			CakeLog::debug(print_r($MailQueueUser->validationErrors, true));
+			return $MailQueueUser->validationErrors;
+		}
+
+		return true;
 	}
 }
