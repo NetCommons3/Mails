@@ -22,6 +22,11 @@ App::uses('ConvertHtml', 'Mails.Utility');
 class NetCommonsMail extends CakeEmail {
 
 /**
+ * @var int メール本文の1行の最大文字数
+ */
+	const MAX_LINE_LENGTH = 300;
+
+/**
  * @var string 件名(定型文)
  */
 	public $subject = null;
@@ -732,22 +737,22 @@ class NetCommonsMail extends CakeEmail {
 		//$lines = explode($this->_LE, $body);
 		$lines = explode('\n', $body);
 		//$pos = 0;
-		$max_line_length = 300;
+		//$max_line_length = 300;
 		$lines_out = array();
 
 		while(list(,$line) = @each($lines)) {
 			// 1行が300文字以下になったら抜ける
-			while(mb_strlen($line) > $max_line_length) {
+			while(mb_strlen($line) > $this::MAX_LINE_LENGTH) {
 				// 1行300文字で改行。なので配列にセット。
 				// 1行300文字まで取得、< があるか
-				$pos = strrpos(mb_substr($line, 0, $max_line_length), '<');
+				$pos = strrpos(mb_substr($line, 0, $this::MAX_LINE_LENGTH), '<');
 				// 1行300文字の中に '<' ありなら、途中で改行
 				if ($pos > 0) {
 					$lines_out[] = substr($line, 0, $pos);
 					$line = substr($line, $pos);
 				} else {
-					$lines_out[] = mb_substr($line, 0, $max_line_length);
-					$line = mb_substr($line,  $max_line_length);
+					$lines_out[] = mb_substr($line, 0, $this::MAX_LINE_LENGTH);
+					$line = mb_substr($line,  $this::MAX_LINE_LENGTH);
 				}
 			}
 			$lines_out[] = $line;
