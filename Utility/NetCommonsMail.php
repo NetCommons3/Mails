@@ -296,26 +296,6 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-/**
- * プラグインの定型文を取得する
- *
- * @param string $blockKey ブロックキー
- * @param string $typeKey メールの種類
- * @return array メール設定データ配列
- */
-	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
-		// $blockKey, $typeKeyで、mail_settings を SELECT する
-		$MailSetting = ClassRegistry::init('Mails.MailSetting', true);
-		$mailSettingData = $MailSetting->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'block_key' => $blockKey,
-				'type_key' => $typeKey,
-			)
-		));
-		return $mailSettingData;
-	}
-
 	//	/**
 	//	 * Fromアドレスをセットする
 	//	 *
@@ -783,13 +763,13 @@ class NetCommonsMail extends CakeEmail {
  *
  * まだ仮
  */
-	public function saveQueue($contentKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+	public function saveQueue($contentKey, $roomId = 0, $userId = null, $toAddress = null, $sendTime = null) {
 		//public function saveQueue($contentKey, $languageId, $roomId = null, $sendTime = null) {
 		if ($sendTime === null) {
-			$sendTime = new DateTime();
+			$sendTime = NetCommonsTime::getNowDatetime();
 		}
 		$blockKey = Current::read('Block.key');
-		$plaginKey = Current::read('Plagin.key');
+		$plaginKey = Current::read('Plugin.key');
 
 		// 返信先アドレスを取得する
 		//$replayTo = parent::replyTo();
@@ -799,10 +779,36 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTagReplace();
 
 		// 件名、本文を取得する
-CakeLog::debug(print_r($sendTime, true));
+//CakeLog::debug(print_r($sendTime, true));
 //CakeLog::debug(print_r(1111, true));
 //debug($this->subject);
 //debug($this->body);
+
+
+		$MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
+		$data = array(
+			'MailQueueUser' => array(
+				'plugin_key' => $plaginKey,
+				'block_key' => $blockKey,
+				//'mail_queue_id' => $mailQueue['MailQueue']['id'],
+				'mail_queue_id' => 1,
+				'user_id' => $userId,
+				'room_id' => $roomId,
+				'to_address' => $toAddress,
+			)
+		);
+CakeLog::debug(print_r($data, true));
+
+		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
+		/** @see MailQueueUser::saveMailQueueUser() */
+		if (! $mailQueueUser = $MailQueueUser->saveMailQueueUser($data)) {
+			// エラー
+			//$this->NetCommons->handleValidationError($MailQueue->validationErrors);
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
+			CakeLog::debug(print_r($MailQueueUser->validationErrors, true));
+			return $MailQueueUser->validationErrors;
+		}
+
 
 		$MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$data = array(
@@ -816,6 +822,7 @@ CakeLog::debug(print_r($sendTime, true));
 				'send_time' => $sendTime,
 			)
 		);
+//CakeLog::debug(print_r($data, true));
 
 		// メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
 		/** @see MailQueue::saveMailQueue() */
@@ -826,7 +833,7 @@ CakeLog::debug(print_r($sendTime, true));
 			CakeLog::debug(print_r($MailQueue->validationErrors, true));
 			return $MailQueue->validationErrors;
 		}
-CakeLog::debug(print_r($mailQueue, true));
+//CakeLog::debug(print_r($mailQueue, true));
 
 		// ※ mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
 		// ※ 通知する権限は、block_role_permissionにもつ想定
@@ -836,28 +843,6 @@ CakeLog::debug(print_r($mailQueue, true));
 		// 　　　　⇒ $this->toUsersに情報あるだろう。
 		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
 		// 　　　　⇒ $this->toUsersにセットしてる
-
-		$MailQueueUser = ClassRegistry::init('MailQueue.MailQueueUser', true);
-		$data = array(
-			'MailQueueUser' => array(
-				'plugin_key' => $plaginKey,
-				'block_key' => $blockKey,
-				'mail_queue_id' => $mailQueue['MailQueue']['id'],
-				'user_id' => $roomId,
-				'room_id' => $userId,
-				'to_address' => $toAddress,
-			)
-		);
-
-		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
-		/** @see MailQueueUser::saveMailQueueUser() */
-		if (! $mailQueueUser = $MailQueueUser->saveMailQueue($data)) {
-			// エラー
-			//$this->NetCommons->handleValidationError($MailQueue->validationErrors);
-			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
-			CakeLog::debug(print_r($MailQueueUser->validationErrors, true));
-			return $MailQueueUser->validationErrors;
-		}
 
 		return true;
 	}
