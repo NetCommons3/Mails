@@ -37,27 +37,27 @@ class MailSetting extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
-		'block_key' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				//'required' => false,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
-			),
-		),
+		//		'block_key' => array(
+		//			'notBlank' => array(
+		//				'rule' => array('notBlank'),
+		//				//'message' => 'Your custom message here',
+		//				//'allowEmpty' => false,
+		//				//'required' => false,
+		//				//'last' => false, // Stop validation after this rule
+		//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+		//			),
+		//		),
 		'type_key' => array(
 			'notBlank' => array(
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
@@ -67,7 +67,7 @@ class MailSetting extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
@@ -77,20 +77,40 @@ class MailSetting extends MailsAppModel {
 				'rule' => array('notBlank'),
 				//'message' => 'Your custom message here',
 				//'allowEmpty' => false,
-				//'required' => false,
+				'required' => true,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
 		'replay_to' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
+			'email' => array(
+				'rule' => array('email'),
 				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
+				'allowEmpty' => true,
 				//'required' => false,
 				//'last' => false, // Stop validation after this rule
 				//'on' => 'create', // Limit validation to 'create' or 'update' operations
 			),
 		),
 	);
+
+/**
+ * プラグインの定型文を取得する
+ *
+ * @param string $blockKey ブロックキー
+ * @param string $typeKey メールの種類
+ * @return array メール設定データ配列
+ */
+	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
+		// $blockKey, $typeKeyで、mail_settings を SELECT する
+		//$MailSetting = ClassRegistry::init('Mails.MailSetting', true);
+		$mailSettingData = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'block_key' => $blockKey,
+				'type_key' => $typeKey,
+			)
+		));
+		return $mailSettingData;
+	}
 }
