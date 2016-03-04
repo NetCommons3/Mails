@@ -29,11 +29,18 @@ class SamplesController extends AppController {
  * @return CakeResponse
  */
 	public function mailtest() {
-		$email = new CakeEmail('sakura');						// インスタンス化
-		$email->to('mutaguchi@opensource-workshop.jp');			// 送信先
-		$email->subject('メールタイトル');						// メールタイトル
+		$mail = new CakeEmail('sakura');						// インスタンス化
 
-		$email->send('メール本文');								// メール送信
+		//送信しない（デバッグ用）
+		$config = $mail->config();
+		$config['transport'] = 'Debug';
+		$mail->config($config);
+
+		$mail->to('mutaguchi@opensource-workshop.jp');			// 送信先
+		$mail->subject('メールタイトル');						// メールタイトル
+
+		$messages = $mail->send('メール本文');								// メール送信
+		var_dump($messages);
 	}
 
 /**
