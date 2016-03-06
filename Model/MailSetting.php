@@ -103,7 +103,6 @@ class MailSetting extends MailsAppModel {
  */
 	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
-		//$MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$mailSettingData = $this->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
