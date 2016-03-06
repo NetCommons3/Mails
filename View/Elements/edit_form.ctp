@@ -74,8 +74,9 @@ $model = 'MailSetting';
 					<p class="help-block">
 						<?php echo __d('mails', '件名と本文には埋め込みキーワードが使えます。'); ?>
 						<?php /* popover説明 */ ?>
+						<?php $popoverHtmlId = 'nc-mail-body-' . Current::read('Frame.id'); ?>
 						<a tabindex="0"
-						   id="nc-mail-body-<?php echo Current::read('Frame.id'); ?>"
+						   id="<?php echo $popoverHtmlId; ?>"
 						   data-toggle="popover"
 						   data-placement="bottom"
 						   title="<?php echo __d('mails', '埋め込みキーワードとは？'); ?>"
@@ -84,7 +85,7 @@ $model = 'MailSetting';
 						</a>
 						<script>
 							$(function() {
-								$('#nc-mail-body-<?php echo Current::read('Frame.id'); ?>').popover({
+								$('#<?php echo $popoverHtmlId; ?>').popover({
 									html: true
 								});
 							});
