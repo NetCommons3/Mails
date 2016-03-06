@@ -101,14 +101,49 @@ class MailSetting extends MailsAppModel {
  * @param string $typeKey メールの種類
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($blockKey, $typeKey = 'contents') {
+	public function getMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
+		if ($blockKey === null) {
+			$blockKey = Current::read('Block.key');
+		}
+
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
+		$conditions = array(
+			'block_key' => $blockKey,
+			'type_key' => $typeKey,
+		);
+
+		return $this->getMailSetting($conditions);
+	}
+
+/**
+ * システム管理(カレンダー含む)の定型文を取得する
+ *
+ * @param string $typeKey メールの種類
+ * @return array メール設定データ配列
+ */
+	public function getMailSettingSystem($typeKey) {
+		//public function getMailSettingSystem($pluginKey = null, $typeKey = 'contents') {
+		$pluginKey = Current::read('Plugin.key');
+
+		// $pluginKey, $typeKeyで、mail_settings を SELECT する
+		$conditions = array(
+			'plug_key' => $pluginKey,
+			'type_key' => $typeKey,
+		);
+		return $this->getMailSetting($conditions);
+	}
+
+/**
+ * プラグインの定型文を取得する
+ *
+ * @param array $conditions 検索条件
+ * @return array メール設定データ配列
+ */
+	public function getMailSetting($conditions) {
 		$mailSettingData = $this->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'block_key' => $blockKey,
-				'type_key' => $typeKey,
-			)
+			//'recursive' => -1,
+			'recursive' => 0,
+			'conditions' => $conditions,
 		));
 		return $mailSettingData;
 	}

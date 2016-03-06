@@ -52,22 +52,22 @@ class NetCommonsMail extends CakeEmail {
 	//const IS_DEBUG = false;
 	const IS_DEBUG = true;
 
-/**
- * Constructor
- *
- * @param array|string $config Array of configs, or string to load configs from email.php
- * @see CakeEmail::__construct()
- */
-	public function __construct($config = null) {
-		parent::__construct($config);
-
-		if ($config == null) {
-			$this->init();
-
-			$blockKey = Current::read('Block.key');
-			$this->setSendMailSetting($blockKey);
-		}
-	}
+///**
+// * Constructor
+// *
+// * @param array|string $config Array of configs, or string to load configs from email.php
+// * @see CakeEmail::__construct()
+// */
+//	public function __construct($config = null) {
+//		parent::__construct($config);
+//
+//		if ($config == null) {
+//			$this->init();
+//
+//			$blockKey = Current::read('Block.key');
+//			$this->setSendMailSetting($blockKey);
+//		}
+//	}
 
 /**
  * 初期設定
@@ -207,12 +207,11 @@ class NetCommonsMail extends CakeEmail {
 			$config['transport'] = 'Debug';
 		}
 		//CakeLog::debug(print_r($config, true));
-		$this->config($config);
+		parent::config($config);
 
 		// html or text
 		$messageType = Hash::get($siteSettingData['Mail.messageType'], '0.value');
-		$this->emailFormat($messageType);
-//$this->emailFormat('html');
+		parent::emailFormat($messageType);
 
 		//		$this->fromEmail = "";
 		//		$this->fromName = "";
@@ -261,31 +260,47 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メール送信する定型文をセットする
+ * メール送信する定型文をセット(通常のプラグイン)
  *
  * @param string $blockKey ブロックキー
  * @param string $typeKey メールの種類
  * @return void
  */
-	public function setSendMailSetting($blockKey = null, $typeKey = 'contents') {
+	public function setSendMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
+		$MailSetting = ClassRegistry::init('Mails.MailSetting');
+		/** @see MailSetting::getMailSettingPlugin() */
+		$mailSettingData = $MailSetting->getMailSettingPlugin($blockKey, $typeKey);
+
+		$this->__setSendMailSetting($mailSettingData);
+	}
+
+/**
+ * メール送信する定型文をセット(システム管理系)
+ *
+ * @param string $typeKey メールの種類
+ * @return void
+ */
+	public function setSendMailSettingSystem($typeKey) {
+		$MailSetting = ClassRegistry::init('Mails.MailSetting');
+		/** @see MailSetting::getMailSettingSystem() */
+		$mailSettingData = $MailSetting->getMailSettingSystem($typeKey);
+
+		$this->__setSendMailSetting($mailSettingData);
+
+	}
+
+/**
+ * メール送信する定型文をセット
+ *
+ * @param array $mailSettingData メール設定データ
+ * @return void
+ */
+	private function __setSendMailSetting($mailSettingData) {
 		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
 		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
-
-		// 定型文を取得
-		if (isset($blockKey)) {
-			// 通常のプラグインはこちら
-			$MailSetting = ClassRegistry::init('Mails.MailSetting');
-			/** @see MailSetting::getMailSettingPlugin() */
-			$mailSettingData = $MailSetting->getMailSettingPlugin($blockKey, $typeKey);
-		} else {
-			// システム管理系はこちら
-			$pluginKey = Current::read('Plugin.key');
-			//$mailSettingData = $this->getMailSettingSystem($pluginKey, $typeKey);
-		}
 		if (empty($mailSettingData)) {
 			return;
 		}
-//CakeLog::debug($mailSettingData);
 
 		// メール通知フラグをセット
 		$this->isMailSend = Hash::get($mailSettingData, 'MailSetting.is_mail_send');
