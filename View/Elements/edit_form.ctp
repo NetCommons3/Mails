@@ -73,6 +73,7 @@ $model = 'MailSetting';
 					)); ?>
 					<p class="help-block">
 						<?php echo __d('mails', '件名と本文には埋め込みキーワードが使えます。'); ?>
+						<?php /* popover説明 */ ?>
 						<a tabindex="0"
 						   id="nc-mail-body-<?php echo Current::read('Frame.id'); ?>"
 						   data-toggle="popover"
@@ -81,15 +82,15 @@ $model = 'MailSetting';
 						   data-content="<?php echo __d('videos', 'それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />{X-SITE_NAME} : サイト名称<br />{X-PLUGIN_NAME} : プラグイン名称<br />{X-ROOM} : ルーム名称<br />{X-BLOCK_NAME} : チャンネル名<br />{X-SUBJECT} : 動画タイトル<br />{X-USER} : 投稿者<br />{X-TO_DATE} : 投稿日時<br />{X-BODY} : 登録内容<br />{X-URL} : 登録内容のURL'); ?>">
 							<span class="glyphicon glyphicon-question-sign"></span>
 						</a>
+						<script>
+							$(function() {
+								$('#nc-mail-body-<?php echo Current::read('Frame.id'); ?>').popover({
+									html: true
+								});
+							});
+						</script>
 					</p>
 				</div>
-				<script>
-					$(function() {
-						$('#nc-mail-body-<?php echo Current::read('Frame.id'); ?>').popover({
-							html: true
-						});
-					});
-				</script>
 			</div>
 		</div>
 
