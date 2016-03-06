@@ -1,11 +1,11 @@
 <?php
 /**
  * Element of block edit form
- *   //   - $model: Model for edit request.
  *   - $action: Action for delete request.
  *   - $callback: Callback element for parameters and messages.
  *   - $callbackOptions: Callback options for element.
  *   - $cancelUrl: Cancel url.
+ *   - $mailTypeKey: メールの種類
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -25,14 +25,17 @@ if (isset($action)) {
 if (! isset($cancelUrl)) {
 	$cancelUrl = null;
 }
-$model = 'MailSetting';
+if (! isset($mailTypeKey)) {
+	$mailTypeKey = 'contents';
+}
 ?>
 
-<?php echo $this->NetCommonsForm->create($model, Hash::merge(array(), $options)); ?>
+<?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.type_key', array('value' => $mailTypeKey)); ?>
+
 	<div class="panel panel-default">
 		<div class="panel-body">
-
-
 <?php
 // debug now!
 // copy to C:\projects\NetCommons3\app\Plugin\Blocks\View\Elements\edit_form.ctp
