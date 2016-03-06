@@ -20,79 +20,86 @@ App::uses('MailsAppModel', 'Mails.Model');
 class MailSetting extends MailsAppModel {
 
 /**
- * Use database config
- *
- * @var string
- */
-	public $useDbConfig = 'master';
-
-/**
  * Validation rules
  *
  * @var array
  */
-	public $validate = array(
-		'plugin_key' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				'required' => true,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+	public $validate = array();
+
+/**
+ * beforeValidate
+ *
+ * @param array $options Options passed from Model::save().
+ * @return bool True if validate operation should continue, false to abort
+ * @link http://book.cakephp.org/2.0/ja/models/callback-methods.html#beforevalidate
+ * @see Model::save()
+ */
+	public function beforeValidate($options = array()) {
+		$this->validate = Hash::merge($this->validate, array(
+			'plugin_key' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					//'message' => 'Your custom message here',
+					//'allowEmpty' => false,
+					'required' => true,
+					//'last' => false, // Stop validation after this rule
+					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
 			),
-		),
-		//		'block_key' => array(
-		//			'notBlank' => array(
-		//				'rule' => array('notBlank'),
-		//				//'message' => 'Your custom message here',
-		//				//'allowEmpty' => false,
-		//				//'required' => false,
-		//				//'last' => false, // Stop validation after this rule
-		//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
-		//			),
-		//		),
-		'type_key' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				'required' => true,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			//		'block_key' => array(
+			//			'notBlank' => array(
+			//				'rule' => array('notBlank'),
+			//				//'message' => 'Your custom message here',
+			//				//'allowEmpty' => false,
+			//				//'required' => false,
+			//				//'last' => false, // Stop validation after this rule
+			//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			//			),
+			//		),
+			'type_key' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					//'message' => 'Your custom message here',
+					//'allowEmpty' => false,
+					'required' => true,
+					//'last' => false, // Stop validation after this rule
+					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
 			),
-		),
-		'mail_fixed_phrase_subject' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				'required' => true,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			'mail_fixed_phrase_subject' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					//'message' => 'Your custom message here',
+					//'allowEmpty' => false,
+					'required' => true,
+					//'last' => false, // Stop validation after this rule
+					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
 			),
-		),
-		'mail_fixed_phrase_body' => array(
-			'notBlank' => array(
-				'rule' => array('notBlank'),
-				//'message' => 'Your custom message here',
-				//'allowEmpty' => false,
-				'required' => true,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			'mail_fixed_phrase_body' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					//'message' => 'Your custom message here',
+					//'allowEmpty' => false,
+					'required' => true,
+					//'last' => false, // Stop validation after this rule
+					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
 			),
-		),
-		'replay_to' => array(
-			'email' => array(
-				'rule' => array('email'),
-				//'message' => 'Your custom message here',
-				'allowEmpty' => true,
-				//'required' => false,
-				//'last' => false, // Stop validation after this rule
-				//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			'replay_to' => array(
+				'email' => array(
+					'rule' => array('email'),
+					//'message' => 'Your custom message here',
+					'allowEmpty' => true,
+					//'required' => false,
+					//'last' => false, // Stop validation after this rule
+					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
 			),
-		),
-	);
+		));
+
+		return parent::beforeValidate($options);
+	}
 
 /**
  * プラグインの定型文を取得する
@@ -146,5 +153,40 @@ class MailSetting extends MailsAppModel {
 			'conditions' => $conditions,
 		));
 		return $mailSettingData;
+	}
+
+/**
+ * メール設定保存
+ *
+ * @param array $data received post data
+ * @return mixed On success Model::$data if its not empty or true, false on failure
+ * @throws InternalErrorException
+ */
+	public function saveMailSetting($data) {
+		//トランザクションBegin
+		$this->begin();
+
+		//バリデーション
+		$this->set($data);
+		if (! $this->validates()) {
+			$this->rollback();
+			return false;
+		}
+
+		try {
+			// 保存
+			if (! $mailSetting = $this->save(null, false)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
+			//トランザクションCommit
+			$this->commit();
+
+		} catch (Exception $ex) {
+			//トランザクションRollback
+			$this->rollback($ex);
+		}
+
+		return $mailSetting;
 	}
 }
