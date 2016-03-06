@@ -14,17 +14,17 @@
  */
 class MailSettingBehavior extends ModelBehavior {
 
-/**
- * afterSave is called after a model is saved.
- *
- * @param Model $model Model using this behavior
- * @param bool $created True if this save created a new record
- * @param array $options Options passed from Model::save().
- * @return bool
- * @see Model::save()
- */
-	public function afterSave(Model $model, $created, $options = array()) {
-	}
+///**
+// * afterSave is called after a model is saved.
+// *
+// * @param Model $model Model using this behavior
+// * @param bool $created True if this save created a new record
+// * @param array $options Options passed from Model::save().
+// * @return bool
+// * @see Model::save()
+// */
+//	public function afterSave(Model $model, $created, $options = array()) {
+//	}
 
 /**
  * 複数人の送信先ユーザ取得する
@@ -36,69 +36,69 @@ class MailSettingBehavior extends ModelBehavior {
 		//$this->setSendMailUsers($blockKey);
 	}
 
-/**
- * メール送信する定型文をセットする
- */
-	public function setSendMailSetting(Model $model, $blockKey = null, $typeKey = 'contents') {
-		// $pluginKey = $Model->plugin();
-		// 'plugin_key' => Inflector::underscore($model->plugin),
-		$pluginKey = Inflector::underscore($model->plugin);
+///**
+// * メール送信する定型文をセットする
+// */
+//	public function setSendMailSetting(Model $model, $blockKey = null, $typeKey = 'contents') {
+//		// $pluginKey = $Model->plugin();
+//		// 'plugin_key' => Inflector::underscore($model->plugin),
+//		$pluginKey = Inflector::underscore($model->plugin);
+//
+//		// 定型文を取得する
+//		if (!empty($blockKey)) {
+//			// 通常のプラグインはこちら
+//			$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
+//		} else {
+//			// システム管理系はこちら
+//			$mailSetting = $this->getMailSettingSystem($pluginKey, $typeKey);
+//		}
+//
+//		// メール通知フラグをセットする
+//		$this->setIsMailSend($mailSetting['mail_setting']['is_mail_send']);
+//
+//		// 通知する場合
+//		if ($this->getIsMailSend()) {
+//
+//			// ブロックキー、プラグインキーをセットする
+//			$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
+//			$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
+//
+//			// 定型文をセットする
+//			$this->setMailSubject($mailSetting['mail_setting']['mail_fixed_phrase_subject']);
+//			$this->setMailBody($mailSetting['mail_setting']['mail_fixed_phrase_body']);
+//
+//			// 返信先アドレスをセットする
+//			$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
+//		}
+//	}
 
-		// 定型文を取得する
-		if (!empty($blockKey)) {
-			// 通常のプラグインはこちら
-			$mailSetting = $this->getMailSettingPlugin($blockKey, $typeKey);
-		} else {
-			// システム管理系はこちら
-			$mailSetting = $this->getMailSettingSystem($pluginKey, $typeKey);
-		}
+///**
+// * プラグインの定型文を取得する
+// */
+//	public function getMailSettingPlugin(Model $model, $blockKey, $typeKey = 'contents') {
+//		// $blockKey, $typeKeyで、mail_settings を SELECT する
+//	}
 
-		// メール通知フラグをセットする
-		$this->setIsMailSend($mailSetting['mail_setting']['is_mail_send']);
+///**
+// * システム管理(カレンダー含む)の定型文を取得する
+// */
+//	public function getMailSettingSystem(Model $model, $pluginKey, $typeKey = 'contents') {
+//		// $pluginKey, $typeKeyで、mail_settings を SELECT する
+//	}
 
-		// 通知する場合
-		if ($this->getIsMailSend()) {
-
-			// ブロックキー、プラグインキーをセットする
-			$this->setMailSettingBlockKey($mailSetting['mail_setting']['block_key']);
-			$this->setMailSettingPlaginKey($mailSetting['mail_setting']['plugin_key']);
-
-			// 定型文をセットする
-			$this->setMailSubject($mailSetting['mail_setting']['mail_fixed_phrase_subject']);
-			$this->setMailBody($mailSetting['mail_setting']['mail_fixed_phrase_body']);
-
-			// 返信先アドレスをセットする
-			$this->setMailReplayTo($mailSetting['mail_setting']['replay_to']);
-		}
-	}
-
-/**
- * プラグインの定型文を取得する
- */
-	public function getMailSettingPlugin(Model $model, $blockKey, $typeKey = 'contents') {
-		// $blockKey, $typeKeyで、mail_settings を SELECT する
-	}
-
-/**
- * システム管理(カレンダー含む)の定型文を取得する
- */
-	public function getMailSettingSystem(Model $model, $pluginKey, $typeKey = 'contents') {
-		// $pluginKey, $typeKeyで、mail_settings を SELECT する
-	}
-
-/**
- * メール通知フラグをセットする
- */
-	public function setIsMailSend(Model $model, $isMailSend) {
-		$this->isMailSend = $isMailSend;
-	}
-
-/**
- * メール通知フラグを取得する
- */
-	public function getIsMailSend(Model $model) {
-		return $this->isMailSend;
-	}
+///**
+// * メール通知フラグをセットする
+// */
+//	public function setIsMailSend(Model $model, $isMailSend) {
+//		$this->isMailSend = $isMailSend;
+//	}
+//
+///**
+// * メール通知フラグを取得する
+// */
+//	public function getIsMailSend(Model $model) {
+//		return $this->isMailSend;
+//	}
 
 /**
  * 件名をセットする
