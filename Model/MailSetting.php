@@ -12,7 +12,7 @@
 App::uses('MailsAppModel', 'Mails.Model');
 
 /**
- * メールセッティング
+ * メール設定
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model
@@ -109,7 +109,6 @@ class MailSetting extends MailsAppModel {
 			'block_key' => $blockKey,
 			'type_key' => $typeKey,
 		);
-
 		return $this->getMailSetting($conditions);
 	}
 
@@ -120,7 +119,6 @@ class MailSetting extends MailsAppModel {
  * @return array メール設定データ配列
  */
 	public function getMailSettingSystem($typeKey) {
-		//public function getMailSettingSystem($pluginKey = null, $typeKey = 'contents') {
 		$pluginKey = Current::read('Plugin.key');
 
 		// $pluginKey, $typeKeyで、mail_settings を SELECT する
