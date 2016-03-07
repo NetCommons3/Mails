@@ -39,7 +39,6 @@ if (! isset($mailTypeKey)) {
 
 	<div class="panel panel-default">
 		<div class="panel-body">
-			<?php //echo $this->element($callback, (isset($callbackOptions) ? $callbackOptions : array())); ?>
 			<div class="col-xs-12">
 				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
 					'type' => 'checkbox',
@@ -48,7 +47,7 @@ if (! isset($mailTypeKey)) {
 			</div>
 
 			<div class="col-xs-11 col-xs-offset-1">
-				<?php echo $this->element('Mails.block_creatable_setting_inline', array(
+				<?php echo $this->element('Mails.permission_setting_inline', array(
 					'settingPermissions' => array(
 						'mail_content_receivable' => __d('mails', '通知する権限'),
 					),

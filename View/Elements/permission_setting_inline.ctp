@@ -1,6 +1,6 @@
 <?php
 /**
- * Element of block role setting
+ * Element of block role permission setting inline
  *   - $roles:
  *       The results `Roles` data of NetCommonsBlockComponent->getBlockRolePermissions().
  *   - $settingPermissions: Permissions data of creatable panel
@@ -15,8 +15,6 @@
  * @license http://www.netcommons.org/license.txt NetCommons License
  * @copyright Copyright 2014, NetCommons Project
  */
-
-// TODO Blockプラグインにプルリクできるかな。どうかな。
 
 echo $this->NetCommonsHtml->script('/blocks/js/block_role_permissions.js');
 
