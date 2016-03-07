@@ -47,7 +47,9 @@ if (! isset($mailTypeKey)) {
 			</div>
 
 			<div class="col-xs-11 col-xs-offset-1">
-				<?php echo $this->element('Mails.permission_setting_inline', array(
+				<?php /* 暫定対応 */
+				//echo $this->element('Blocks.permission_setting_inline', array(
+				echo $this->element('Mails.permission_setting_inline', array(
 					'settingPermissions' => array(
 						'mail_content_receivable' => __d('mails', '通知する権限'),
 					),
