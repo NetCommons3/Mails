@@ -1,0 +1,66 @@
+# LANGUAGE translation of CakePHP Application
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: Plugin/Blocks/View/Elements/block_tabs.ctp:50
+msgid "Mail settings"
+msgstr ""
+
+#: Plugin/Mails/Model/MailSetting.php:60
+msgid "%s はメール形式で入力してください"
+msgstr ""
+
+#: Plugin/Mails/Model/MailSetting.php:60
+#: Plugin/Mails/View/Elements/edit_form.ctp:60
+msgid "返信を受けるメールアドレス"
+msgstr ""
+
+#: Plugin/Mails/Model/MailSetting.php:67
+#: Plugin/Mails/View/Elements/edit_form.ctp:68
+msgid "件名"
+msgstr ""
+
+#: Plugin/Mails/Model/MailSetting.php:74
+#: Plugin/Mails/View/Elements/edit_form.ctp:75
+msgid "本文"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:46
+msgid "メール通知機能を使用する"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:53
+msgid "通知する権限"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:63
+msgid "返信を受けるメールアドレスを変えたい場合に指定できます"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:80
+msgid "件名と本文には埋め込みキーワードが使えます"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:87
+msgid "埋め込みキーワードとは？"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:88
+msgid "それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />"
+msgstr ""
+
+#: Plugin/Videos/Controller/VideoMailSettingsController.php:96
+msgid "[{X-SITE_NAME}]{X-PLUGIN_NAME}投稿({X-ROOM} {X-BLOCK_NAME})"
+msgstr ""
+
