@@ -42,7 +42,7 @@ if (! isset($mailTypeKey)) {
 			<div class="col-xs-12">
 				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
 					'type' => 'checkbox',
-					'label' => __d('mails', 'メール通知機能を使用する')
+					'label' => __d('mails', 'Use the mail notification function')
 				)); ?>
 			</div>
 
@@ -51,42 +51,42 @@ if (! isset($mailTypeKey)) {
 				//echo $this->element('Blocks.permission_setting_inline', array(
 				echo $this->element('Mails.permission_setting_inline', array(
 					'settingPermissions' => array(
-						'mail_content_receivable' => __d('mails', '通知する権限'),
+						'mail_content_receivable' => __d('mails', 'Notification to the authority'),
 					),
 				)); ?>
 
 				<div class="form-group">
 					<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
 						'type' => 'text',
-						'label' => __d('mails', '返信を受けるメールアドレス'),
+						'label' => __d('mails', 'E-mail address to receive a reply'),
 						'div' => '',
 					)); ?>
-					<p class="help-block"><?php echo __d('mails', '返信を受けるメールアドレスを変えたい場合に指定できます'); ?></p>
+					<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
 				</div>
 
 				<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_subject', array(
 					'type' => 'text',
-					'label' => __d('mails', '件名'),
+					'label' => __d('mails', 'Subject'),
 					'required' => true,
 				)); ?>
 
 				<div class="form-group">
 					<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_body', array(
 						'type' => 'textarea',
-						'label' => __d('mails', '本文'),
+						'label' => __d('mails', 'Body'),
 						'required' => true,
 						'div' => '',
 					)); ?>
 					<p class="help-block">
-						<?php echo __d('mails', '件名と本文には埋め込みキーワードが使えます'); ?>
+						<?php echo __d('mails', 'Can use an embedded keyword in the subject line and body'); ?>
 						<?php /* popover説明 */ ?>
 						<?php $popoverHtmlId = 'nc-mail-body-' . Current::read('Frame.id'); ?>
 						<a tabindex="0"
 						   id="<?php echo $popoverHtmlId; ?>"
 						   data-toggle="popover"
 						   data-placement="bottom"
-						   title="<?php echo __d('mails', '埋め込みキーワードとは？'); ?>"
-						   data-content="<?php echo __d('mails', 'それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />') . $mailBodyPopoverMessage; ?>">
+						   title="<?php echo __d('mails', 'Embedded keyword?'); ?>"
+						   data-content="<?php echo __d('mails', 'Each of the embedded keywords, will be sent is converted to the corresponding content. <br />') . $mailBodyPopoverMessage; ?>">
 							<span class="glyphicon glyphicon-question-sign"></span>
 						</a>
 						<script>

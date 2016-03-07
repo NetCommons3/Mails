@@ -57,21 +57,21 @@ class MailSetting extends MailsAppModel {
 			'replay_to' => array(
 				'email' => array(
 					'rule' => array('email'),
-					'message' => sprintf(__d('mails', '%s はメール形式で入力してください'), __d('mails', '返信を受けるメールアドレス')),
+					'message' => sprintf(__d('mails', '%s, please enter by e-mail format'), __d('mails', 'E-mail address to receive a reply')),
 					'allowEmpty' => true,
 				),
 			),
 			'mail_fixed_phrase_subject' => array(
 				'notBlank' => array(
 					'rule' => array('notBlank'),
-					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', '件名')),
+					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Subject')),
 					'required' => true,
 				),
 			),
 			'mail_fixed_phrase_body' => array(
 				'notBlank' => array(
 					'rule' => array('notBlank'),
-					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', '本文')),
+					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Body')),
 					'required' => true,
 				),
 			),
