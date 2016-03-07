@@ -16,6 +16,7 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
+// TODO Blockプラグインに移動予定
 echo $this->NetCommonsHtml->script('/blocks/js/block_role_permissions.js');
 
 //Camel形式に変換
