@@ -27,6 +27,18 @@ class MailSetting extends MailsAppModel {
 	public $validate = array();
 
 /**
+ * use behaviors
+ *
+ * @var array
+ * @see NetCommonsAppModel::$actAs
+ * @see OriginalKeyBehavior
+ */
+	public $actsAs = array(
+		'NetCommons.OriginalKey',
+		'Blocks.BlockRolePermission',
+	);
+
+/**
  * beforeValidate
  *
  * @param array $options Options passed from Model::save().
@@ -36,64 +48,31 @@ class MailSetting extends MailsAppModel {
  */
 	public function beforeValidate($options = array()) {
 		$this->validate = Hash::merge($this->validate, array(
-			'plugin_key' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					//'message' => 'Your custom message here',
-					//'allowEmpty' => false,
-					'required' => true,
-					//'last' => false, // Stop validation after this rule
-					//'on' => 'create', // Limit validation to 'create' or 'update' operations
-				),
-			),
-			//		'block_key' => array(
-			//			'notBlank' => array(
-			//				'rule' => array('notBlank'),
-			//				//'message' => 'Your custom message here',
-			//				//'allowEmpty' => false,
-			//				//'required' => false,
-			//				//'last' => false, // Stop validation after this rule
-			//				//'on' => 'create', // Limit validation to 'create' or 'update' operations
-			//			),
-			//		),
-			'type_key' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					//'message' => 'Your custom message here',
-					//'allowEmpty' => false,
-					'required' => true,
-					//'last' => false, // Stop validation after this rule
-					//'on' => 'create', // Limit validation to 'create' or 'update' operations
-				),
-			),
-			'mail_fixed_phrase_subject' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					//'message' => 'Your custom message here',
-					//'allowEmpty' => false,
-					'required' => true,
-					//'last' => false, // Stop validation after this rule
-					//'on' => 'create', // Limit validation to 'create' or 'update' operations
-				),
-			),
-			'mail_fixed_phrase_body' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					//'message' => 'Your custom message here',
-					//'allowEmpty' => false,
-					'required' => true,
-					//'last' => false, // Stop validation after this rule
-					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+			'is_mail_send' => array(
+				'boolean' => array(
+					'rule' => array('boolean'),
+					'message' => __d('net_commons', 'Invalid request.'),
 				),
 			),
 			'replay_to' => array(
 				'email' => array(
 					'rule' => array('email'),
-					//'message' => 'Your custom message here',
+					'message' => sprintf(__d('mails', '%s はメール形式で入力してください'), __d('mails', '返信を受けるメールアドレス')),
 					'allowEmpty' => true,
-					//'required' => false,
-					//'last' => false, // Stop validation after this rule
-					//'on' => 'create', // Limit validation to 'create' or 'update' operations
+				),
+			),
+			'mail_fixed_phrase_subject' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', '件名')),
+					'required' => true,
+				),
+			),
+			'mail_fixed_phrase_body' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', '本文')),
+					'required' => true,
 				),
 			),
 		));

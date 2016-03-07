@@ -1,6 +1,6 @@
 <?php
 /**
- * Element of block edit form
+ * Element of mail edit form
  *   - $action: Action for delete request.
  *   - $callback: Callback element for parameters and messages.
  *   - $callbackOptions: Callback options for element.
@@ -31,16 +31,14 @@ if (! isset($mailTypeKey)) {
 ?>
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.type_key', array('value' => $mailTypeKey)); ?>
 
 	<div class="panel panel-default">
 		<div class="panel-body">
-<?php
-// debug now!
-// copy to C:\projects\NetCommons3\app\Plugin\Blocks\View\Elements\edit_form.ctp
-?>
-<!--			--><?php //echo $this->element($callback, (isset($callbackOptions) ? $callbackOptions : array())); ?>
+			<?php //echo $this->element($callback, (isset($callbackOptions) ? $callbackOptions : array())); ?>
 			<div class="col-xs-12">
 				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
 					'type' => 'checkbox',
@@ -67,12 +65,14 @@ if (! isset($mailTypeKey)) {
 				<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_subject', array(
 					'type' => 'text',
 					'label' => __d('mails', '件名'),
+					'required' => true,
 				)); ?>
 
 				<div class="form-group">
 					<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_body', array(
 						'type' => 'textarea',
 						'label' => __d('mails', '本文'),
+						'required' => true,
 						'div' => '',
 					)); ?>
 					<p class="help-block">
