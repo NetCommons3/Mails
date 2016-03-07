@@ -59,7 +59,7 @@ if (! isset($mailTypeKey)) {
 						'label' => __d('mails', '返信を受けるメールアドレス'),
 						'div' => '',
 					)); ?>
-					<p class="help-block"><?php echo __d('mails', '返信を受けるメールアドレスを変えたい場合に指定できます。'); ?></p>
+					<p class="help-block"><?php echo __d('mails', '返信を受けるメールアドレスを変えたい場合に指定できます'); ?></p>
 				</div>
 
 				<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_subject', array(
@@ -76,7 +76,7 @@ if (! isset($mailTypeKey)) {
 						'div' => '',
 					)); ?>
 					<p class="help-block">
-						<?php echo __d('mails', '件名と本文には埋め込みキーワードが使えます。'); ?>
+						<?php echo __d('mails', '件名と本文には埋め込みキーワードが使えます'); ?>
 						<?php /* popover説明 */ ?>
 						<?php $popoverHtmlId = 'nc-mail-body-' . Current::read('Frame.id'); ?>
 						<a tabindex="0"
