@@ -81,7 +81,19 @@ class MailSetting extends MailsAppModel {
 	}
 
 /**
- * プラグインの定型文を取得する
+ * メール設定 データ新規作成
+ *
+ * @return array
+ */
+	public function createMailSetting() {
+		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
+
+		$mailSetting = $this->createAll();
+		return $mailSetting;
+	}
+
+/**
+ * プラグインのメール設定(定型文等) 取得
  *
  * @param string $blockKey ブロックキー
  * @param string $typeKey メールの種類
@@ -102,7 +114,7 @@ class MailSetting extends MailsAppModel {
 	}
 
 /**
- * システム管理(カレンダー含む)の定型文を取得する
+ * システム管理(カレンダー含む)のメール設定(定型文等) 取得
  *
  * @param string $typeKey メールの種類
  * @return array メール設定データ配列
@@ -120,22 +132,22 @@ class MailSetting extends MailsAppModel {
 	}
 
 /**
- * プラグインの定型文を取得する
+ * メール設定(定型文等) 取得
  *
  * @param array $conditions 検索条件
  * @return array メール設定データ配列
  */
 	public function getMailSetting($conditions) {
-		$mailSettingData = $this->find('first', array(
+		$mailSetting = $this->find('first', array(
 			//'recursive' => -1,
 			'recursive' => 0,
 			'conditions' => $conditions,
 		));
-		return $mailSettingData;
+		return $mailSetting;
 	}
 
 /**
- * メール設定保存
+ * メール設定 保存
  *
  * @param array $data received post data
  * @return mixed On success Model::$data if its not empty or true, false on failure

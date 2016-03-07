@@ -6,6 +6,7 @@
  *   - $callbackOptions: Callback options for element.
  *   - $cancelUrl: Cancel url.
  *   - $mailTypeKey: メールの種類
+ *   - $mailBodyPopoverMessage: メール定型文ポップオーバー内の説明文（HTML可）
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -84,7 +85,7 @@ if (! isset($mailTypeKey)) {
 						   data-toggle="popover"
 						   data-placement="bottom"
 						   title="<?php echo __d('mails', '埋め込みキーワードとは？'); ?>"
-						   data-content="<?php echo __d('videos', 'それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />{X-SITE_NAME} : サイト名称<br />{X-PLUGIN_NAME} : プラグイン名称<br />{X-ROOM} : ルーム名称<br />{X-BLOCK_NAME} : チャンネル名<br />{X-SUBJECT} : 動画タイトル<br />{X-USER} : 投稿者<br />{X-TO_DATE} : 投稿日時<br />{X-BODY} : 登録内容<br />{X-URL} : 登録内容のURL'); ?>">
+						   data-content="<?php echo __d('mails', 'それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />') . $mailBodyPopoverMessage; ?>">
 							<span class="glyphicon glyphicon-question-sign"></span>
 						</a>
 						<script>
