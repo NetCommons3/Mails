@@ -38,12 +38,23 @@ class MailSendShell extends AppShell {
 	);
 
 /**
- * メール送信
+ * Cronからメール送信 - Cronからコールするのはこちらを使ってください
  *
  * @return void
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#id2
  */
 	public function main() {
+		// ここに、初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応 記述
+
+		$this->main();
+	}
+
+/**
+ * メール送信
+ *
+ * @return void
+ */
+	public function send() {
 		$now = NetCommonsTime::getNowDatetime();
 
 		// キュー取得
@@ -55,6 +66,7 @@ class MailSendShell extends AppShell {
 			)
 		));
 		if (empty($mailQueues)) {
+			//$this->out('キューなし');
 			return;
 		}
 
