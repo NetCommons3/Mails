@@ -681,22 +681,6 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メールを送信する2 debug用
- */
-	public function send2() {
-		// 仮
-		//		$this->_mailer->to('mutaguchi@opensource-workshop.jp');			// 送信先
-		//		$this->_mailer->subject('メールタイトル');						// メールタイトル
-		//
-		//		$this->_mailer->send('メール本文');								// メール送信
-		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先
-		parent::subject('メールタイトル');						// メールタイトル
-
-		//parent::send('メール本文');								// メール送信
-		parent::send('');								// メール送信
-	}
-
-/**
  * メールを送信する3 debug用
  */
 	public function send3($blockKey, $typeKey = 'contents') {

@@ -79,7 +79,6 @@ class MailSendShell extends AppShell {
 		}
 
 		// SiteSettingからメール設定を取得する
-		/** @see SiteSetting::getSiteSettingForEdit() */
 		$siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
 				'Mail.from',
@@ -95,7 +94,6 @@ class MailSendShell extends AppShell {
 			)
 		));
 
-		//$Language = ClassRegistry::init('M17n.Language');
 		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
 
 		// Language.id取得
@@ -131,10 +129,21 @@ class MailSendShell extends AppShell {
 			}
 			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
 		}
+	}
 
+/**
+ * メール送信 デバッグ用
+ *
+ * @return void
+ */
+	public function debug1() {
 		// debug
-		//$mail = new NetCommonsMail('sakura');
-		//$mail->send2();
-		//$this->out('メール送信済み');
+		$mail = new NetCommonsMail('sakura');
+		$mail->to('mutaguchi@opensource-workshop.jp');			// 送信先
+		$mail->subject('メールタイトル');						// メールタイトル
+
+		//$mail->send('メール本文');								// メール送信
+		$mail->send('');								// メール送信
+		$this->out('メール送信済み');
 	}
 }
