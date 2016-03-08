@@ -119,7 +119,6 @@ class MailQueuesComponent extends Component {
 		// メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueue = $this->_controller->MailQueue->saveMailQueue($data)) {
-			// エラー
 			$this->_controller->NetCommons->handleValidationError($this->_controller->MailQueue->validationErrors);
 			return false;
 		}
@@ -138,7 +137,6 @@ class MailQueuesComponent extends Component {
 		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
 		/** @see MailQueueUser::saveMailQueueUser() */
 		if (! $mailQueueUser = $this->_controller->MailQueueUser->saveMailQueueUser($data)) {
-			// エラー
 			$this->_controller->NetCommons->handleValidationError($this->_controller->MailQueueUser->validationErrors);
 			return false;
 		}
