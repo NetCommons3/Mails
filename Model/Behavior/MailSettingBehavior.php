@@ -17,38 +17,70 @@
  */
 class MailSettingBehavior extends ModelBehavior {
 
-///**
-// * afterSave is called after a model is saved.
-// *
-// * @param Model $model Model using this behavior
-// * @param bool $created True if this save created a new record
-// * @param array $options Options passed from Model::save().
-// * @return bool
-// * @see Model::save()
-// */
-//	public function afterSave(Model $model, $created, $options = array()) {
-//	}
+/**
+ * @var bool 削除済みか
+ */
+	public $isDeleted = null;
 
 /**
- * 件名を取得する
+ * setup
  *
  * @param Model $model モデル
+ * @param array $settings 設定値
  * @return void
+ * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::setup
  */
-	public function getMailSubject(Model $model) {
-		// 定型文のタグ変換
-		foreach ($this->_assignedTags as $k => $v) {
-			if (substr($k, 0, 4) == "X-TO" || $k == "X-URL") {
-				continue;
-			}
+	public function setup(Model $model, $settings = array()) {
+		$this->settings[$model->alias] = $settings;
+		$this->isDeleted = false;
+	}
 
-			// HtmlからText変換処理
-			//$convertHtml =& $commonMain->registerClass(WEBAPP_DIR.'/components/convert/Html.class.php', "Convert_Html", "convertHtml");
-			//$this->mailSubject = str_replace("{".$k."}", $convertHtml->convertHtmlToText($v), $this->mailSubject);
-
-			$this->mailSubject = str_replace("{".$k."}", $v, $this->mailSubject);
+/**
+ * beforeDelete
+ * コンテンツが削除されたら、キューに残っているメールも削除
+ *
+ * @param Model $model Model using this behavior
+ * @param bool $cascade If true records that depend on this record will also be deleted
+ * @return mixed False if the operation should abort. Any other result will continue.
+ * @throws InternalErrorException
+ * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::beforedelete
+ * @link http://book.cakephp.org/2.0/ja/models/callback-methods.html#beforedelete
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ */
+	public function beforeDelete(Model $model, $cascade = true) {
+		// 多言語のコンテンツを key を使って、Model::deleteAll() で削除した場合を想定
+		// 削除済みなら、もう処理をしない
+		if ($this->isDeleted) {
+			return;
 		}
 
-		return $this->mailSubject;
+		// コンテンツ取得
+		$content = $model->find('first', array(
+			'conditions' => array($model->alias . '.id' => $model->id)
+		));
+
+		$model->loadModels([
+			'MailSetting' => 'Mails.MailSetting',
+			'MailQueue' => 'Mails.MailQueue',
+			'MailQueueUser' => 'Mails.MailQueueUser',
+		]);
+
+		// キューの配信先 削除
+		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+
+		// キュー 削除
+		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+
+		// メール設定 削除
+		if (! $model->MailSetting->deleteAll(array($model->MailSetting->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+
+		$this->isDeleted = true;
+		return true;
 	}
 }
