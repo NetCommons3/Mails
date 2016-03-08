@@ -1,6 +1,6 @@
 <?php
 /**
- * Mail Setting Behavior
+ * メールキュー Behavior
  *
  * @author Noriko Arai <arai@nii.ac.jp>
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
@@ -10,7 +10,7 @@
  */
 
 /**
- * Mail Setting Behavior
+ * メールキュー Behavior
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model\Behavior
