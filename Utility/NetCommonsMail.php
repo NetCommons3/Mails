@@ -69,6 +69,7 @@ class NetCommonsMail extends CakeEmail {
 
 		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
+		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->Language = ClassRegistry::init('M17n.Language');
 
 		// SiteSettingからメール設定を取得する
@@ -101,7 +102,7 @@ class NetCommonsMail extends CakeEmail {
 		$languageId = Current::read('Language.id');		//仮
 		$this->__initConfig($languageId);
 
-		$this->__initTags($data);
+		$this->__initTags($data, $languageId);
 		$this->__setMailSettingPlugin($typeKey);
 	}
 
@@ -191,19 +192,15 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定 タグ
  *
  * @param array $data 投稿データ
+ * @param int $languageId 言語ID
  * @return void
  */
-	private function __initTags($data) {
+	private function __initTags($data, $languageId) {
 		//private function __initTags($siteSettingData, $data) {
-		// シェルから呼び出した時に$languageIdとれない。要検討
-		//$languageId = Current::read('Language.id');		//仮
-		$languageId = 2;
-
 		$from = Hash::get($this->siteSettingData['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSettingData['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSettingData['App.site_name'], $languageId . '.value');
 
-		// タグセット
 		$this->assignTag("X-FROM_EMAIL", $from);
 		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
 		$this->assignTag("X-SITE_NAME", htmlspecialchars($siteName));
@@ -213,6 +210,18 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag("X-TO_DATE", date('Y/m/d H:i:s'));
 		$this->assignTag("X-APPROVAL_COMMENT", $data['WorkflowComment']['comment']);
+
+		// X-ROOM
+		$roomId = Current::read('Room.id');
+		$roomsLanguageData = $this->RoomsLanguage->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'room_id' => $roomId,
+				'language_id' => $languageId,
+			)
+		));
+		$roomName = Hash::get($roomsLanguageData, 'RoomsLanguage.name');
+		$this->assignTag("X-ROOM", htmlspecialchars($roomName));
 	}
 
 /**
