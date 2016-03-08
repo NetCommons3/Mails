@@ -48,8 +48,7 @@ if (! isset($mailTypeKey)) {
 
 			<div class="col-xs-11 col-xs-offset-1">
 				<?php /* 暫定対応 */
-				//echo $this->element('Blocks.permission_setting_inline', array(
-				echo $this->element('Mails.permission_setting_inline', array(
+				echo $this->element('Blocks.permission_setting_inline', array(
 					'settingPermissions' => array(
 						'mail_content_receivable' => __d('mails', 'Notification to the authority'),
 					),
