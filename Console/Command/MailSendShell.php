@@ -47,7 +47,7 @@ class MailSendShell extends AppShell {
 
 		// SiteSettingからメール設定を取得する
 		/** @see SiteSetting::getSiteSettingForEdit() */
-		$siteSettings = $SiteSetting->getSiteSettingForEdit(array(
+		$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
 				'Mail.from',
 				'Mail.from_name',
@@ -62,7 +62,7 @@ class MailSendShell extends AppShell {
 			)
 		));
 
-		$languageCode = Hash::get($siteSettings['Config.language'], '0.value');
+		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
 
 		// Language.id取得
 		$languages = $Language->find('first', array(
@@ -77,13 +77,15 @@ class MailSendShell extends AppShell {
 
 			foreach ($mailQueue['MailQueueUser'] as $mailQueueUser) {
 				$mail = new NetCommonsMail();
-				$mail->initShell($siteSettings, $languageId);
-				// まだ仮
-				//$mail->send2();
+				$mail->initShell($siteSetting, $mailQueue, $languageId);
 
+				$mail->sendQueueMail($mailQueueUser);
 			}
 		}
 
-		$this->out('メール送信済み');
+		// debug
+		//$mail = new NetCommonsMail('sakura');
+		//$mail->send2();
+		//$this->out('メール送信済み');
 	}
 }

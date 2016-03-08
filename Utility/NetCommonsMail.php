@@ -56,7 +56,7 @@ class NetCommonsMail extends CakeEmail {
 /**
  * @var array SiteSetting model data
  */
-	public $siteSettings = null;
+	public $siteSetting = null;
 
 /**
  * Constructor
@@ -70,6 +70,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
+		$this->User = ClassRegistry::init('Users.user');
 	}
 
 /**
@@ -83,7 +84,7 @@ class NetCommonsMail extends CakeEmail {
 	public function initPlugin($data, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
 		/** @see SiteSetting::getSiteSettingForEdit() */
-		$this->siteSettings = $this->SiteSetting->getSiteSettingForEdit(array(
+		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
 				'Mail.from',
 				'Mail.from_name',
@@ -108,29 +109,78 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 初期設定 Shell用
  *
- * @param array $siteSettings サイト設定データ
+ * @param array $siteSetting サイト設定データ
+ * @param array $mailQueue メールキューデータ
  * @param int $languageId 言語ID
  * @return void
  */
-	public function initShell($siteSettings, $languageId) {
-		$this->siteSettings = $siteSettings;
+	public function initShell($siteSetting, $mailQueue, $languageId) {
+		$this->siteSetting = $siteSetting;
 		$this->__initConfig($languageId);
+		$this->__setMailSettingQueue($mailQueue);
 	}
 
 /**
- * キューのメールを送信する
+ * キューからメール送信
  *
+ * @param array $mailQueueUser メール配信先データ
  * @return bool true:正常,false:エラー
  */
-	function sendQueueMail() {
-//		if(empty($this->siteSettings)) {
-//			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
-//			return false;
-//		}
-//		if ($this->body == "") {
-//			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
-//			return false;
-//		}
+	function sendQueueMail($mailQueueUser) {
+		//function sendQueueMail($mailQueue, $mailQueueUser) {
+		if (empty($this->siteSetting)) {
+			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+		if ($this->body == "") {
+			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+//var_dump($mailQueueUser);
+		// --- 3パターン対応
+		$roomId = Hash::get($mailQueueUser, 'room_id');
+		$userId = Hash::get($mailQueueUser, 'user_id');
+		$toAddress = Hash::get($mailQueueUser, 'to_address');
+		if ($roomId === null && $userId === null && $toAddress === null) {
+			LogError('メール配信先がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		if (isset($roomId)) {
+			// ルーム単位でメール配信
+			return false;
+
+		} elseif (isset($userId)) {
+			return false;
+//var_dump($userId);
+			// user単位でメール配信
+//			$user = $this->User->findById($userId);
+//			$userEmail = Hash::get($user, 'User.email');
+//			if (empty($userEmail)) {
+//				LogError('メールアドレスがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+//				return false;
+//			}
+//			parent::to($userEmail);
+
+		} elseif (isset($toAddress)) {
+			// メールアドレス単位でメール配信
+			parent::to($toAddress);
+		}
+
+		// 改行対応
+		if (parent::emailFormat() == 'text') {
+			// text形式は配列にすると改行される
+			$this->body = explode('\n', $this->body);
+		} else {
+			$this->body = str_replace('\n', '<br />', $this->body);
+		}
+//var_dump(parent::to());
+
+		parent::subject($this->subject);
+		$messages = parent::send($this->body);
+		//CakeLog::debug(print_r($messages, true));
+		return $messages;
 
 		// 重要度セット
 		//		if (!empty($this->priority)) {
@@ -278,45 +328,30 @@ class NetCommonsMail extends CakeEmail {
 
 		//			}
 		//		}
-
-		// タグ変換：メール定型文をタグ変換して、生文に変換する
-		$this->assignTagReplace();
-
-		// 改行対応
-		if (parent::emailFormat() == 'text') {
-			// text形式は配列にすると改行される
-			$this->body = explode('\n', $this->body);
-		} else {
-			$this->body = str_replace('\n', '<br />', $this->body);
-		}
-
-		parent::subject($this->subject);
-		$messages = parent::send($this->body);
-//		var_dump($messages);
-		return $messages;
 	}
 
 /**
  * 初期設定 メールのコンフィグ
  *
+ * @param int $languageId 言語ID
  * @return void
  */
 	private function __initConfig($languageId) {
-		//private function __initConfig($siteSettings) {
-		$from = Hash::get($this->siteSettings['Mail.from'], '0.value');
-		$fromName = Hash::get($this->siteSettings['Mail.from_name'], $languageId . '.value');
+		//private function __initConfig($siteSetting) {
+		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
+		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 
 		$config = array();
 		$config['from'] = array($from => $fromName);
 
-		$transport = Hash::get($this->siteSettings['Mail.transport'], '0.value');
+		$transport = Hash::get($this->siteSetting['Mail.transport'], '0.value');
 
 		// SMTP, SMTPAuth
 		if ($transport == SiteSetting::MAIL_TRANSPORT_SMTP) {
-			$smtpHost = Hash::get($this->siteSettings['Mail.smtp.host'], '0.value');
-			$smtpPort = Hash::get($this->siteSettings['Mail.smtp.port'], '0.value');
-			$smtpUser = Hash::get($this->siteSettings['Mail.smtp.user'], '0.value');
-			$smtpPass = Hash::get($this->siteSettings['Mail.smtp.pass'], '0.value');
+			$smtpHost = Hash::get($this->siteSetting['Mail.smtp.host'], '0.value');
+			$smtpPort = Hash::get($this->siteSetting['Mail.smtp.port'], '0.value');
+			$smtpUser = Hash::get($this->siteSetting['Mail.smtp.user'], '0.value');
+			$smtpPass = Hash::get($this->siteSetting['Mail.smtp.pass'], '0.value');
 
 			$config['transport'] = 'Smtp';
 			$config['host'] = $smtpHost;
@@ -342,7 +377,7 @@ class NetCommonsMail extends CakeEmail {
 		parent::config($config);
 
 		// html or text
-		$messageType = Hash::get($this->siteSettings['Mail.messageType'], '0.value');
+		$messageType = Hash::get($this->siteSetting['Mail.messageType'], '0.value');
 		parent::emailFormat($messageType);
 	}
 
@@ -354,10 +389,10 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __initTags($data, $languageId) {
-		//private function __initTags($siteSettings, $data) {
-		$from = Hash::get($this->siteSettings['Mail.from'], '0.value');
-		$fromName = Hash::get($this->siteSettings['Mail.from_name'], $languageId . '.value');
-		$siteName = Hash::get($this->siteSettings['App.site_name'], $languageId . '.value');
+		//private function __initTags($siteSetting, $data) {
+		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
+		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
+		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
 
 		$this->assignTag("X-FROM_EMAIL", $from);
 		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
@@ -371,14 +406,14 @@ class NetCommonsMail extends CakeEmail {
 
 		// X-ROOMタグ
 		$roomId = Current::read('Room.id');
-		$roomsLanguageData = $this->RoomsLanguage->find('first', array(
+		$roomsLanguage = $this->RoomsLanguage->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'room_id' => $roomId,
 				'language_id' => $languageId,
 			)
 		));
-		$roomName = Hash::get($roomsLanguageData, 'RoomsLanguage.name');
+		$roomName = Hash::get($roomsLanguage, 'RoomsLanguage.name');
 		$this->assignTag("X-ROOM", htmlspecialchars($roomName));
 	}
 
@@ -390,8 +425,8 @@ class NetCommonsMail extends CakeEmail {
  */
 	private function __setMailSettingPlugin($typeKey) {
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettingData = $this->MailSetting->getMailSettingPlugin($typeKey);
-		$this->__setMailSetting($mailSettingData);
+		$mailSetting = $this->MailSetting->getMailSettingPlugin($typeKey);
+		$this->__setMailSetting($mailSetting);
 	}
 
 /**
@@ -402,29 +437,54 @@ class NetCommonsMail extends CakeEmail {
  */
 	private function __setMailSettingSystem($typeKey) {
 		/** @see MailSetting::getMailSettingSystem() */
-		$mailSettingData = $this->MailSetting->getMailSettingSystem($typeKey);
-		$this->__setMailSetting($mailSettingData);
+		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
+		$this->__setMailSetting($mailSetting);
 	}
 
 /**
  * メール送信する定型文をセット
  *
- * @param array $mailSettingData メール設定データ
+ * @param array $mailSetting メール設定データ
  * @return void
  */
-	private function __setMailSetting($mailSettingData) {
+	private function __setMailSetting($mailSetting) {
 		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
 		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
-		if (empty($mailSettingData)) {
+		if (empty($mailSetting)) {
 			return;
 		}
 
 		// メール通知フラグをセット
-		$this->isMailSend = Hash::get($mailSettingData, 'MailSetting.is_mail_send');
+		$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
 
-		$subject = Hash::get($mailSettingData, 'MailSetting.mail_fixed_phrase_subject');
-		$body = Hash::get($mailSettingData, 'MailSetting.mail_fixed_phrase_body');
-		$replyTo = Hash::get($mailSettingData, 'MailSetting.replay_to');
+		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
+
+		// 定型文をセット
+		$this->setSubject($subject);
+		$this->setBody($body);
+
+		// 返信先アドレス
+		if (! empty($replyTo)) {
+			parent::replyTo($replyTo);
+		}
+	}
+
+/**
+ * メール送信する件名、本文をセット
+ *
+ * @param array $mailQueue メールキューデータ
+ * @return void
+ */
+	private function __setMailSettingQueue($mailQueue) {
+		if (empty($mailQueue)) {
+			return;
+		}
+
+		$subject = Hash::get($mailQueue, 'MailQueue.mail_subject');
+		$body = Hash::get($mailQueue, 'MailQueue.mail_body');
+		$replyTo = Hash::get($mailQueue, 'MailQueue.replay_to');
 
 		// 定型文をセット
 		$this->setSubject($subject);
@@ -524,8 +584,8 @@ class NetCommonsMail extends CakeEmail {
 			if (substr($value, 0, 4) == "X-TO" || $key == "X-URL") {
 				continue;
 			}
-			$this->body = str_replace("{".$key."}", $value, $this->body);
-			$this->subject = str_replace("{".$key."}", $convertHtml->convertHtmlToText($value), $this->subject);
+			$this->body = str_replace("{" . $key . "}", $value, $this->body);
+			$this->subject = str_replace("{" . $key . "}", $convertHtml->convertHtmlToText($value), $this->subject);
 		}
 
 		$this->body = str_replace("\r\n", "\n", $this->body);
@@ -612,157 +672,20 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メールを送信する
+ * メールを直送信
+ * 仮
  *
- * @return bool true:正常,false:エラー
+ * @return bool 成功 or 失敗
  */
-	function sendMail() {
-		if(empty($this->siteSettings)) {
-			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
+	function sendMailDirect() {
+		if (empty($this->siteSetting)) {
+			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 		if ($this->body == "") {
-			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ .' (line '. __LINE__ .')');
+			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
-
-		//		if (!empty($this->priority)) {
-		//			$this->headers[] = "X-Priority: ". $this->priority;
-		//		}
-		//		$this->headers[] = "X-Mailer: PHP/". phpversion();
-		//		$this->headers[] = "Return-Path: ". $this->fromEmail;
-		//
-		//		$container =& DIContainerFactory::getContainer();
-		//		$configView =& $container->getComponent("configView");
-		//		$this->assign("X-FROM_EMAIL", $this->fromEmail);
-		//		$this->assign("X-FROM_NAME", htmlspecialchars($this->fromName));
-		//		$confs = $configView->getConfigByConfname(_SYS_CONF_MODID, "sitename");
-		//		$this->assign("X-SITE_NAME", htmlspecialchars($confs["conf_value"]));
-		//		$this->assign("X-SITE_URL", BASE_URL.INDEX_FILE_NAME);
-		//
-		//		$session =& $container->getComponent("Session");
-		//		if (!isset($this->_assignedTags['X-ROOM'])) {
-		//			$request =& $container->getComponent("Request");
-		//			$pageView =& $container->getComponent("pagesView");
-		//			$roomId = $request->getParameter("room_id");
-		//			$pages = $pageView->getPageById($roomId);
-		//
-		//			$this->assign("X-ROOM", htmlspecialchars($pages["page_name"]));
-		//		}
-		//		if (!isset($this->_assignedTags["X-USER"])) {
-		//			$this->assign("X-USER", htmlspecialchars($session->getParameter("_handle")));
-		//		}
-		//
-		//		$commonMain =& $container->getComponent("commonMain");
-		//		$convertHtml =& $commonMain->registerClass(WEBAPP_DIR.'/components/convert/Html.class.php', "Convert_Html", "convertHtml");
-		//		foreach ($this->_assignedTags as $k => $v) {
-		//			if (substr($k, 0, 4) == "X-TO" || $k == "X-URL") {
-		//				continue;
-		//			}
-		//
-		//			$this->body = str_replace("{".$k."}", $v, $this->body);
-		//			$this->subject = str_replace("{".$k."}", $convertHtml->convertHtmlToText($v), $this->subject);
-		//		}
-		//		$this->body = str_replace("\r\n", "\n", $this->body);
-		//		$this->body = str_replace("\r", "\n", $this->body);
-		//		$this->body = str_replace("\n", $this->_LE, $this->body);
-		//		$this->body = $this->_insertNewLine($this->body);
-		//	if(isset($this->_assignedTags["X-URL"])) {
-		//			$this->body = str_replace("{X-URL}", "<a href=\"". $this->_assignedTags["X-URL"]. "\">". $this->_assignedTags["X-URL"]. "</a>", $this->body);
-		//			$mobile_body = str_replace("{X-URL}", $this->_assignedTags["X-URL"], $this->body);
-		//			unset($this->_assignedTags["X-URL"]);
-		//		} else {
-		//			$mobile_body = $this->body;
-		//		}
-		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
-		//		$mobile_body = $this->_insertNewLine($mobile_body);
-		//		if(count($this->toUsers) > 0) {
-		//			foreach ($this->toUsers as $user) {
-		//				$email = $user["email"];
-		//				if (empty($email)) {
-		//					continue;
-		//				}
-		//				if(isset($this->_assignedTags["X-TO_DATE"])) {
-		//					$date = timezone_date_format($this->_assignedTags["X-TO_DATE"], _FULL_DATE_FORMAT);
-		//				} else {
-		//					$date = "";
-		//				}
-		//				if(!isset($user["handle"])) {
-		//					$user["handle"] = "";
-		//				}
-		//
-		//				// type (html(email) or text(mobile_email))
-		//				if(!isset($user["type"])) {
-		//					$user["type"] = "html";
-		//				}
-		//				if(empty($user["lang_dirname"])) {
-		//					$user["lang_dirname"] = $session->getParameter("_lang");
-		//					if(!isset($user["lang_dirname"]) || $user["lang_dirname"] == "") {
-		//						$user["lang_dirname"] = "japanese";
-		//					}
-		//				}
-		//				$subject = $this->subject;
-		//				if($this->isHTML == true && ($user["type"] == "html" || $user["type"] == "email")) {
-		//					// htmlメール
-		//					$this->_mailer->IsHTML(true);
-		//					$body = $this->body;
-		//					$body = str_replace("{X-TO_HANDLE}", htmlspecialchars($user["handle"]), $body);
-		//				} else {
-		//					// テキストメール
-		//					$this->_mailer->IsHTML(false);
-		//					$body = $mobile_body;
-		//					$body = str_replace("{X-TO_HANDLE}", $user["handle"], $body);
-		//				}
-		//
-		//				$subject = str_replace("{X-TO_HANDLE}", $user["handle"], $subject);
-		//				$subject = str_replace("{X-TO_EMAIL}", $email, $subject);
-		//				$subject = str_replace("{X-TO_DATE}", $date, $subject);
-		//				$body = str_replace("{X-TO_EMAIL}", $email, $body);
-		//				$body = str_replace("{X-TO_DATE}", $date, $body);
-		//
-		//				$localFilePath = WEBAPP_DIR. "/language/". strtolower($user["lang_dirname"]). "/Mailer_Local.php";
-		//				if (file_exists($localFilePath)) {
-		//					require_once($localFilePath);
-		//
-		//					$className = "Mailer_Local_" . ucfirst(strtolower($user["lang_dirname"]));
-		//					$local =& new $className();
-		//
-		//					$this->_mailer->CharSet = $local->charSet;
-		//					$this->_mailer->Encoding = $local->encoding;
-		//					if (!empty($this->fromName)) {
-		//						$this->_mailer->FromName = $local->encodeFromName($this->fromName);
-		//					}
-		//					$this->_mailer->Subject = $local->encodeSubject($subject);
-		//					$this->_mailer->Body = $local->encodeBody($body);
-		//				} else {
-		//					$this->_mailer->CharSet = $this->charSet;
-		//					$this->_mailer->Encoding = $this->encoding;
-		//					if (!empty($this->fromName)) {
-		//						$this->_mailer->FromName = $this->fromName;
-		//					}
-		//					$this->_mailer->Subject = $subject;
-		//					$this->_mailer->Body = $body;
-		//				}
-		//
-		//				$this->_mailer->ClearAllRecipients();
-		//				$this->_mailer->AddAddress($email);
-		//				if (!empty($this->fromEmail)) {
-		//					$this->_mailer->From = $this->fromEmail;
-		//				}
-		//				$this->_mailer->ClearCustomHeaders();
-		//				foreach ($this->headers as $header) {
-		//					$this->_mailer->AddCustomHeader($header);
-		//				}
-		//
-		//				if (!$this->_mailer->Send()) {
-		//					$this->_log->warn($email. "宛にメールを送信できませんでした/". $this->_mailer->ErrorInfo, "Mailer#send");
-		//				} else {
-		//					$this->_log->trace($email. "宛にメールを送信しました", "Mailer#send");
-		//				}
-		//
-		//				//flush();	// ob_contentが送られてしまうためコメント
-		//			}
-		//		}
 
 		// タグ変換：メール定型文をタグ変換して、生文に変換する
 		$this->assignTagReplace();
@@ -777,7 +700,7 @@ class NetCommonsMail extends CakeEmail {
 
 		parent::subject($this->subject);
 		$messages = parent::send($this->body);
-//		var_dump($messages);
+		//CakeLog::debug(print_r($messages, true));
 		return $messages;
 	}
 
@@ -793,7 +716,8 @@ class NetCommonsMail extends CakeEmail {
 		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先
 		parent::subject('メールタイトル');						// メールタイトル
 
-		parent::send('メール本文');								// メール送信
+		//parent::send('メール本文');								// メール送信
+		parent::send('');								// メール送信
 	}
 
 /**
