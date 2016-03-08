@@ -106,8 +106,7 @@ class MailQueuesComponent extends Component {
  * @return bool 成功 or 失敗
  */
 	private function __saveQueue(NetCommonsMail $mail, $contentKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
-		// タグ変換
-		// メール定型文をタグ変換して、生文に変換する
+		// タグ変換：メール定型文をタグ変換して、生文に変換する
 		$mail->assignTagReplace();
 
 		// dataの準備
