@@ -32,12 +32,6 @@ class NetCommonsMail extends CakeEmail {
 	const MAX_LINE_LENGTH = 300;
 
 /**
- * @var bool デバッグON
- */
-	//const IS_DEBUG = false;
-	const IS_DEBUG = true;
-
-/**
  * @var string 件名(定型文)
  */
 	public $subject = null;
@@ -104,7 +98,7 @@ class NetCommonsMail extends CakeEmail {
 		$languageId = Current::read('Language.id');
 		$this->__initConfig($languageId);
 
-		$this->__initTags($data, $languageId);
+		$this->__setTags($data, $languageId);
 		$this->__setMailSettingPlugin($typeKey);
 	}
 
@@ -131,11 +125,11 @@ class NetCommonsMail extends CakeEmail {
 	function sendQueueMail($mailQueueUser) {
 		//function sendQueueMail($mailQueue, $mailQueueUser) {
 		if (empty($this->siteSetting)) {
-			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'SiteSettingデータ')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 		if ($this->body == "") {
-			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メール本文')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
@@ -148,7 +142,7 @@ class NetCommonsMail extends CakeEmail {
 		$userId = Hash::get($mailQueueUser, 'user_id');
 		$toAddress = Hash::get($mailQueueUser, 'to_address');
 		if ($roomId === null && $userId === null && $toAddress === null) {
-			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メール配信先')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError('Mail delivery destination is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
@@ -167,7 +161,7 @@ class NetCommonsMail extends CakeEmail {
 			));
 			$userEmail = Hash::get($user, 'user.email');
 			if (empty($userEmail)) {
-				LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メールアドレス')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				LogError('Email is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 				return false;
 			}
@@ -183,7 +177,6 @@ class NetCommonsMail extends CakeEmail {
 			$messages = parent::send($this->body);
 		}
 
-		//CakeLog::debug(print_r($messages, true));
 		return $messages;
 
 		// 重要度セット
@@ -373,11 +366,6 @@ class NetCommonsMail extends CakeEmail {
 			$config['transport'] = 'Mail';
 		}
 
-		if (self::IS_DEBUG) {
-			//送信しない（デバッグ用）
-			$config['transport'] = 'Debug';
-		}
-		//CakeLog::debug(print_r($config, true));
 		parent::config($config);
 
 		// html or text
@@ -392,7 +380,7 @@ class NetCommonsMail extends CakeEmail {
  * @param int $languageId 言語ID
  * @return void
  */
-	private function __initTags($data, $languageId) {
+	private function __setTags($data, $languageId) {
 		//private function __initTags($siteSetting, $data) {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
@@ -739,8 +727,6 @@ class NetCommonsMail extends CakeEmail {
 		parent::subject($this->subject);						// メールタイトル
 
 		$messages = parent::send($this->body);
-		if (self::IS_DEBUG) {
-			var_dump($this->subject, $messages);
-		}
+		return $messages;
 	}
 }

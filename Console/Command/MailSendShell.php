@@ -25,6 +25,12 @@ App::uses('NetCommonsTime', 'NetCommons.Utility');
 class MailSendShell extends AppShell {
 
 /**
+ * @var bool デバッグON
+ */
+	//const IS_DEBUG = false;
+	const IS_DEBUG = true;
+
+/**
  * use model
  *
  * @var array
@@ -66,7 +72,9 @@ class MailSendShell extends AppShell {
 			)
 		));
 		if (empty($mailQueues)) {
-			//$this->out('キューなし');
+			if (self::IS_DEBUG) {
+				CakeLog::debug('MailQueue is empty.');
+			}
 			return;
 		}
 
@@ -105,7 +113,18 @@ class MailSendShell extends AppShell {
 				$mail = new NetCommonsMail();
 				$mail->initShell($siteSetting, $mailQueue, $languageId);
 
-				$mail->sendQueueMail($mailQueueUser);
+				if (self::IS_DEBUG) {
+					//送信しない（デバッグ用）
+					$config = $mail->config();
+					$config['transport'] = 'Debug';
+					$mail->config($config);
+				}
+
+				$messages = $mail->sendQueueMail($mailQueueUser);
+
+				if (self::IS_DEBUG) {
+					CakeLog::debug(print_r($messages, true));
+				}
 
 				// 送信後にキュー削除
 				$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
