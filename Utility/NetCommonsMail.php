@@ -54,14 +54,9 @@ class NetCommonsMail extends CakeEmail {
 	public $assignTags = array();
 
 /**
- * @var array model
+ * @var array SiteSetting model data
  */
-	public $SiteSetting = null;
-
-/**
- * @var array model
- */
-	public $MailSetting = null;
+	public $siteSettingData = null;
 
 /**
  * Constructor
@@ -74,6 +69,24 @@ class NetCommonsMail extends CakeEmail {
 
 		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
+		$this->Language = ClassRegistry::init('M17n.Language');
+
+		// SiteSettingからメール設定を取得する
+		/** @see SiteSetting::getSiteSettingForEdit() */
+		$this->siteSettingData = $this->SiteSetting->getSiteSettingForEdit(array(
+			'SiteSetting.key' => array(
+				'Mail.from',
+				'Mail.from_name',
+				'Mail.messageType',
+				'Mail.transport',
+				'Mail.smtp.host',
+				'Mail.smtp.port',
+				'Mail.smtp.user',
+				'Mail.smtp.pass',
+				'App.site_name',
+				'Config.language',
+			)
+		));
 	}
 
 /**
@@ -85,25 +98,10 @@ class NetCommonsMail extends CakeEmail {
  * @see CakeEmail::$charset
  */
 	public function initPlugin($data, $typeKey = 'contents') {
-		// SiteSettingからメール設定を取得する
-		/** @see SiteSetting::getSiteSettingForEdit() */
-		$siteSettingData = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-				'Mail.from_name',
-				'Mail.messageType',
-				'Mail.transport',
-				'Mail.smtp.host',
-				'Mail.smtp.port',
-				'Mail.smtp.user',
-				'Mail.smtp.pass',
-				'App.site_name',
-			)
-		));
+		$languageId = Current::read('Language.id');		//仮
+		$this->__initConfig($languageId);
 
-		$this->__initConfig($siteSettingData);
-		$this->__initTags($siteSettingData, $data);
-
+		$this->__initTags($data);
 		$this->__setMailSettingPlugin($typeKey);
 	}
 
@@ -114,23 +112,19 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	public function initShell() {
-		// SiteSettingからメール設定を取得する
-		/** @see SiteSetting::getSiteSettingForEdit() */
-		$siteSettingData = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-				'Mail.from_name',
-				'Mail.messageType',
-				'Mail.transport',
-				'Mail.smtp.host',
-				'Mail.smtp.port',
-				'Mail.smtp.user',
-				'Mail.smtp.pass',
-				'App.site_name',
+		$languageCode = Hash::get($this->siteSettingData['Config.language'], '0.value');
+
+		// Language.id取得
+		$languageData = $this->Language->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'Language.code' => $languageCode,
 			)
 		));
+		$languageId = Hash::get($languageData, 'Language.id');
 
-		$this->__initConfig($siteSettingData);
+		//$languageId = 2; 仮
+		$this->__initConfig($languageId);
 		//$this->__initTags($siteSettingData, $data);
 
 		// 定型文をセット
@@ -146,40 +140,24 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 初期設定 メールのコンフィグ
  *
- * @param array $siteSettingData サイト設定データ
  * @return void
  */
-	private function __initConfig($siteSettingData) {
-//		$languageCode = Hash::get($siteSettingData['Config.language'], '0.value');
-
-		// Language.id取得
-//		/** @see Language */
-//		$Language = ClassRegistry::init('M17n.Language', true);
-//		$languageData = $Language->find('first', array(
-//			'recursive' => -1,
-//			'conditions' => array(
-//				'Language.code' => $languageCode,
-//			)
-//		));
-//		$languageId = Hash::get($languageData, 'Language.id');
-		// シェルから呼び出した時に$languageIdとれない。要検討
-		//$languageId = Current::read('Language.id');		//仮
-		$languageId = 2;
-
-		$from = Hash::get($siteSettingData['Mail.from'], '0.value');
-		$fromName = Hash::get($siteSettingData['Mail.from_name'], $languageId . '.value');
+	private function __initConfig($languageId) {
+		//private function __initConfig($siteSettingData) {
+		$from = Hash::get($this->siteSettingData['Mail.from'], '0.value');
+		$fromName = Hash::get($this->siteSettingData['Mail.from_name'], $languageId . '.value');
 
 		$config = array();
 		$config['from'] = array($from => $fromName);
 
-		$transport = Hash::get($siteSettingData['Mail.transport'], '0.value');
+		$transport = Hash::get($this->siteSettingData['Mail.transport'], '0.value');
 
 		// SMTP, SMTPAuth
 		if ($transport == SiteSetting::MAIL_TRANSPORT_SMTP) {
-			$smtpHost = Hash::get($siteSettingData['Mail.smtp.host'], '0.value');
-			$smtpPort = Hash::get($siteSettingData['Mail.smtp.port'], '0.value');
-			$smtpUser = Hash::get($siteSettingData['Mail.smtp.user'], '0.value');
-			$smtpPass = Hash::get($siteSettingData['Mail.smtp.pass'], '0.value');
+			$smtpHost = Hash::get($this->siteSettingData['Mail.smtp.host'], '0.value');
+			$smtpPort = Hash::get($this->siteSettingData['Mail.smtp.port'], '0.value');
+			$smtpUser = Hash::get($this->siteSettingData['Mail.smtp.user'], '0.value');
+			$smtpPass = Hash::get($this->siteSettingData['Mail.smtp.pass'], '0.value');
 
 			$config['transport'] = 'Smtp';
 			$config['host'] = $smtpHost;
@@ -205,25 +183,25 @@ class NetCommonsMail extends CakeEmail {
 		parent::config($config);
 
 		// html or text
-		$messageType = Hash::get($siteSettingData['Mail.messageType'], '0.value');
+		$messageType = Hash::get($this->siteSettingData['Mail.messageType'], '0.value');
 		parent::emailFormat($messageType);
 	}
 
 /**
  * 初期設定 タグ
  *
- * @param array $siteSettingData サイト設定データ
  * @param array $data 投稿データ
  * @return void
  */
-	private function __initTags($siteSettingData, $data) {
+	private function __initTags($data) {
+		//private function __initTags($siteSettingData, $data) {
 		// シェルから呼び出した時に$languageIdとれない。要検討
 		//$languageId = Current::read('Language.id');		//仮
 		$languageId = 2;
 
-		$from = Hash::get($siteSettingData['Mail.from'], '0.value');
-		$fromName = Hash::get($siteSettingData['Mail.from_name'], $languageId . '.value');
-		$siteName = Hash::get($siteSettingData['App.site_name'], $languageId . '.value');
+		$from = Hash::get($this->siteSettingData['Mail.from'], '0.value');
+		$fromName = Hash::get($this->siteSettingData['Mail.from_name'], $languageId . '.value');
+		$siteName = Hash::get($this->siteSettingData['App.site_name'], $languageId . '.value');
 
 		// タグセット
 		$this->assignTag("X-FROM_EMAIL", $from);
