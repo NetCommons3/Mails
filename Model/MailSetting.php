@@ -169,6 +169,8 @@ class MailSetting extends MailsAppModel {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
+			// ここに、メール設定変更時「通知しない」なら、メールキュー削除 処理を記述
+
 			//トランザクションCommit
 			$this->commit();
 
