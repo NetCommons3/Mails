@@ -117,19 +117,7 @@ class MailQueue extends MailsAppModel {
  * @var array
  */
 	public $hasMany = array(
-		'MailQueueUser' => array(
-			'className' => 'MailQueueUser',
-			'foreignKey' => 'mail_queue_id',
-			'dependent' => false,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
-		)
+		'MailQueueUser',
 	);
 
 /**
