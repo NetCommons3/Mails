@@ -106,6 +106,10 @@ class MailQueuesComponent extends Component {
  * @return bool 成功 or 失敗
  */
 	private function __saveQueue(NetCommonsMail $mail, $contentKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+		if (isset($sendTime)) {
+			// ここに、クーロン設定なし：未来日メール送信しない 処理を記述
+		}
+
 		// タグ変換：メール定型文をタグ変換して、生文に変換する
 		$mail->assignTagReplace();
 
