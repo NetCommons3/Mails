@@ -131,7 +131,7 @@ class MailQueueUser extends MailsAppModel {
 	);
 
 /**
- * メールキュー送信先データ保存
+ * キューの配信先データ保存
  *
  * セットするパターンが３つ。いずれかをセットする
  * ・room_id + ロール（block_role_permission）　：　複数人パターン
@@ -168,5 +168,36 @@ class MailQueueUser extends MailsAppModel {
 		}
 
 		return $mailQueueUser;
+	}
+
+/**
+ * キューの配信先データ削除
+ *
+ * @param int $id ID
+ * @return mixed On success Model::$data if its not empty or true, false on failure
+ * @throws InternalErrorException
+ */
+	public function deleteMailQueueUser($id) {
+		if (empty($id)) {
+			return false;
+		}
+
+		//トランザクションBegin
+		$this->begin();
+
+		try {
+			if (! $this->delete($id, false)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
+			//トランザクションCommit
+			$this->commit();
+
+		} catch (Exception $ex) {
+			//トランザクションRollback
+			$this->rollback($ex);
+		}
+
+		return true;
 	}
 }

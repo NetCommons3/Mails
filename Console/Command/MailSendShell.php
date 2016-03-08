@@ -17,8 +17,25 @@ App::uses('NetCommonsTime', 'NetCommons.Utility');
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Console\Command
+ * @property MailQueue $MailQueue
+ * @property MailQueueUser $MailQueueUser
+ * @property Language $Language
+ * @property SiteSetting $SiteSetting
  */
 class MailSendShell extends AppShell {
+
+/**
+ * use model
+ *
+ * @var array
+ * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#Shell::$uses
+ */
+	public $uses = array(
+		'Mails.MailQueue',
+		'Mails.MailQueueUser',
+		'M17n.Language',
+		'SiteManager.SiteSetting',
+	);
 
 /**
  * メール送信
@@ -27,12 +44,11 @@ class MailSendShell extends AppShell {
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#id2
  */
 	public function main() {
-		$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		$now = NetCommonsTime::getNowDatetime();
 
 		// キュー取得
 		/** @link http://www.cpa-lab.com/tech/081 */
-		$mailQueues = $MailQueue->find('all', array(
+		$mailQueues = $this->MailQueue->find('all', array(
 			'recursive' => 1,
 			'conditions' => array(
 				'MailQueue.send_time <=' => $now,
@@ -42,12 +58,9 @@ class MailSendShell extends AppShell {
 			return;
 		}
 
-		$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
-		$Language = ClassRegistry::init('M17n.Language');
-
 		// SiteSettingからメール設定を取得する
 		/** @see SiteSetting::getSiteSettingForEdit() */
-		$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
+		$siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
 				'Mail.from',
 				'Mail.from_name',
@@ -62,10 +75,11 @@ class MailSendShell extends AppShell {
 			)
 		));
 
+		//$Language = ClassRegistry::init('M17n.Language');
 		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
 
 		// Language.id取得
-		$languages = $Language->find('first', array(
+		$languages = $this->Language->find('first', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'Language.code' => $languageCode,
@@ -80,7 +94,11 @@ class MailSendShell extends AppShell {
 				$mail->initShell($siteSetting, $mailQueue, $languageId);
 
 				$mail->sendQueueMail($mailQueueUser);
+
+				// 送信後にキュー削除
+				$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
 			}
+			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
 		}
 
 		// debug

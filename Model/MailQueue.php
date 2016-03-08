@@ -154,4 +154,35 @@ class MailQueue extends MailsAppModel {
 
 		return $mailQueue;
 	}
+
+/**
+ * メールキューデータ削除
+ *
+ * @param int $id ID
+ * @return mixed On success Model::$data if its not empty or true, false on failure
+ * @throws InternalErrorException
+ */
+	public function deleteMailQueue($id) {
+		if (empty($id)) {
+			return false;
+		}
+
+		//トランザクションBegin
+		$this->begin();
+
+		try {
+			if (! $this->delete($id, false)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
+			//トランザクションCommit
+			$this->commit();
+
+		} catch (Exception $ex) {
+			//トランザクションRollback
+			$this->rollback($ex);
+		}
+
+		return true;
+	}
 }

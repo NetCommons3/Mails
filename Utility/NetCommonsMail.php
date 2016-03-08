@@ -141,7 +141,6 @@ class NetCommonsMail extends CakeEmail {
 		// 改行対応
 		$this->brReplace();
 
-//var_dump($mailQueueUser);
 		// --- 3パターン対応
 		$roomId = Hash::get($mailQueueUser, 'room_id');
 		$userId = Hash::get($mailQueueUser, 'user_id');
@@ -153,12 +152,11 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		if (isset($roomId)) {
-			// ルーム単位でメール配信
+			// --- ルーム単位でメール配信
 			return false;
 
 		} elseif (isset($userId)) {
-			// user単位でメール配信
-			//$user = $this->User->findById($userId);
+			// --- user単位でメール配信
 			$user = $this->User->find('first', array(
 				'recursive' => -1,
 				'conditions' => array(
@@ -177,7 +175,7 @@ class NetCommonsMail extends CakeEmail {
 			$messages = parent::send($this->body);
 
 		} elseif (isset($toAddress)) {
-			// メールアドレス単位でメール配信
+			// --- メールアドレス単位でメール配信
 			parent::to($toAddress);
 			parent::subject($this->subject);
 			$messages = parent::send($this->body);
