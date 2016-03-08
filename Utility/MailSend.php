@@ -26,6 +26,6 @@ class MailSend {
 		// バックグラウンドでメール送信
 		// logrotate問題対応 http://dqn.sakusakutto.jp/2012/08/php_exec_nohup_background.html
 		// コマンド例) cake Mails.mailSend
-		exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend > /dev/null &');
+		exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
 	}
 }
