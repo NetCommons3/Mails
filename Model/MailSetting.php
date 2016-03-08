@@ -95,14 +95,15 @@ class MailSetting extends MailsAppModel {
 /**
  * プラグインのメール設定(定型文等) 取得
  *
- * @param string $blockKey ブロックキー
  * @param string $typeKey メールの種類
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
-		if ($blockKey === null) {
-			$blockKey = Current::read('Block.key');
-		}
+	public function getMailSettingPlugin($typeKey = 'contents') {
+		//public function getMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
+		//if ($blockKey === null) {
+		//	$blockKey = Current::read('Block.key');
+		//}
+		$blockKey = Current::read('Block.key');
 
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
 		$conditions = array(

@@ -27,6 +27,8 @@ class MailSendShell extends AppShell {
  */
 	public function main() {
 		$mail = new NetCommonsMail();
+		$mail->initShell();
+
 		// 仮
 		$mail->send2();
 
