@@ -129,13 +129,17 @@ class NetCommonsMail extends CakeEmail {
 	function sendQueueMail($mailQueueUser) {
 		//function sendQueueMail($mailQueue, $mailQueueUser) {
 		if (empty($this->siteSetting)) {
-			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'SiteSettingデータ')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 		if ($this->body == "") {
-			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メール本文')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
+
+		// 改行対応
+		$this->brReplace();
 
 //var_dump($mailQueueUser);
 		// --- 3パターン対応
@@ -143,7 +147,8 @@ class NetCommonsMail extends CakeEmail {
 		$userId = Hash::get($mailQueueUser, 'user_id');
 		$toAddress = Hash::get($mailQueueUser, 'to_address');
 		if ($roomId === null && $userId === null && $toAddress === null) {
-			LogError('メール配信先がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メール配信先')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
 
@@ -152,33 +157,32 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 
 		} elseif (isset($userId)) {
-			return false;
-//var_dump($userId);
 			// user単位でメール配信
-//			$user = $this->User->findById($userId);
-//			$userEmail = Hash::get($user, 'User.email');
-//			if (empty($userEmail)) {
-//				LogError('メールアドレスがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-//				return false;
-//			}
-//			parent::to($userEmail);
+			//$user = $this->User->findById($userId);
+			$user = $this->User->find('first', array(
+				'recursive' => -1,
+				'conditions' => array(
+					'id' => $userId,
+				)
+			));
+			$userEmail = Hash::get($user, 'user.email');
+			if (empty($userEmail)) {
+				LogError(sprintf(__d('mails', '%sがありません'), __d('mails', 'メールアドレス')) . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
+				return false;
+			}
+
+			parent::to($userEmail);
+			parent::subject($this->subject);
+			$messages = parent::send($this->body);
 
 		} elseif (isset($toAddress)) {
 			// メールアドレス単位でメール配信
 			parent::to($toAddress);
+			parent::subject($this->subject);
+			$messages = parent::send($this->body);
 		}
 
-		// 改行対応
-		if (parent::emailFormat() == 'text') {
-			// text形式は配列にすると改行される
-			$this->body = explode('\n', $this->body);
-		} else {
-			$this->body = str_replace('\n', '<br />', $this->body);
-		}
-//var_dump(parent::to());
-
-		parent::subject($this->subject);
-		$messages = parent::send($this->body);
 		//CakeLog::debug(print_r($messages, true));
 		return $messages;
 
@@ -606,14 +610,28 @@ class NetCommonsMail extends CakeEmail {
 		if (parent::emailFormat() == 'text') {
 			$this->body = str_replace("{X-URL}", $this->assignTags["X-URL"], $this->body);
 		} else {
-			$this->body = str_replace("{X-URL}", "<a href=\"". $this->assignTags["X-URL"]. "\">". $this->assignTags["X-URL"]. "</a>", $this->body);
+			$this->body = str_replace("{X-URL}", "<a href=\"" . $this->assignTags["X-URL"] . "\">" . $this->assignTags["X-URL"] . "</a>", $this->body);
 		}
 
 		// URLの置換は一度きり
 		//unset($this->assignTags["X-URL"]);
 	}
 
-	//	/**
+/**
+ * 改行対応
+ *
+ * @return void
+ */
+	public function brReplace() {
+		if (parent::emailFormat() == 'text') {
+			// text形式は配列にすると改行される
+			$this->body = explode('\n', $this->body);
+		} else {
+			$this->body = str_replace('\n', '<br />', $this->body);
+		}
+	}
+
+		//	/**
 	//	 * 送信先ユーザの設定
 	//	 *
 	//	 * @param	array	$users	ユーザ情報配列
@@ -691,12 +709,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTagReplace();
 
 		// 改行対応
-		if (parent::emailFormat() == 'text') {
-			// text形式は配列にすると改行される
-			$this->body = explode('\n', $this->body);
-		} else {
-			$this->body = str_replace('\n', '<br />', $this->body);
-		}
+		$this->brReplace();
 
 		parent::subject($this->subject);
 		$messages = parent::send($this->body);
