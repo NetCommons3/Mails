@@ -56,11 +56,11 @@ class MailQueuesComponent extends Component {
  *
  * @param NetCommonsMail $mail NetCommonsメール
  * @param string $contentKey コンテンツキー
- * @param int $roomId ルームID
  * @param date $sendTime 送信日時
  * @return bool 成功 or 失敗
  */
-	public function saveQueueRoomId(NetCommonsMail $mail, $contentKey, $roomId, $sendTime = null) {
+	public function saveQueueRoomId(NetCommonsMail $mail, $contentKey, $sendTime = null) {
+		$roomId = Current::read('Room.id');
 		return $this->__saveQueue($mail, $contentKey, $roomId, null, null, $sendTime);
 	}
 
