@@ -19,6 +19,10 @@ App::uses('SiteSetting', 'SiteManager.Model');
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Utility
+ * @property SiteSetting $SiteSetting
+ * @property MailSetting $MailSetting
+ * @property RoomsLanguage $RoomsLanguage
+ * @property User $User
  */
 class NetCommonsMail extends CakeEmail {
 
@@ -83,7 +87,6 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function initPlugin($data, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
-		/** @see SiteSetting::getSiteSettingForEdit() */
 		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
 				'Mail.from',
@@ -95,7 +98,6 @@ class NetCommonsMail extends CakeEmail {
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
 				'App.site_name',
-				//'Config.language',
 			)
 		));
 
@@ -395,6 +397,7 @@ class NetCommonsMail extends CakeEmail {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
+		$workflowComment = Hash::get($data, 'WorkflowComment.comment');
 
 		$this->assignTag("X-FROM_EMAIL", $from);
 		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
@@ -404,7 +407,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag("X-BLOCK_NAME", htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag("X-TO_DATE", date('Y/m/d H:i:s'));
-		$this->assignTag("X-APPROVAL_COMMENT", $data['WorkflowComment']['comment']);
+		$this->assignTag("X-APPROVAL_COMMENT", $workflowComment);
 
 		// X-ROOMタグ
 		$roomId = Current::read('Room.id');
@@ -426,7 +429,6 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __setMailSettingPlugin($typeKey) {
-		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $this->MailSetting->getMailSettingPlugin($typeKey);
 		$this->__setMailSetting($mailSetting);
 	}
@@ -438,7 +440,6 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __setMailSettingSystem($typeKey) {
-		/** @see MailSetting::getMailSettingSystem() */
 		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
 		$this->__setMailSetting($mailSetting);
 	}
@@ -742,26 +743,6 @@ class NetCommonsMail extends CakeEmail {
 			return;
 		}
 
-		//		$config = $this->config();
-		//$config['from'] = array('mutaguchi@opensource-workshop.jp' => 'NetCommons管理者');
-		//		$fromEmail = key($config['from']);
-		//		$fromName = current($config['from']);
-		//var_dump($config, $fromEmail, $fromName);
-
-		//		$this->assignTag("X-FROM_EMAIL", $fromEmail);
-		//		$this->assignTag("X-FROM_NAME", htmlspecialchars($fromName));
-		//		$this->assignTag("X-SITE_NAME", htmlspecialchars('サイト名称')); //仮
-		//		$this->assignTag("X-SITE_URL", Router::fullbaseUrl());
-
-		//		if (!isset($this->_assignedTags['X-ROOM'])) {
-		//			$request =& $container->getComponent("Request");
-		//			$pageView =& $container->getComponent("pagesView");
-		//			$roomId = $request->getParameter("room_id");
-		//			$pages = $pageView->getPageById($roomId);
-		//
-		//			$this->assign("X-ROOM", htmlspecialchars($pages["page_name"]));
-		//		}
-
 		if ($this->assignTag("X-USER") == null) {
 			$this->assignTag("X-USER", htmlspecialchars(AuthComponent::user('handlename')));
 		}
@@ -778,10 +759,7 @@ class NetCommonsMail extends CakeEmail {
 		// タグ変換
 		$this->assignTagReplace();
 
-		//		$this->to('mutaguchi@opensource-workshop.jp');			// 送信先
-		//		$this->subject('メールタイトル');						// メールタイトル
-		//		$this->send('メール本文');								// メール送信
-		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先(仮)
+		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先
 		parent::subject($this->subject);						// メールタイトル
 
 		$messages = parent::send($this->body);
