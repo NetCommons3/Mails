@@ -630,30 +630,6 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-		//	/**
-	//	 * 送信先ユーザの設定
-	//	 *
-	//	 * @param	array	$users	ユーザ情報配列
-	//	 *
-	//	 * @access	public
-	//	 */
-	//	function setToUsers(&$users)
-	//	{
-	//		$this->toUsers = $users;
-	//	}
-
-	//	/**
-	//	 * 送信先ユーザの追加
-	//	 *
-	//	 * @param	array	$user	ユーザ情報配列
-	//	 *
-	//	 * @access	public
-	//	 */
-	//	function addToUser(&$user)
-	//	{
-	//		$this->toUsers[] = $user;
-	//	}
-
 /**
  * 1行の最大文字数で、改行入れて本文整形
  *
