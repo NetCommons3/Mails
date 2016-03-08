@@ -64,16 +64,9 @@ class MailQueueBehavior extends ModelBehavior {
 			'MailQueueUser' => 'Mails.MailQueueUser',
 		]);
 
-		// MailQueueUser.content_key 追加予定
-		$mailQueues = $model->MailQueue->find('all', array(
-			'conditions' => array('MailQueue.content_key' => $content[$model->alias]['key'])
-		));
-
-		foreach ($mailQueues as $mailQueue) {
-			// キューの配信先 削除
-			if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.id' => $mailQueue['MailQueues']['id']), false)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
+		// キューの配信先 削除
+		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.content_key' => $content[$model->alias]['key']), false)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 
 		// キュー 削除

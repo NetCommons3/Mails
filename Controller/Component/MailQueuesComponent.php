@@ -168,8 +168,8 @@ class MailQueuesComponent extends Component {
 			'MailQueue' => array(
 				'plugin_key' => $pluginKey,
 				'block_key' => $blockKey,
-				'replay_to' => $replyTo,
 				'content_key' => $contentKey,
+				'replay_to' => $replyTo,
 				'mail_subject' => $mail->subject,
 				'mail_body' => $mail->body,
 				'send_time' => $sendTime,
@@ -177,6 +177,7 @@ class MailQueuesComponent extends Component {
 			'MailQueueUser' => array(
 				'plugin_key' => $pluginKey,
 				'block_key' => $blockKey,
+				'content_key' => $contentKey,
 				'user_id' => $userId,
 				'room_id' => $roomId,
 				'to_address' => $toAddress,
