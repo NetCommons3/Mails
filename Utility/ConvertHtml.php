@@ -1,13 +1,20 @@
 <?php
 /**
- * Convert_Htmlクラス
+ * Convert_Html Utility
  *
- * @package     NetCommons.component
- * @author      Noriko Arai,Ryuji Masukawa
- * @copyright   2006-2007 NetCommons Project
- * @license     http://www.netcommons.org/license.txt  NetCommons License
- * @project     NetCommons Project, supported by National Institute of Informatics
- * @access      public
+ * @author Noriko Arai <arai@nii.ac.jp>
+ * @author Ryuji Masukawa
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @link http://www.netcommons.org NetCommons Project
+ * @license http://www.netcommons.org/license.txt NetCommons License
+ * @copyright Copyright 2014, NetCommons Project
+ */
+
+/**
+ * Convert_Html Utility
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Utility
  */
 class ConvertHtml {
 	//var $_className = "Convert_Html";
