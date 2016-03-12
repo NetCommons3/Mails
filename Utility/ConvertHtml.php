@@ -1,13 +1,20 @@
 <?php
- /**
- * Convert_Htmlクラス
+/**
+ * Convert_Html Utility
  *
- * @package     NetCommons.component
- * @author      Noriko Arai,Ryuji Masukawa
- * @copyright   2006-2007 NetCommons Project
- * @license     http://www.netcommons.org/license.txt  NetCommons License
- * @project     NetCommons Project, supported by National Institute of Informatics
- * @access      public
+ * @author Noriko Arai <arai@nii.ac.jp>
+ * @author Ryuji Masukawa
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @link http://www.netcommons.org NetCommons Project
+ * @license http://www.netcommons.org/license.txt NetCommons License
+ * @copyright Copyright 2014, NetCommons Project
+ */
+
+/**
+ * Convert_Html Utility
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Utility
  */
 class ConvertHtml {
 	//var $_className = "Convert_Html";
@@ -168,6 +175,12 @@ class ConvertHtml {
 		return preg_replace($patterns, $replacements, $str);
 	}
 
+/**
+ * _getIndentStr
+ *
+ * @param int $indent_cnt
+ * @return string
+ */
 	public function _getIndentStr($indent_cnt = 0) {
 		$indent_str = "";
 		$tab_str = "";
@@ -181,9 +194,10 @@ class ConvertHtml {
 /**
  * HtmlからText変換処理
  *
- * @param string Html文字列
+ * @param string $str Html文字列
+ * @param bool $convert
  * @return string	Plain Text文字列
- **/
+ */
 	public function convertMobileHtml($str, $convert=false) {
 		$container =& DIContainerFactory::getContainer();
 		$session =& $container->getComponent("Session");
@@ -229,7 +243,8 @@ class ConvertHtml {
 
 /**
  * HtmlからText変換処理
- * @param string Html文字列
+ *
+ * @param string $matches Html文字列
  * @return string	Plain Text文字列
  **/
 	public function _replaceRelative2Absolute($matches) {
@@ -239,7 +254,7 @@ class ConvertHtml {
 /**
  * HtmlからText変換処理
  *
- * @param string Html文字列
+ * @param string $matches Html文字列
  * @return string	Plain Text文字列
  **/
 	public function _replaceSesion($matches) {
@@ -257,4 +272,3 @@ class ConvertHtml {
 		return $matches[1].$matches[2].$matches[3].$matches[4].$matches[5].$matches[6];
 	}
 }
-?>
