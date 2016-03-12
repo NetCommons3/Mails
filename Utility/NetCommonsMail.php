@@ -682,6 +682,10 @@ class NetCommonsMail extends CakeEmail {
 
 /**
  * メールを送信する3 debug用
+ *
+ * @param string $blockKey ブロックキー
+ * @param string $typeKey コンテンツキー
+ * @return void
  */
 	public function send3($blockKey, $typeKey = 'contents') {
 		$this->setSendMailSetting($blockKey);
