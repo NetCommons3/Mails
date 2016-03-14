@@ -95,18 +95,23 @@ class MailSetting extends MailsAppModel {
 /**
  * プラグインのメール設定(定型文等) 取得
  *
+ * @param int $languageId 言語ID
  * @param string $typeKey メールの種類
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($typeKey = 'contents') {
+	public function getMailSettingPlugin($languageId = null, $typeKey = 'contents') {
 		//public function getMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
 		//if ($blockKey === null) {
 		//	$blockKey = Current::read('Block.key');
 		//}
+		if ($languageId === null) {
+			$languageId = Current::read('Language.id');
+		}
 		$blockKey = Current::read('Block.key');
 
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
 		$conditions = array(
+			'language_id' => $languageId,
 			'block_key' => $blockKey,
 			'type_key' => $typeKey,
 		);

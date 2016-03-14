@@ -125,9 +125,13 @@ class MailSendShell extends AppShell {
 				}
 
 				// 送信後にキュー削除
-				$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
+				if (! self::IS_DEBUG) {
+					$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
+				}
 			}
-			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
+			if (! self::IS_DEBUG) {
+				$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
+			}
 		}
 	}
 

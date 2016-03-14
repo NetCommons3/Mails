@@ -74,12 +74,13 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 初期設定 プラグイン用
  *
- * @param array $data 投稿データ
+ * @param int $languageId 言語ID
  * @param string $typeKey メール定型文の種類
  * @return void
  * @see CakeEmail::$charset
  */
-	public function initPlugin($data, $typeKey = 'contents') {
+	public function initPlugin($languageId, $typeKey = 'contents') {
+		//public function initPlugin($data, $languageId, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
 		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
@@ -95,11 +96,12 @@ class NetCommonsMail extends CakeEmail {
 			)
 		));
 
-		$languageId = Current::read('Language.id');
+		//$languageId = Current::read('Language.id');
 		$this->__initConfig($languageId);
 
-		$this->__setTags($data, $languageId);
-		$this->__setMailSettingPlugin($typeKey);
+		//		$this->__setTags($data, $languageId);
+		$this->__setTags($languageId);
+		$this->__setMailSettingPlugin($languageId, $typeKey);
 	}
 
 /**
@@ -376,16 +378,17 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 初期設定 タグ
  *
- * @param array $data 投稿データ
  * @param int $languageId 言語ID
  * @return void
  */
-	private function __setTags($data, $languageId) {
+	private function __setTags($languageId) {
 		//private function __initTags($siteSetting, $data) {
+		//private function __setTags($data, $languageId) {
+		//public function setTags($data, $languageId) {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
-		$workflowComment = Hash::get($data, 'WorkflowComment.comment');
+		//$workflowComment = Hash::get($data, 'WorkflowComment.comment');
 
 		$this->assignTag('X-FROM_EMAIL', $from);
 		$this->assignTag('X-FROM_NAME', htmlspecialchars($fromName));
@@ -395,7 +398,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag('X-TO_DATE', date('Y/m/d H:i:s'));
-		$this->assignTag('X-APPROVAL_COMMENT', $workflowComment);
+		//$this->assignTag('X-APPROVAL_COMMENT', $workflowComment);
 
 		// X-ROOMタグ
 		$roomId = Current::read('Room.id');
@@ -413,11 +416,12 @@ class NetCommonsMail extends CakeEmail {
 /**
  * メール送信する定型文をセット(通常のプラグイン)
  *
+ * @param int $languageId 言語ID
  * @param string $typeKey メールの種類
  * @return void
  */
-	private function __setMailSettingPlugin($typeKey) {
-		$mailSetting = $this->MailSetting->getMailSettingPlugin($typeKey);
+	private function __setMailSettingPlugin($languageId, $typeKey) {
+		$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 		$this->__setMailSetting($mailSetting);
 	}
 
@@ -550,17 +554,17 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-	///**
-	// * 変換タグを配列で追加
-	// *
-	// * @param array $tags タグ配列
-	// * @return void
-	// */
-	//	public function assignTags($tags) {
-	//		foreach ($tags as $key => $value) {
-	//			$this->assignTag($key, $value);
-	//		}
-	//	}
+/**
+ * 変換タグを配列で追加
+ *
+ * @param array $tags タグ配列
+ * @return void
+ */
+	public function assignTags($tags) {
+		foreach ($tags as $key => $value) {
+			$this->assignTag($key, $value);
+		}
+	}
 
 /**
  * タグ変換：メール定型文をタグ変換して、生文に変換する
