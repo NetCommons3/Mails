@@ -133,6 +133,7 @@ class MailQueuesComponent extends Component {
 		// 　　　　⇒ $this->toUsersにセットしてる
 
 		$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
+		$data['MailQueueUser']['mail_queue_key'] = $mailQueue['MailQueue']['key'];
 
 		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
 		/** @see MailQueueUser::saveMailQueueUser() */
@@ -162,10 +163,12 @@ class MailQueuesComponent extends Component {
 
 		$blockKey = Current::read('Block.key');
 		$pluginKey = Current::read('Plugin.key');
+		$languageId = Current::read('Language.id');
 		$replyTo = key($mail->replyTo());
 
 		$data = array(
 			'MailQueue' => array(
+				'language_id' => $languageId,
 				'plugin_key' => $pluginKey,
 				'block_key' => $blockKey,
 				'content_key' => $contentKey,
