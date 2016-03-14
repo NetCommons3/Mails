@@ -33,8 +33,9 @@ if (! isset($mailTypeKey)) {
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.language_id', array('value' => Current::read('Language.id'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.type_key', array('value' => $mailTypeKey)); ?>
 
 	<div class="panel panel-default">
