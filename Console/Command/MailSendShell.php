@@ -90,26 +90,27 @@ class MailSendShell extends AppShell {
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
 				'App.site_name',
-				'Config.language',
+				//'Config.language',
 			)
 		));
 
-		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
-
-		// Language.id取得
-		$languages = $this->Language->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'Language.code' => $languageCode,
-			)
-		));
-		$languageId = Hash::get($languages, 'Language.id');
+		//		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
+		//
+		//		// Language.id取得
+		//		$languages = $this->Language->find('first', array(
+		//			'recursive' => -1,
+		//			'conditions' => array(
+		//				'Language.code' => $languageCode,
+		//			)
+		//		));
+		//		$languageId = Hash::get($languages, 'Language.id');
 
 		foreach ($mailQueues as $mailQueue) {
 
 			foreach ($mailQueue['MailQueueUser'] as $mailQueueUser) {
 				$mail = new NetCommonsMail();
-				$mail->initShell($siteSetting, $mailQueue, $languageId);
+				//$mail->initShell($siteSetting, $mailQueue, $languageId);
+				$mail->initShell($siteSetting, $mailQueue);
 
 				if (self::IS_DEBUG) {
 					//送信しない（デバッグ用）
@@ -118,7 +119,7 @@ class MailSendShell extends AppShell {
 					$mail->config($config);
 				}
 
-				$messages = $mail->sendQueueMail($mailQueueUser);
+				$messages = $mail->sendQueueMail($mailQueueUser, $mailQueue['language_id']);
 
 				if (self::IS_DEBUG) {
 					CakeLog::debug(print_r($messages, true));
