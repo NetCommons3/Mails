@@ -22,6 +22,7 @@ App::uses('SiteSetting', 'SiteManager.Model');
  * @property SiteSetting $SiteSetting
  * @property MailSetting $MailSetting
  * @property RoomsLanguage $RoomsLanguage
+ * @property RolesRoomsUser $RolesRoomsUser
  * @property User $User
  */
 class NetCommonsMail extends CakeEmail {
@@ -68,7 +69,9 @@ class NetCommonsMail extends CakeEmail {
 		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
+		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$this->User = ClassRegistry::init('Users.user');
+
 	}
 
 /**
@@ -493,6 +496,8 @@ class NetCommonsMail extends CakeEmail {
 
 		if (isset($roomId)) {
 			// --- ルーム単位でメール配信
+			// 途中
+			//$this->RolesRoomsUser;
 			return false;
 
 		} elseif (isset($userId)) {
