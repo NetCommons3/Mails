@@ -226,7 +226,8 @@ class NetCommonsMail extends CakeEmail {
  * @param string $typeKey メールの種類
  * @return void
  */
-	private function __setMailSettingPlugin($languageId, $typeKey) {
+	public function __setMailSettingPlugin($languageId, $typeKey = 'contents') {
+		//private function __setMailSettingPlugin($languageId, $typeKey) {
 		$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 		$this->__setMailSetting($mailSetting);
 	}
