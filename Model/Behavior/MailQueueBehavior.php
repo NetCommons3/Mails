@@ -45,6 +45,11 @@ class MailQueueBehavior extends ModelBehavior {
 	private $__netCommonsMail = null;
 
 /**
+ * @var date メール送信日時
+ */
+	private $__mailSendTime = null;
+
+/**
  * setup
  *
  * @param Model $model モデル
@@ -60,11 +65,10 @@ class MailQueueBehavior extends ModelBehavior {
 		if ($workflowType === null) {
 			// --- ワークフローのstatusによって送信内容を変える
 			if ($model->Behaviors->loaded('Workflow.Workflow')) {
-
+				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
 			} else {
-
+				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
-			$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
 		}
 
 		$this->__isDeleted = false;
@@ -74,7 +78,7 @@ class MailQueueBehavior extends ModelBehavior {
 /**
  * afterSave is called after a model is saved.
  *
- * @param Model $model Model using this behavior
+ * @param Model $model モデル
  * @param bool $created True if this save created a new record
  * @param array $options Options passed from Model::save().
  * @return bool
@@ -115,8 +119,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$url = NetCommonsUrl::url($url, true);
 		$this->__netCommonsMail->assignTag('X-URL', $url);
 
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+
 		// --- ワークフローのstatusによって送信内容を変える
-		if ($model->Behaviors->loaded('Workflow.Workflow')) {
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// 各プラグインが承認機能を使うかどうかは、気にしなくてＯＫ。承認機能を使わないなら status=公開が飛んでくるため。
 
 			$MailQueue = ClassRegistry::init('Mails.MailQueue');
@@ -128,32 +134,27 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->__netCommonsMail->assignTagReplace();
 
 			$status = $model->data[$model->alias]['status'];
-			$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 
-			if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
+			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+				// 公開
+				// dataの準備
+				$data = $this->__readyData($mail, $contentKey, $languageId, $roomId, $userId, $toAddress, $sendTime);
 
-				// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
-				if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-					// 公開
-					// dataの準備
-					$data = $this->__readyData($mail, $contentKey, $languageId, $roomId, $userId, $toAddress, $sendTime);
+				/** @see MailQueue::saveQueueByUserId() */
+				/** @see MailQueue::saveQueueByRoomId() */
+				$MailQueue->saveQueueByUserId($contentKey, '');
+				$MailQueue->saveQueueByRoomId($contentKey);
 
-					/** @see MailQueue::saveQueueByUserId() */
-					/** @see MailQueue::saveQueueByRoomId() */
-					$MailQueue->saveQueueByUserId($contentKey, '');
-					$MailQueue->saveQueueByRoomId($contentKey);
-
-				} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-					// 承認依頼
-				} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
-					// 差戻し
-				}
-
-
-			} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-				// --- ここにコンテンツコメントの承認時の処理、書く
+			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+				// 承認依頼
+			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
+				// 差戻し
 			}
-		} else {
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// --- ここにコンテンツコメントの承認時の処理、書く
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			// --- ここにワークフローの機能自体、使ってないプラグインの処理を書く
 		}
 
@@ -216,7 +217,7 @@ class MailQueueBehavior extends ModelBehavior {
  * beforeDelete
  * コンテンツが削除されたら、キューに残っているメールも削除
  *
- * @param Model $model Model using this behavior
+ * @param Model $model モデル
  * @param bool $cascade If true records that depend on this record will also be deleted
  * @return mixed False if the operation should abort. Any other result will continue.
  * @throws InternalErrorException
@@ -258,25 +259,39 @@ class MailQueueBehavior extends ModelBehavior {
 /**
  * メールを送るか
  *
- * @param Model $model Model using this behavior
- * @param date $sendTime 送信日時
+ * @param Model $model モデル
  * @return bool
  */
-	public function isMailSend(Model $model, $sendTime = null) {
-		/** @see MailSetting::getMailSettingPlugin() */
+	public function isMailSend(Model $model) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
+		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $MailSetting->getMailSettingPlugin();
 		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
 
+		// プラグイン設定でメール通知を使わないなら、メール送らない
 		if (! $isMailSend) {
 			return false;
 		}
 
-		if (isset($sendTime)) {
-			// ここに、クーロン設定なし：未来日メール送信しない 処理を記述
+		if (isset($this->__mailSendTime)) {
+			$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
+			// SiteSettingからメール設定を取得する
+			$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
+				'SiteSetting.key' => array(
+					'Mail.use_cron',
+				)
+			));
+
+			$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
+			// クーロンが使えないなら、未来日メールは送らない
+			if (empty($useCron)) {
+				return false;
+			}
 		}
 
-		if (! $model->Behaviors->loaded('Workflow.Workflow')) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		// ここまで処理して承認フローを使わないなら、メール送る
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			return true;
 		}
 
@@ -287,5 +302,16 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		return true;
+	}
+
+/**
+ * メール送信日時 セット
+ *
+ * @param Model $model モデル
+ * @param date $mailSendTime 送信日時
+ * @return void
+ */
+	public function setMailSendTime(Model $model, $mailSendTime) {
+		$this->__mailSendTime = $mailSendTime;
 	}
 }
