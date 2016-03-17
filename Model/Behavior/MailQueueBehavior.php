@@ -42,12 +42,17 @@ class MailQueueBehavior extends ModelBehavior {
 /**
  * @var NetCommonsMail
  */
-	private $__netCommonsMail = null;
+	//private $__netCommonsMail = null;
 
 /**
  * @var date メール送信日時
  */
 	private $__mailSendTime = null;
+
+/**
+ * @var array 追加の埋め込みタグ
+ */
+	private $__addEmbedTags = null;
 
 /**
  * setup
@@ -72,7 +77,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$this->__isDeleted = false;
-		$this->__netCommonsMail = new NetCommonsMail();
 	}
 
 /**
@@ -87,15 +91,16 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function afterSave(Model $model, $created, $options = array()) {
 		// --- メールを送るか
-		if (! self::isMailSend($model)) {
+		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
 		// --- 定型文をセット
-		//$mail = new NetCommonsMail();
+		// TODOO ここらへん見直し中！
+		$mail = new NetCommonsMail();
 		$languageId = Current::read('Language.id');
-		//$mail->initPlugin($languageId);
-		$this->__netCommonsMail->__setMailSettingPlugin($languageId);
+		$mail->initPlugin($languageId);
+		//$mail->setMailSettingPlugin($languageId);
 		//$mail->assignTags($this->tags);
 
 		// --- 定型文の変換タグをセット
@@ -103,7 +108,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
 		foreach ($embedTags as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
-			$this->__netCommonsMail->assignTag($embedTag, $dataValue);
+			$mail->assignTag($embedTag, $dataValue);
 		}
 
 		$contentKey = $model->data[$model->alias]['key'];
@@ -117,7 +122,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'key' => $contentKey
 		));
 		$url = NetCommonsUrl::url($url, true);
-		$this->__netCommonsMail->assignTag('X-URL', $url);
+		$mail->assignTag('X-URL', $url);
 
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 
@@ -128,18 +133,19 @@ class MailQueueBehavior extends ModelBehavior {
 			$MailQueue = ClassRegistry::init('Mails.MailQueue');
 
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-			$this->__netCommonsMail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
+			$mail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
 
 			// タグ変換：メール定型文をタグ変換して、生文に変換する
-			$this->__netCommonsMail->assignTagReplace();
+			$mail->assignTagReplace();
 
 			$status = $model->data[$model->alias]['status'];
 
 			// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// 公開
-				// dataの準備
-				$data = $this->__readyData($mail, $contentKey, $languageId, $roomId, $userId, $toAddress, $sendTime);
+				$mail = $this->__getNetCommonsMail($model, $languageId);
+				$dataByUserId = $this->__readyData($contentKey, $languageId, null, $userId);
+				$dataByRoomId = $this->__readyData($contentKey, $languageId, $roomId);
 
 				/** @see MailQueue::saveQueueByUserId() */
 				/** @see MailQueue::saveQueueByRoomId() */
@@ -164,53 +170,6 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- メールキューSave
 
 		return true;
-	}
-
-/**
- * dataの準備
- *
- * @param NetCommonsMail $mail NetCommonsメール
- * @param string $contentKey コンテンツキー
- * @param int $languageId 言語ID
- * @param int $roomId ルームID
- * @param int $userId ユーザーID
- * @param string $toAddress 送信先メールアドレス
- * @param date $sendTime 送信日時
- * @return array data
- */
-	private function __readyData(NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
-		if ($sendTime === null) {
-			$sendTime = NetCommonsTime::getNowDatetime();
-		}
-
-		$blockKey = Current::read('Block.key');
-		$pluginKey = Current::read('Plugin.key');
-		//$languageId = Current::read('Language.id');
-		$replyTo = key($mail->replyTo());
-		//$replyTo = empty($this->replyTo()) ? $this->replyTo() : null;
-
-		$data = array(
-			'MailQueue' => array(
-				'language_id' => $languageId,
-				'plugin_key' => $pluginKey,
-				'block_key' => $blockKey,
-				'content_key' => $contentKey,
-				'replay_to' => $replyTo,
-				'mail_subject' => $mail->subject,
-				'mail_body' => $mail->body,
-				'send_time' => $sendTime,
-			),
-			'MailQueueUser' => array(
-				'plugin_key' => $pluginKey,
-				'block_key' => $blockKey,
-				'content_key' => $contentKey,
-				'user_id' => $userId,
-				'room_id' => $roomId,
-				'to_address' => $toAddress,
-			)
-		);
-
-		return $data;
 	}
 
 /**
@@ -254,6 +213,84 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$this->__isDeleted = true;
 		return true;
+	}
+
+/**
+ * メール送信日時 セット
+ *
+ * @param Model $model モデル
+ * @param date $mailSendTime 送信日時
+ * @return void
+ */
+	public function setMailSendTime(Model $model, $mailSendTime) {
+		$this->__mailSendTime = $mailSendTime;
+	}
+
+/**
+ * 追加の埋め込みタグ セット
+ * ・追加タグをセットできる
+ * ・X-URL等、既存タグ値の上書きできる
+ *
+ * @param Model $model モデル
+ * @param string $embedTag 埋め込みタグ
+ * @param string $value タグから置き換わる値
+ * @return void
+ */
+	public function setAddEmbedTag(Model $model, $embedTag, $value) {
+		$this->__addEmbedTags[$embedTag] = $value;
+	}
+
+/**
+ * NetCommonsMail ゲット
+ *
+ * @param Model $model モデル
+ * @param int $languageId 言語ID
+ * @param string $typeKey メール定型文の種類
+ * @return NetCommonsMail
+ */
+	private function __getNetCommonsMail(Model $model, $languageId, $typeKey = 'contents') {
+		// --- 定型文をNetCommonsMailにセット
+		$mail = new NetCommonsMail();
+		//$languageId = Current::read('Language.id');
+		$mail->initPlugin($languageId, $typeKey);
+		//$mail->setMailSettingPlugin($languageId);
+		//$mail->assignTags($this->tags);
+
+		// --- 定型文の埋め込みタグをセット
+		$this->settings[$model->alias];
+		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
+		foreach ($embedTags as $embedTag => $dataKey) {
+			$dataValue = Hash::get($model->data, $dataKey);
+			$mail->assignTag($embedTag, $dataValue);
+		}
+
+		$contentKey = $model->data[$model->alias]['key'];
+
+		// fullpassのURL
+		$url = NetCommonsUrl::actionUrl(array(
+			'controller' => Current::read('Plugin.key'),
+			'action' => 'view',
+			'block_id' => Current::read('Block.id'),
+			'frame_id' => Current::read('Frame.id'),
+			'key' => $contentKey
+		));
+		$url = NetCommonsUrl::url($url, true);
+		$mail->assignTag('X-URL', $url);
+
+		$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
+		$mail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
+
+		// --- 追加の埋め込みタグ セット
+		if (isset($this->__addEmbedTags)) {
+			foreach ($this->__addEmbedTags as $embedTag => $value) {
+				$mail->assignTag($embedTag, $value);
+			}
+		}
+
+		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
+		$mail->assignTagReplace();
+
+		return $mail;
 	}
 
 /**
@@ -305,13 +342,50 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * メール送信日時 セット
+ * dataの準備
+ * mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
  *
- * @param Model $model モデル
- * @param date $mailSendTime 送信日時
- * @return void
+ * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $contentKey コンテンツキー
+ * @param int $languageId 言語ID
+ * @param int $roomId ルームID - 複数人パターン。ルーム配信
+ * @param int $userId ユーザーID - 個別パターン1。承認フローでの投稿、差戻し、承認完了通知、パスワード再発行等
+ * @param string $toAddress 送信先メールアドレス - 個別パターン2。登録フォームの投稿者
+ * @return array data
  */
-	public function setMailSendTime(Model $model, $mailSendTime) {
-		$this->__mailSendTime = $mailSendTime;
+	private function __readyData(NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null) {
+		//private function __readyData(NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+		if ($this->__mailSendTime === null) {
+			$this->__mailSendTime = NetCommonsTime::getNowDatetime();
+		}
+
+		$blockKey = Current::read('Block.key');
+		$pluginKey = Current::read('Plugin.key');
+		//$languageId = Current::read('Language.id');
+		$replyTo = key($mail->replyTo());
+		//$replyTo = empty($this->replyTo()) ? $this->replyTo() : null;
+
+		$data = array(
+			'MailQueue' => array(
+				'language_id' => $languageId,
+				'plugin_key' => $pluginKey,
+				'block_key' => $blockKey,
+				'content_key' => $contentKey,
+				'replay_to' => $replyTo,
+				'mail_subject' => $mail->subject,
+				'mail_body' => $mail->body,
+				'send_time' => $this->__mailSendTime,
+			),
+			'MailQueueUser' => array(
+				'plugin_key' => $pluginKey,
+				'block_key' => $blockKey,
+				'content_key' => $contentKey,
+				'user_id' => $userId,
+				'room_id' => $roomId,
+				'to_address' => $toAddress,
+			)
+		);
+
+		return $data;
 	}
 }

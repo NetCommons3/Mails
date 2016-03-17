@@ -121,16 +121,16 @@ class MailQueuesComponent extends Component {
 	//		$this->_mail->assignTag($key, $value);
 	//	}
 
-/**
- * 承認コメントタグ セット
- *
- * @param array $data 投稿データ
- * @return void
- */
-	public function setWorkflowCommentTag($data) {
-		$workflowComment = Hash::get($data, 'WorkflowComment.comment');
-		$this->tags['X-APPROVAL_COMMENT'] = $workflowComment;
-	}
+	///**
+	// * 承認コメントタグ セット
+	// *
+	// * @param array $data 投稿データ
+	// * @return void
+	// */
+	//	public function setWorkflowCommentTag($data) {
+	//		$workflowComment = Hash::get($data, 'WorkflowComment.comment');
+	//		$this->tags['X-APPROVAL_COMMENT'] = $workflowComment;
+	//	}
 
 	///**
 	// * 複数人パターン でキューに保存する

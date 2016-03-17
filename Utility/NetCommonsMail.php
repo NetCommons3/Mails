@@ -48,7 +48,7 @@ class NetCommonsMail extends CakeEmail {
 	public $isMailSend = null;
 
 /**
- * @var array 変換タグ
+ * @var array 埋め込みタグ
  */
 	public $assignTags = array();
 
@@ -71,7 +71,6 @@ class NetCommonsMail extends CakeEmail {
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$this->User = ClassRegistry::init('Users.user');
-
 	}
 
 /**
@@ -105,7 +104,7 @@ class NetCommonsMail extends CakeEmail {
 
 		//		$this->__setTags($data, $languageId);
 		$this->__setTags($languageId);
-		$this->__setMailSettingPlugin($languageId, $typeKey);
+		$this->setMailSettingPlugin($languageId, $typeKey);
 	}
 
 /**
@@ -226,7 +225,7 @@ class NetCommonsMail extends CakeEmail {
  * @param string $typeKey メールの種類
  * @return void
  */
-	public function __setMailSettingPlugin($languageId, $typeKey = 'contents') {
+	public function setMailSettingPlugin($languageId, $typeKey = 'contents') {
 		//private function __setMailSettingPlugin($languageId, $typeKey) {
 		$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 		$this->__setMailSetting($mailSetting);
@@ -239,6 +238,7 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __setMailSettingSystem($typeKey) {
+		// TODOO ここ見直し？。sitesettingから取得するfunction必要
 		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
 		$this->__setMailSetting($mailSetting);
 	}
@@ -338,7 +338,7 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * 変換タグの追加
+ * 埋め込みタグの追加
  *
  * @param string $tag タグ
  * @param string $value 変換する値
@@ -362,7 +362,7 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * 変換タグを配列で追加
+ * 埋め込みタグを配列で追加
  *
  * @param array $tags タグ配列
  * @return void
@@ -374,7 +374,7 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * タグ変換：メール定型文をタグ変換して、生文に変換する
+ * 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
  *
  * @return array タグ
  */

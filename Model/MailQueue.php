@@ -207,18 +207,18 @@ class MailQueue extends MailsAppModel {
 		// ※ 通知する権限は、block_role_permissionにもつ想定
 		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
 		// 　　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
-		// 　　・user_id 　　：　個別パターン1。パスワード再発行等
-		// 　　　　⇒ $this->toUsersに情報あるだろう。
-		// 　　・to_address　：　個別パターン2。その他に通知するメールアドレス
-		// 　　　　⇒ $this->toUsersにセットしてる
+		// 　　　　⇒ 英日の場合、1コンテンツでキューに英日で2件、キューユーザに2件。mail_queue_id + roomIdで言語特定
+		// 　　・user_id 　　：　個別パターン1。承認フローでの投稿、差戻し、承認完了通知、パスワード再発行等
+		// 　　・to_address　：　個別パターン2。登録フォームの投稿者
 
-		if (isset($roomId) || isset($userId)) {
-			// room_id, user_idは、各ユーザ毎のlanguage_idで、対応するメールを送る
-			$data['MailQueueUser']['mail_queue_key'] = $mailQueue['MailQueue']['key'];
-		} elseif (isset($toAddress)) {
-			// メールアドレスは、MailQueueのIDで指定された言語で送る
-			$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
-		}
+		//		if (isset($roomId) || isset($userId)) {
+		//			// room_id, user_idは、各ユーザ毎のlanguage_idで、対応するメールを送る
+		//			$data['MailQueueUser']['mail_queue_key'] = $mailQueue['MailQueue']['key'];
+		//		} elseif (isset($toAddress)) {
+		//			// メールアドレスは、MailQueueのIDで指定された言語で送る
+		//			$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
+		//		}
+		$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
 
 		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
 		/** @see MailQueueUser::saveMailQueueUser() */
