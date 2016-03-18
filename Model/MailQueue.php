@@ -103,6 +103,121 @@ class MailQueue extends MailsAppModel {
 	);
 
 /**
+ * 複数人パターン でキューに保存する
+ * ・room_id + ロール（block_role_permission）　：　複数人パターン
+ *
+ * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $contentKey コンテンツキー
+ * @param int $languageId 言語ID
+ * @param date $sendTime 送信日時
+ * @return bool 成功 or 失敗
+ */
+	public function saveQueueByRoomId(NetCommonsMail $mail, $contentKey, $languageId, $sendTime = null) {
+		//public function saveQueueByRoomId(Model $model, NetCommonsMail $mail, $languageId, $sendTime = null) {
+		//private function __readyDataByRoomId(Model $model, NetCommonsMail $mail, $contentKey, $languageId) {
+		$roomId = Current::read('Room.id');
+		$data = $this->__readyData($mail, $contentKey, $languageId, $roomId, null, null, $sendTime);
+		return $this->__saveQueue($data);
+	}
+
+/**
+ * 個別パターン1 でキューに保存する
+ * ・user_id 　　：　個別パターン1。パスワード再発行等 (NCにいる人イメージ)
+ *
+ * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $contentKey コンテンツキー
+ * @param int $languageId 言語ID
+ * @param int $userId ユーザーID
+ * @param date $sendTime 送信日時
+ * @return bool 成功 or 失敗
+ */
+	public function saveQueueByUserId(NetCommonsMail $mail, $contentKey, $languageId, $userId, $sendTime = null) {
+		//public function saveQueueByUserId(Model $model, NetCommonsMail $mail, $languageId, $userId) {
+		//return $this->__readyData($model, $contentKey, $typeKey, null, $userId, null, $sendTime);
+		$data = $this->__readyData($mail, $contentKey, $languageId, null, $userId, null, $sendTime);
+		return $this->__saveQueue($data);
+	}
+
+/**
+ * dataの準備
+ * mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
+ *
+ * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $contentKey コンテンツキー
+ * @param int $languageId 言語ID
+ * @param int $roomId ルームID - 複数人パターン。ルーム配信
+ * @param int $userId ユーザーID - 個別パターン1。承認フローでの投稿、差戻し、承認完了通知、パスワード再発行等
+ * @param string $toAddress 送信先メールアドレス - 個別パターン2。登録フォームの投稿者
+ * @param date $sendTime 送信日時
+ * @return array data
+ */
+	private function __readyData(NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+		//private function __readyData(NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
+		//private function __readyData(Model $model, NetCommonsMail $mail, $contentKey, $languageId, $roomId = null, $userId = null, $toAddress = null) {
+		//private function __readyData(Model $model, NetCommonsMail $mail, $languageId, $roomId = null, $userId = null, $toAddress = null) {
+
+		//$mailSendTime = isset($this->settings[$model->alias]['mailSendTime']) ? $this->settings[$model->alias]['mailSendTime'] : NetCommonsTime::getNowDatetime();
+		$sendTime = isset($sendTime) ? $sendTime : NetCommonsTime::getNowDatetime();
+		$blockKey = Current::read('Block.key');
+		$pluginKey = Current::read('Plugin.key');
+		//$languageId = Current::read('Language.id');
+		$replyTo = key($mail->replyTo());
+		//$replyTo = empty($this->replyTo()) ? $this->replyTo() : null;
+		//$contentKey = $model->data[$model->alias]['key'];
+
+		$data = array(
+			'MailQueue' => array(
+				'language_id' => $languageId,
+				'plugin_key' => $pluginKey,
+				'block_key' => $blockKey,
+				'content_key' => $contentKey,
+				'replay_to' => $replyTo,
+				'mail_subject' => $mail->subject,
+				'mail_body' => $mail->body,
+				'send_time' => $sendTime,
+			),
+			'MailQueueUser' => array(
+				'plugin_key' => $pluginKey,
+				'block_key' => $blockKey,
+				'content_key' => $contentKey,
+				'user_id' => $userId,
+				'room_id' => $roomId,
+				'to_address' => $toAddress,
+			)
+		);
+
+		return $data;
+	}
+
+/**
+ * キューに保存する
+ * ・メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
+ * ・メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
+ *
+ * @param array $data データ
+ * @return bool 成功 or 失敗
+ */
+	private function __saveQueue($data) {
+		$this->loadModels(array(
+			'MailQueueUser' => 'Mails.MailQueueUser',
+		));
+
+		// メールキューテーブル(mail_queues)保存 - （メール生文を）
+		if (! $mailQueue = $this->saveMailQueue($data)) {
+			return false;
+		}
+
+		$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
+
+		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
+		if (! $mailQueueUser = $this->MailQueueUser->saveMailQueueUser($data)) {
+			return false;
+		}
+
+		return true;
+	}
+
+/**
  * メールキューデータ保存
  *
  * @param array $data received post data
@@ -135,99 +250,6 @@ class MailQueue extends MailsAppModel {
 		}
 
 		return $mailQueue;
-	}
-
-/**
- * 複数人パターン でキューに保存する
- * ・room_id + ロール（block_role_permission）　：　複数人パターン
- *
- * @param string $contentKey コンテンツキー
- * @param string $typeKey メール定型文の種類
- * @param date $sendTime 送信日時
- * @return bool 成功 or 失敗
- */
-	public function saveQueueByRoomId($contentKey, $typeKey = 'contents', $sendTime = null) {
-		$roomId = Current::read('Room.id');
-		return $this->__saveQueue($contentKey, $typeKey, $roomId, null, null, $sendTime);
-	}
-
-/**
- * 個別パターン1 でキューに保存する
- * ・user_id 　　：　個別パターン1。パスワード再発行等 (NCにいる人イメージ)
- *
- * @param string $contentKey コンテンツキー
- * @param int $userId ユーザーID
- * @param string $typeKey メール定型文の種類
- * @param date $sendTime 送信日時
- * @return bool 成功 or 失敗
- */
-	public function saveQueueByUserId($contentKey, $userId, $typeKey = 'contents', $sendTime = null) {
-		return $this->__saveQueue($contentKey, $typeKey, null, $userId, null, $sendTime);
-	}
-
-/**
- * キューに保存する
- * ・メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
- * ・メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
- *
- * @param string $contentKey コンテンツキー
- * @param string $typeKey メール定型文の種類
- * @param int $roomId ルームID
- * @param int $userId ユーザーID
- * @param string $toAddress 送信先メールアドレス
- * @param date $sendTime 送信日時
- * @return bool 成功 or 失敗
- */
-	private function __saveQueue($contentKey, $typeKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
-		//private function __saveQueue(NetCommonsMail $mail, $contentKey, $roomId = null, $userId = null, $toAddress = null, $sendTime = null) {
-		if (isset($sendTime)) {
-			// ここに、クーロン設定なし：未来日メール送信しない 処理を記述
-		}
-
-		// --- メール文を多言語するなら、ここからメールキュー保存まで、言語毎にループ
-		//		$mail = new NetCommonsMail();
-		//		$languageId = Current::read('Language.id');
-		//		$mail->initPlugin($languageId, $typeKey);
-		//		$mail->assignTags($this->tags);
-
-		// タグ変換：メール定型文をタグ変換して、生文に変換する
-		//$mail->assignTagReplace();
-
-		// dataの準備
-		//$data = $this->__readyData($mail, $contentKey, $languageId, $roomId, $userId, $toAddress, $sendTime);
-
-		// メールキューテーブル(mail_queues)保存 - （メール生文を）
-		/** @see MailQueue::saveMailQueue() */
-		if (! $mailQueue = $this->_controller->MailQueue->saveMailQueue($data)) {
-			$this->_controller->NetCommons->handleValidationError($this->_controller->MailQueue->validationErrors);
-			return false;
-		}
-
-		// ※ mail_queue_users 値をセットするパターンが３つある。いずれかをセットする
-		// ※ 通知する権限は、block_role_permissionにもつ想定
-		// 　　・room_id + ロール（block_role_permission）　：　複数人パターン
-		// 　　　　⇒ $roomId 引数で取得, $blockKeyでロール取得
-		// 　　　　⇒ 英日の場合、1コンテンツでキューに英日で2件、キューユーザに2件。mail_queue_id + roomIdで言語特定
-		// 　　・user_id 　　：　個別パターン1。承認フローでの投稿、差戻し、承認完了通知、パスワード再発行等
-		// 　　・to_address　：　個別パターン2。登録フォームの投稿者
-
-		//		if (isset($roomId) || isset($userId)) {
-		//			// room_id, user_idは、各ユーザ毎のlanguage_idで、対応するメールを送る
-		//			$data['MailQueueUser']['mail_queue_key'] = $mailQueue['MailQueue']['key'];
-		//		} elseif (isset($toAddress)) {
-		//			// メールアドレスは、MailQueueのIDで指定された言語で送る
-		//			$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
-		//		}
-		$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
-
-		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
-		/** @see MailQueueUser::saveMailQueueUser() */
-		if (! $mailQueueUser = $this->_controller->MailQueueUser->saveMailQueueUser($data)) {
-			$this->_controller->NetCommons->handleValidationError($this->_controller->MailQueueUser->validationErrors);
-			return false;
-		}
-
-		return true;
 	}
 
 /**

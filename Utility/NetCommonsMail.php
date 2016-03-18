@@ -32,6 +32,21 @@ class NetCommonsMail extends CakeEmail {
  */
 	const MAX_LINE_LENGTH = 300;
 
+	///**
+	// * @var string SiteSettingの定型文の種類：承認依頼
+	// */
+	//	const SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval';
+
+/**
+ * @var string SiteSettingの定型文の種類：差戻し
+ */
+	const SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval';
+
+/**
+ * @var string SiteSettingの定型文の種類：承認完了
+ */
+	const SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
+
 /**
  * @var string 件名(定型文)
  */
@@ -42,10 +57,10 @@ class NetCommonsMail extends CakeEmail {
  */
 	public $body = null;
 
-/**
- * @var int メールで通知する
- */
-	public $isMailSend = null;
+	///**
+	// * @var int メールで通知する
+	// */
+	//	public $isMailSend = null;
 
 /**
  * @var array 埋め込みタグ
@@ -77,7 +92,7 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定 プラグイン用
  *
  * @param int $languageId 言語ID
- * @param string $typeKey メール定型文の種類
+ * @param string $typeKey 定型文の種類
  * @return void
  * @see CakeEmail::$charset
  */
@@ -95,6 +110,14 @@ class NetCommonsMail extends CakeEmail {
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
 				'App.site_name',
+				//'Workflow.approval_mail_subject',
+				//'Workflow.approval_mail_body',
+				'Workflow.disapproval_mail_subject',
+				'Workflow.disapproval_mail_body',
+				'Workflow.approval_completion_mail_subject',
+				'Workflow.approval_completion_mail_body',
+				'Mail.body_header',		// まだ対応処理書いてない
+				'Mail.signature',		// まだ対応処理書いてない
 			)
 		));
 
@@ -104,7 +127,7 @@ class NetCommonsMail extends CakeEmail {
 
 		//		$this->__setTags($data, $languageId);
 		$this->__setTags($languageId);
-		$this->setMailSettingPlugin($languageId, $typeKey);
+		//$this->setMailSettingPlugin($languageId, $typeKey);
 	}
 
 /**
@@ -219,16 +242,57 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メール送信する定型文をセット(通常のプラグイン)
+ * プラグインの定型文 セット
  *
  * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
+ * @param string $typeKey 定型文の種類
  * @return void
  */
-	public function setMailSettingPlugin($languageId, $typeKey = 'contents') {
+	public function setMailFixedPhrasePlugin($languageId, $typeKey = 'contents') {
 		//private function __setMailSettingPlugin($languageId, $typeKey) {
 		$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
-		$this->__setMailSetting($mailSetting);
+		//$this->__setMailSetting($mailSetting);
+
+		//		// メール通知フラグをセット
+		//		//$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
+
+		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
+
+		// 定型文をセット
+		$this->setSubject($subject);
+		$this->setBody($body);
+
+		$this->setReplyTo($replyTo);
+	}
+
+/**
+ * サイト設定の定型文 セット
+ *
+ * @param int $languageId 言語ID
+ * @param string $fixedPhraseType 定型文の種類
+ * @return void
+ */
+	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType) {
+		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'], $languageId . '.value');
+		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'], $languageId . '.value');
+
+		// 定型文をセット
+		$this->setSubject($subject);
+		$this->setBody($body);
+	}
+
+/**
+ * 返信先アドレス セット
+ *
+ * @param string $replyTo 返信先アドレス
+ * @return void
+ */
+	public function setReplyTo($replyTo) {
+		if (! empty($replyTo)) {
+			parent::replyTo($replyTo);
+		}
 	}
 
 /**
@@ -240,38 +304,38 @@ class NetCommonsMail extends CakeEmail {
 	private function __setMailSettingSystem($typeKey) {
 		// TODOO ここ見直し？。sitesettingから取得するfunction必要
 		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
-		$this->__setMailSetting($mailSetting);
+		//$this->__setMailSetting($mailSetting);
 	}
 
-/**
- * メール送信する定型文をセット
- *
- * @param array $mailSetting メール設定データ
- * @return void
- */
-	private function __setMailSetting($mailSetting) {
-		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
-		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
-		if (empty($mailSetting)) {
-			return;
-		}
-
-		// メール通知フラグをセット
-		$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
-
-		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
-		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
-		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
-
-		// 定型文をセット
-		$this->setSubject($subject);
-		$this->setBody($body);
-
-		// 返信先アドレス
-		if (! empty($replyTo)) {
-			parent::replyTo($replyTo);
-		}
-	}
+	///**
+	// * メール送信する定型文をセット
+	// *
+	// * @param array $mailSetting メール設定データ
+	// * @return void
+	// */
+	//	private function __setMailSetting($mailSetting) {
+	//		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
+	//		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
+	//		if (empty($mailSetting)) {
+	//			return;
+	//		}
+	//
+	//		// メール通知フラグをセット
+	//		//$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
+	//
+	//		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+	//		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+	//		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
+	//
+	//		// 定型文をセット
+	//		$this->setSubject($subject);
+	//		$this->setBody($body);
+	//
+	//		// 返信先アドレス
+	//		if (! empty($replyTo)) {
+	//			parent::replyTo($replyTo);
+	//		}
+	//	}
 
 /**
  * メール送信する件名、本文をセット
@@ -374,7 +438,7 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
+ * 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
  *
  * @return array タグ
  */
@@ -698,7 +762,7 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 		}
 
-		// タグ変換：メール定型文をタグ変換して、生文に変換する
+		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
 		$this->assignTagReplace();
 
 		// 改行対応
