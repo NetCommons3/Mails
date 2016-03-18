@@ -287,7 +287,7 @@ class MailQueueBehavior extends ModelBehavior {
 		//$mail->assignTags($this->tags);
 
 		// --- 定型文の埋め込みタグをセット
-		$this->settings[$model->alias];
+		//$this->settings[$model->alias];
 		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
 		foreach ($embedTags as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
