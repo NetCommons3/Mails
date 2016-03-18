@@ -240,13 +240,13 @@ class NetCommonsMail extends CakeEmail {
 /**
  * プラグインの定型文 セット
  *
- * @param int $languageId 言語ID
- * @param string $typeKey 定型文の種類
+ * @param array $mailSetting メール設定データ
  * @return void
  */
-	public function setMailFixedPhrasePlugin($languageId, $typeKey = 'contents') {
+	public function setMailFixedPhrasePlugin($mailSetting) {
 		//private function __setMailSettingPlugin($languageId, $typeKey) {
-		$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+		//public function setMailFixedPhrasePlugin($languageId, $typeKey = 'contents') {
+		//$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 		//$this->__setMailSetting($mailSetting);
 
 		//		// メール通知フラグをセット

@@ -84,6 +84,12 @@ class MailQueueBehavior extends ModelBehavior {
 		$contentKey = $model->data[$model->alias]['key'];
 		$createdUserId = $model->data[$model->alias]['created_user'];
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$sendTime = $this->__getMailSendTime($model);
+
+		$MailSetting = ClassRegistry::init('Mails.MailSetting');
+		/** @see MailSetting::getMailSettingPlugin() */
+		$mailSetting = $MailSetting->getMailSettingPlugin($languageId);
+		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
 
 		// --- ワークフローのstatusによって送信内容を変える
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
@@ -95,16 +101,14 @@ class MailQueueBehavior extends ModelBehavior {
 			// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
-				// 投稿内容メール - メールキューSave
+				// 投稿メール - メールキューSave
 				$postMail = new NetCommonsMail();
 				$postMail->initPlugin($languageId);
 				$postMail->setMailFixedPhrasePlugin($languageId);
+				$postMail->setReplyTo($replyTo);
 				$postMail = $this->__convertPlainText($model, $postMail);
-				$sendTime = $this->__getMailSendTime($model);
 				/** @see MailQueue::saveQueueByRoomId() */
 				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
-
-				$replyTo = key($postMail->replyTo());
 
 				// 承認完了通知メール - メールキューSave
 				$completedMail = new NetCommonsMail();
@@ -117,12 +121,33 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
+				// content_publishable
+				// 投稿メール - メールキューSave
+				$postMail = new NetCommonsMail();
+				$postMail->initPlugin($languageId);
+				$postMail->setMailFixedPhrasePlugin($languageId);
+				$postMail->setReplyTo($replyTo);
+				$postMail = $this->__convertPlainText($model, $postMail);
+				/** @see MailQueue::saveQueueByRoomId() */
+				$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId);
+				// ルーム内の承認者達にメールを送る
+				//$this->RolesRoomsUser;
+
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
+				// 差戻し通知メール - メールキューSave
+				$disapprovedMail = new NetCommonsMail();
+				$disapprovedMail->initPlugin($languageId);
+				$disapprovedMail->setMailFixedPhraseSiteSetting($languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL);
+				$disapprovedMail->setReplyTo($replyTo);
+				$disapprovedMail = $this->__convertPlainText($model, $disapprovedMail);
+				/** @see MailQueue::saveQueueByUserId() */
+				$MailQueue->saveQueueByUserId($disapprovedMail, $contentKey, $languageId, $createdUserId);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- ここにコンテンツコメントの承認時の処理、書く
+			// content_comment_publishable
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			// --- ここにワークフローの機能自体、使ってないプラグインの処理を書く
 		}
