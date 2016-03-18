@@ -20,19 +20,16 @@ App::uses('NetCommonsMail', 'Mails.Utility');
 class MailQueueBehavior extends ModelBehavior {
 
 /**
- * @var string 承認機能の種類：使用しない
+ * 承認機能の種類
+ *
+ * @var string 使用しない
+ * @var string ワークフロー
+ * @var string コンテンツコメント
  */
-	const MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none';
-
-/**
- * @var string 承認機能の種類：ワークフロー
- */
-	const MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow';
-
-/**
- * @var string 承認機能の種類：コンテンツコメント
- */
-	const MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
+	const
+		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
+		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
+		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
 
 /**
  * @var bool 削除済みか
@@ -61,7 +58,7 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 		}
 
-		$this->settings[$model->alias]['mailSendTime'] = null;
+		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 
 		$this->__isDeleted = false;
@@ -78,12 +75,11 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		// --- メールを送るか
+		// --- メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
-		// --- 定型文をセット
 		$languageId = Current::read('Language.id');
 		$contentKey = $model->data[$model->alias]['key'];
 		$createdUserId = $model->data[$model->alias]['created_user'];
@@ -99,17 +95,18 @@ class MailQueueBehavior extends ModelBehavior {
 			// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
-				// 投稿内容メール
+				// 投稿内容メール - メールキューSave
 				$postMail = new NetCommonsMail();
 				$postMail->initPlugin($languageId);
 				$postMail->setMailFixedPhrasePlugin($languageId);
 				$postMail = $this->__convertPlainText($model, $postMail);
+				$sendTime = $this->__getMailSendTime($model);
 				/** @see MailQueue::saveQueueByRoomId() */
-				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId);
+				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
 
 				$replyTo = key($postMail->replyTo());
 
-				// 承認完了通知メール
+				// 承認完了通知メール - メールキューSave
 				$completedMail = new NetCommonsMail();
 				$completedMail->initPlugin($languageId);
 				$completedMail->setMailFixedPhraseSiteSetting($languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION);
@@ -133,7 +130,6 @@ class MailQueueBehavior extends ModelBehavior {
 //CakeLog::debug(print_r($model->data, true));
 //CakeLog::debug(print_r($this->settings, true));
 		// --- 送信者データ取得
-		// --- メールキューSave
 
 		return true;
 	}
@@ -181,16 +177,30 @@ class MailQueueBehavior extends ModelBehavior {
 		return true;
 	}
 
+	///**
+	// * メール送信日時 セット
+	// *
+	// * @param Model $model モデル
+	// * @param date $mailSendTime 送信日時
+	// * @return void
+	// */
+	//	public function setMailSendTime(Model $model, $mailSendTime) {
+	//		$this->settings[$model->alias]['mailSendTime'] = $mailSendTime;
+	//		//$this->__mailSendTime = $mailSendTime;
+	//	}
+
 /**
- * メール送信日時 セット
+ * メール送信日時 ゲット
  *
  * @param Model $model モデル
- * @param date $mailSendTime 送信日時
- * @return void
+ * @return date 送信日時
  */
-	public function setMailSendTime(Model $model, $mailSendTime) {
-		$this->settings[$model->alias]['mailSendTime'] = $mailSendTime;
-		//$this->__mailSendTime = $mailSendTime;
+	private function __getMailSendTime(Model $model) {
+		// DBに項目があり期限付き公開の時のみ、日時を取得する（ブログを想定）。その後、未来日メール送られる
+		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
+			return $model->data[$model->alias]['publish_start'];
+		}
+		return null;
 	}
 
 /**
@@ -209,7 +219,7 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * メールを送るか
+ * メールを送るかどうか
  *
  * @param Model $model モデル
  * @return bool
@@ -225,7 +235,9 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		if (isset($this->settings[$model->alias]['mailSendTime'])) {
+		$sendTime = $this->__getMailSendTime($model);
+		//if (isset($this->settings[$model->alias]['mailSendTime'])) {
+		if (isset($sendTime)) {
 			$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 			// SiteSettingからメール設定を取得する
 			$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
@@ -235,8 +247,10 @@ class MailQueueBehavior extends ModelBehavior {
 			));
 
 			$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
-			// クーロンが使えないなら、未来日メールは送らない
-			if (empty($useCron)) {
+			$now = NetCommonsTime::getNowDatetime();
+
+			// クーロンが使えなくて未来日なら、未来日メールなので送らない
+			if (empty($useCron) && strtotime($now) >= strtotime($sendTime)) {
 				return false;
 			}
 		}

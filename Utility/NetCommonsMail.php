@@ -32,20 +32,16 @@ class NetCommonsMail extends CakeEmail {
  */
 	const MAX_LINE_LENGTH = 300;
 
-	///**
-	// * @var string SiteSettingの定型文の種類：承認依頼
-	// */
-	//	const SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval';
-
 /**
- * @var string SiteSettingの定型文の種類：差戻し
+ * SiteSettingの定型文の種類
+ *
+ * @var string 差戻し通知
+ * @var string 承認完了通知
  */
-	const SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval';
-
-/**
- * @var string SiteSettingの定型文の種類：承認完了
- */
-	const SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
+	const
+		//SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval',
+		SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval',
+		SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
 
 /**
  * @var string 件名(定型文)
