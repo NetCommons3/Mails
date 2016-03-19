@@ -133,7 +133,7 @@ class MailQueueBehavior extends ModelBehavior {
 				$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId);
 
 				// ルーム内の承認者達にメールを送る
-				//$this->RolesRoomsUser;
+				// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？
 				$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 				$conditions = array(
 					'RolesRoomsUser.room_id' => Current::read('Room.id'),
