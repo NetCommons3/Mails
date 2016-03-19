@@ -84,7 +84,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$contentKey = $model->data[$model->alias]['key'];
 		$createdUserId = $model->data[$model->alias]['created_user'];
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$sendTime = $this->__getMailSendTime($model);
+		$sendTime = $this->__getSendTime($model);
 
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		/** @see MailSetting::getMailSettingPlugin() */
@@ -94,6 +94,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- ワークフローのstatusによって送信内容を変える
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
+			// 暫定対応：ここらへんのリファクタリングは後回し
 
 			$MailQueue = ClassRegistry::init('Mails.MailQueue');
 			$status = $model->data[$model->alias]['status'];
@@ -128,10 +129,38 @@ class MailQueueBehavior extends ModelBehavior {
 				$postMail->setMailFixedPhrasePlugin($languageId);
 				$postMail->setReplyTo($replyTo);
 				$postMail = $this->__convertPlainText($model, $postMail);
-				/** @see MailQueue::saveQueueByRoomId() */
+				/** @see MailQueue::saveQueueByUserId() */
 				$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId);
+
 				// ルーム内の承認者達にメールを送る
 				//$this->RolesRoomsUser;
+				$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
+				$conditions = array(
+					'RolesRoomsUser.room_id' => Current::read('Room.id'),
+					'RoomRolePermission.permission' => 'content_publishable',
+					'RoomRolePermission.value' => 1,
+				);
+				$rolesRoomsUsers = $RolesRoomsUser->find('all', array(
+					'recursive' => -1,
+					'fields' => array(
+						'RolesRoomsUser.user_id',
+					),
+					'joins' => array(
+						array(
+							'table' => 'room_role_permissions',
+							'alias' => 'RoomRolePermission',
+							'type' => 'INNER',
+							'conditions' => array(
+								'RolesRoomsUser.roles_room_id' . ' = RoomRolePermission.roles_room_id',
+							),
+						),
+					),
+					'conditions' => $conditions,
+				));
+				foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+					/** @see MailQueue::saveQueueByUserId() */
+					$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
+				}
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
@@ -220,7 +249,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @return date 送信日時
  */
-	private function __getMailSendTime(Model $model) {
+	private function __getSendTime(Model $model) {
 		// DBに項目があり期限付き公開の時のみ、日時を取得する（ブログを想定）。その後、未来日メール送られる
 		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
 			return $model->data[$model->alias]['publish_start'];
@@ -260,7 +289,7 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		$sendTime = $this->__getMailSendTime($model);
+		$sendTime = $this->__getSendTime($model);
 		//if (isset($this->settings[$model->alias]['mailSendTime'])) {
 		if (isset($sendTime)) {
 			$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
