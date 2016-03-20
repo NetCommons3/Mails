@@ -88,12 +88,12 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定 プラグイン用
  *
  * @param int $languageId 言語ID
- * @param string $typeKey 定型文の種類
  * @return void
  * @see CakeEmail::$charset
  */
-	public function initPlugin($languageId, $typeKey = 'contents') {
+	public function initPlugin($languageId) {
 		//public function initPlugin($data, $languageId, $typeKey = 'contents') {
+		//public function initPlugin($languageId, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
 		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
