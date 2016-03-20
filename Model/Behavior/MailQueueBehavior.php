@@ -76,8 +76,19 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$sendTime = $this->__getSendTime($model);
-		return $this->saveQueueBehavior($model, array($sendTime));
+		$sendTime = $this->__getSendTimePublish($model);
+		return $this->__saveQueue($model, array($sendTime), false);
+	}
+
+/**
+ * リマインダーでキュー保存
+ *
+ * @param Model $model モデル
+ * @param array $sendTimes メール送信日時
+ * @return bool
+ */
+	public function saveQueueReminder(Model $model, $sendTimes) {
+		return $this->__saveQueue($model, $sendTimes, true);
 	}
 
 /**
@@ -124,15 +135,16 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * ビヘイビアでキュー保存
+ * キュー保存
  *
  * @param Model $model モデル
  * @param array $sendTimes メール送信日時
+ * @param bool $useReminder リマインダー使う
  * @return bool
  */
-	public function saveQueueBehavior(Model $model, $sendTimes) {
+	private function __saveQueue(Model $model, $sendTimes, $useReminder) {
 		// --- メールを送るかどうか
-		if (! $this->isMailSend($model)) {
+		if (! $this->isMailSend($model, $useReminder, $sendTimes)) {
 			return true;
 		}
 
@@ -142,15 +154,16 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
 
-		// 暫定対応
-		//$sendTime = $this->__getSendTime($model);
-		$sendTime = $sendTimes[0];
-
-		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		///** @see MailSetting::getMailSettingPlugin() */
-		//$mailSetting = $MailSetting->getMailSettingPlugin($languageId);
-		//$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
+		if ($useReminder) {
+			$now = NetCommonsTime::getNowDatetime();
+			foreach ($sendTimes as $key => $sendTime) {
+				// リマインダーで日時が過ぎてたら、メール送らないので、除外する
+				// isMailSendでリマインダーの複数日全てが、日時過ぎている場合は、この処理まで到達しないので、$sendTimesは空にならない想定
+				if (strtotime($now) > strtotime($sendTime)) {
+					unset($sendTimes[$key]);
+				}
+			}
+		}
 
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフローのstatusによって送信内容を変える
@@ -159,7 +172,7 @@ class MailQueueBehavior extends ModelBehavior {
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - ルーム配信 - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTime);
+				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
@@ -167,11 +180,12 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
-				$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_publishable');
+				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_publishable');
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
-				// 差戻し通知メール - 登録者に配信 - メールキューSave
+				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
 				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL, $createdUserId);
 			}
 
@@ -189,14 +203,15 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
-				$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_comment_publishable');
+				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_comment_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable');
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			// --- ワークフローの機能自体、使ってないプラグインの処理
 			// --- 公開
 			// 投稿メール - メールキューSave
-			$this->__saveQueuePostMail($model, $languageId, $sendTime);
+			$this->__saveQueuePostMail($model, $languageId, $sendTimes);
 		}
 
 		return true;
@@ -215,13 +230,13 @@ class MailQueueBehavior extends ModelBehavior {
 	//	}
 
 /**
- * メール送信日時 ゲット
+ * 公開するメール送信日時 ゲット
  *
  * @param Model $model モデル
  * @return date 送信日時
  */
-	private function __getSendTime(Model $model) {
-		// DBに項目があり期限付き公開の時のみ、日時を取得する（ブログを想定）。その後、未来日メール送られる
+	private function __getSendTimePublish(Model $model) {
+		// DBに項目があり期限付き公開の時のみ、公開日時を取得する（ブログを想定）。その後、未来日メール送られる
 		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
 			return $model->data[$model->alias]['publish_start'];
 		}
@@ -257,9 +272,11 @@ class MailQueueBehavior extends ModelBehavior {
  * メールを送るかどうか
  *
  * @param Model $model モデル
+ * @param bool $useReminder リマインダー使う
+ * @param arrya $sendTimeReminders リマインダー送信日時
  * @return bool
  */
-	public function isMailSend(Model $model) {
+	public function isMailSend(Model $model, $useReminder, $sendTimeReminders = null) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $MailSetting->getMailSettingPlugin();
@@ -270,22 +287,26 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		$sendTime = $this->__getSendTime($model);
-		//if (isset($this->settings[$model->alias]['mailSendTime'])) {
-		if (isset($sendTime)) {
-			$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
-			// SiteSettingからメール設定を取得する
-			$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
-				'SiteSetting.key' => array(
-					'Mail.use_cron',
-				)
-			));
+		if ($useReminder) {
+			// --- リマインダー
+			// リマインダーが複数日あって、全て日時が過ぎてたら、メール送らない
+			$isMailSendReminder = false;
+			foreach ($sendTimeReminders as $sendTime) {
+				if ($this->__isMailSendTime($useReminder, $sendTime)) {
+					$isMailSendReminder = true;
+				}
+			}
+			if (! $isMailSendReminder) {
+				return false;
+			}
 
-			$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
-			$now = NetCommonsTime::getNowDatetime();
+		} else {
+			// --- 通常の投稿
+			// 公開日時 ゲット
+			$sendTime = $this->__getSendTimePublish($model);
+			//if (isset($this->settings[$model->alias]['mailSendTime'])) {
 
-			// クーロンが使えなくて未来日なら、未来日メールなので送らない
-			if (empty($useCron) && strtotime($now) >= strtotime($sendTime)) {
+			if (! $this->__isMailSendTime($useReminder, $sendTime)) {
 				return false;
 			}
 		}
@@ -306,16 +327,87 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * メール送信日時で送るかどうか
+ *
+ * @param bool $useReminder リマインダー使う
+ * @param date $sendTime メール送信日時
+ * @return bool
+ */
+	private function __isMailSendTime($useReminder, $sendTime) {
+		if ($sendTime === null) {
+			return true;
+		}
+
+		$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
+		// SiteSettingからメール設定を取得する
+		$siteSetting = $SiteSetting->getSiteSettingForEdit(array(
+			'SiteSetting.key' => array(
+				'Mail.use_cron',
+			)
+		));
+
+		$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
+		$now = NetCommonsTime::getNowDatetime();
+
+		// クーロンが使えなくて未来日なら、未来日メールなので送らない
+		if (empty($useCron) && strtotime($now) < strtotime($sendTime)) {
+			return false;
+		}
+
+		if (! $useReminder) {
+			return true;
+		}
+
+		// リマインダーで日時が過ぎてたら、メール送らない
+		if (strtotime($now) > strtotime($sendTime)) {
+			return false;
+		}
+
+		return true;
+	}
+
+/**
+ * 投稿メール - メールアドレスに配信 - メールキューSave
+ * 登録フォームの投稿を想定
+ *
+ * @param Model $model モデル
+ * @param string $toAddresses 送信先メールアドレス
+ * @param int $languageId 言語ID
+ * @param date $sendTime メール送信日時
+ * @return void
+ */
+	public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTime = null) {
+		if ($languageId === null) {
+			$languageId = Current::read('Language.id');
+		}
+
+		$MailQueue = ClassRegistry::init('Mails.MailQueue');
+		$contentKey = $model->data[$model->alias]['key'];
+
+		// --- 承認依頼
+		// 投稿メール - メールアドレスに配信 - メールキューSave
+		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, null, $toAddresses);
+
+		// ルーム内の承認者達にメールを送る
+		// 送信者データ取得
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission('content_publishable');
+		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			/** @see MailQueue::saveQueueByUserId() */
+			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
+		}
+	}
+
+/**
  * 投稿メール - メールキューSave
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param date $sendTime メール送信日時
+ * @param array $sendTimes メール送信日時
  * @param int $createdUserId 登録ユーザID
  * @param string $toAddresses 送信先メールアドレス
  * @return NetCommonsMail
  */
-	private function __saveQueuePostMail(Model $model, $languageId, $sendTime, $createdUserId = null, $toAddresses = null) {
+	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes, $createdUserId = null, $toAddresses = null) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		/** @see MailSetting::getMailSettingPlugin() */
@@ -342,15 +434,18 @@ class MailQueueBehavior extends ModelBehavior {
 				$MailQueue->saveQueueByToAddress($postMail, $contentKey, $languageId, $toAddress);
 			}
 		} else {
-			// ルーム配信
-			/** @see MailQueue::saveQueueByRoomId() */
-			$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
+			// リマインダー対応のため、ループ
+			foreach ($sendTimes as $sendTime) {
+				// ルーム配信
+				/** @see MailQueue::saveQueueByRoomId() */
+				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
+			}
 		}
 		return $postMail;
 	}
 
 /**
- * 通知メール - 登録者に配信 - メールキューSave
+ * 通知メール - 登録者に配信(即時) - メールキューSave
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
@@ -367,7 +462,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
 		$contentKey = $model->data[$model->alias]['key'];
 
-		// 通知メール（承認完了、差戻し） - メールキューSave
+		// 通知メール - （承認完了、差戻し）(即時) - メールキューSave
 		$noticeMail = new NetCommonsMail();
 		$noticeMail->initPlugin($languageId);
 		//$completedMail->setMailFixedPhraseSiteSetting($languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION);
@@ -380,24 +475,24 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 承認依頼メール - 登録者と承認者に配信 - メールキューSave
+ * 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param date $sendTime メール送信日時
  * @param int $createdUserId 登録ユーザID
  * @param string $publishablePermission 公開パーミッション content_publishable or content_comment_publishable
  * @return void
  */
-	private function __saveQueueApprovalMail(Model $model, $languageId, $sendTime, $createdUserId, $publishablePermission) {
+	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission) {
+		//private function __saveQueueApprovalMail(Model $model, $languageId, $sendTime, $createdUserId, $publishablePermission) {
 		$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		$contentKey = $model->data[$model->alias]['key'];
 
 		// --- 承認依頼
-		// 投稿メール - 登録者に配信 - メールキューSave
-		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, $createdUserId);
+		// 投稿メール - 登録者に配信(即時) - メールキューSave
+		$postMail = $this->__saveQueuePostMail($model, $languageId, null, $createdUserId);
 
-		// ルーム内の承認者達にメールを送る
+		// ルーム内の承認者達にメールを送る(即時)
 		// 送信者データ取得
 		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($publishablePermission);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
@@ -439,37 +534,6 @@ class MailQueueBehavior extends ModelBehavior {
 			'conditions' => $conditions,
 		));
 		return $rolesRoomsUsers;
-	}
-
-/**
- * 投稿メール - メールアドレスに配信 - メールキューSave
- * 登録フォームの投稿を想定
- *
- * @param Model $model モデル
- * @param string $toAddresses 送信先メールアドレス
- * @param int $languageId 言語ID
- * @param date $sendTime メール送信日時
- * @return void
- */
-	public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTime = null) {
-		if ($languageId === null) {
-			$languageId = Current::read('Language.id');
-		}
-
-		$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		$contentKey = $model->data[$model->alias]['key'];
-
-		// --- 承認依頼
-		// 投稿メール - メールアドレスに配信 - メールキューSave
-		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, null, $toAddresses);
-
-		// ルーム内の承認者達にメールを送る
-		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission('content_publishable');
-		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
-			/** @see MailQueue::saveQueueByUserId() */
-			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
-		}
 	}
 
 /**
