@@ -92,6 +92,46 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * 投稿メール - メールアドレスに配信(即時) - メールキューSave
+ * 登録フォームの投稿を想定
+ *
+ * @param Model $model モデル
+ * @param string $toAddresses 送信先メールアドレス
+ * @param int $languageId 言語ID
+ * @param date $sendTime メール送信日時
+ * @return bool
+ * @throws InternalErrorException
+ */
+	public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTime = null) {
+		// --- メールを送るかどうか
+		if (! $this->isMailSend($model, false)) {
+			return true;
+		}
+
+		if ($languageId === null) {
+			$languageId = Current::read('Language.id');
+		}
+
+		$MailQueue = ClassRegistry::init('Mails.MailQueue');
+		$contentKey = $model->data[$model->alias]['key'];
+
+		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
+		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, null, $toAddresses);
+
+		// ルーム内の承認者達にメールを送る
+		// 送信者データ取得
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission('content_publishable');
+		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			/** @see MailQueue::saveQueueByUserId() */
+			if (! $MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id'])) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+		}
+
+		return true;
+	}
+
+/**
  * beforeDelete
  * コンテンツが削除されたら、キューに残っているメールも削除
  *
@@ -367,37 +407,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 投稿メール - メールアドレスに配信 - メールキューSave
- * 登録フォームの投稿を想定
- *
- * @param Model $model モデル
- * @param string $toAddresses 送信先メールアドレス
- * @param int $languageId 言語ID
- * @param date $sendTime メール送信日時
- * @return void
- */
-	public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTime = null) {
-		if ($languageId === null) {
-			$languageId = Current::read('Language.id');
-		}
-
-		$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		$contentKey = $model->data[$model->alias]['key'];
-
-		// --- 承認依頼
-		// 投稿メール - メールアドレスに配信 - メールキューSave
-		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, null, $toAddresses);
-
-		// ルーム内の承認者達にメールを送る
-		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission('content_publishable');
-		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
-			/** @see MailQueue::saveQueueByUserId() */
-			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
-		}
-	}
-
-/**
  * 投稿メール - メールキューSave
  *
  * @param Model $model モデル
@@ -406,6 +415,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $createdUserId 登録ユーザID
  * @param string $toAddresses 送信先メールアドレス
  * @return NetCommonsMail
+ * @throws InternalErrorException
  */
 	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes, $createdUserId = null, $toAddresses = null) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
@@ -426,19 +436,27 @@ class MailQueueBehavior extends ModelBehavior {
 		if (isset($createdUserId)) {
 			//登録者に配信
 			/** @see MailQueue::saveQueueByUserId() */
-			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId);
+			if (! $MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
 		} elseif (isset($toAddresses)) {
 			//メールアドレスに配信
 			foreach ($toAddresses as $toAddress) {
 				/** @see MailQueue::saveQueueByToAddress() */
-				$MailQueue->saveQueueByToAddress($postMail, $contentKey, $languageId, $toAddress);
+				if (! $MailQueue->saveQueueByToAddress($postMail, $contentKey, $languageId, $toAddress)) {
+					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+				}
 			}
+
 		} else {
 			// リマインダー対応のため、ループ
 			foreach ($sendTimes as $sendTime) {
 				// ルーム配信
 				/** @see MailQueue::saveQueueByRoomId() */
-				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
+				if (! $MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime)) {
+					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+				}
 			}
 		}
 		return $postMail;
@@ -452,6 +470,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $fixedPhraseType 定型文の種類
  * @param int $createdUserId 登録ユーザID
  * @return void
+ * @throws InternalErrorException
  */
 	private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
@@ -471,7 +490,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$noticeMail = $this->__convertPlainText($model, $noticeMail);
 		//登録者に配信
 		/** @see MailQueue::saveQueueByUserId() */
-		$MailQueue->saveQueueByUserId($noticeMail, $contentKey, $languageId, $createdUserId);
+		if (! $MailQueue->saveQueueByUserId($noticeMail, $contentKey, $languageId, $createdUserId)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
 	}
 
 /**
@@ -482,6 +503,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $createdUserId 登録ユーザID
  * @param string $publishablePermission 公開パーミッション content_publishable or content_comment_publishable
  * @return void
+ * @throws InternalErrorException
  */
 	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission) {
 		//private function __saveQueueApprovalMail(Model $model, $languageId, $sendTime, $createdUserId, $publishablePermission) {
@@ -497,7 +519,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($publishablePermission);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			/** @see MailQueue::saveQueueByUserId() */
-			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
+			if (! $MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id'])) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
 		}
 	}
 
