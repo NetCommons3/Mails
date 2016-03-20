@@ -81,13 +81,17 @@ class MailQueue extends MailsAppModel {
 					'required' => true,
 				),
 			),
-			'send_time' => array(
-				'datetime' => array(
-					'rule' => array('datetime'),
-					'message' => __d('net_commons', 'Invalid request.'),
-					'required' => true,
-				),
-			),
+			// 暫定コメントアウト対応：datetimeのvalidateがコア側でエラーになる。セットした値：'send_time' => string '2016-03-20 15:37:12' (length=19)
+			// 'rule' => array('datetime') => Notice (8): Undefined index: datetime [CORE/Cake/Utility/Validation.php, line 361]
+			// 'rule' => array('datetime', 'ymd') => Warning (2): preg_match(): Delimiter must not be alphanumeric or backslash [CORE/Cake/Utility/Validation.php, line 880]
+			//			'send_time' => array(
+			//				'datetime' => array(
+			//					'rule' => array('datetime'),
+			//					//'rule' => array('datetime', 'ymd'),
+			//					'message' => __d('net_commons', 'Invalid request.'),
+			//					'required' => true,
+			//				),
+			//			),
 		));
 
 		return parent::beforeValidate($options);
@@ -225,6 +229,10 @@ class MailQueue extends MailsAppModel {
 		$this->loadModels(array(
 			'MailQueueUser' => 'Mails.MailQueueUser',
 		));
+
+		// 暫定対応：新規登録
+		$this->create();
+		$this->MailQueueUser->create();
 
 		// メールキューテーブル(mail_queues)保存 - （メール生文を）
 		if (! $mailQueue = $this->saveMailQueue($data)) {
