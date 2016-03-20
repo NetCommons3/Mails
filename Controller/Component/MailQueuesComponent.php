@@ -70,30 +70,30 @@ class MailQueuesComponent extends Component {
 		//		$this->_mail->initPlugin();
 	}
 
-/**
- * メールを送るか
- *
- * @return bool
- */
-	public function isMailSend() {
-		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSetting = $this->_controller->MailSetting->getMailSettingPlugin();
-		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
-
-		if (! $isMailSend) {
-			return false;
-		}
-
-		if ($this->_controller->Components->loaded('Workflow.Workflow')) {
-			$status = $this->_controller->Workflow->parseStatus();
-			// 一時保存はメール送らない
-			if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
-				return false;
-			}
-		}
-
-		return true;
-	}
+	///**
+	// * メールを送るか
+	// *
+	// * @return bool
+	// */
+	//	public function isMailSend() {
+	//		/** @see MailSetting::getMailSettingPlugin() */
+	//		$mailSetting = $this->_controller->MailSetting->getMailSettingPlugin();
+	//		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
+	//
+	//		if (! $isMailSend) {
+	//			return false;
+	//		}
+	//
+	//		if ($this->_controller->Components->loaded('Workflow.Workflow')) {
+	//			$status = $this->_controller->Workflow->parseStatus();
+	//			// 一時保存はメール送らない
+	//			if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
+	//				return false;
+	//			}
+	//		}
+	//
+	//		return true;
+	//	}
 
 	///**
 	// * メール送信
@@ -162,20 +162,20 @@ class MailQueuesComponent extends Component {
 	//		return $this->__saveQueue($contentKey, null, $userId, null, $sendTime);
 	//	}
 
-/**
- * 個別パターン2 でキューに保存する
- * ・to_address　：　個別パターン2。メールアドレスのみで通知する (NCにいない人イメージ)
- *
- * @param string $contentKey コンテンツキー
- * @param string $toAddress 送信先メールアドレス
- * @param date $sendTime 送信日時
- * @return bool 成功 or 失敗
- */
-	public function saveQueueToAddress($contentKey, $toAddress, $sendTime = null) {
-		//public function saveQueueToAddress(NetCommonsMail $mail, $contentKey, $toAddress, $sendTime = null) {
-		//return $this->__saveQueue($mail, $contentKey, null, null, $toAddress, $sendTime);
-		return $this->__saveQueue($contentKey, null, null, $toAddress, $sendTime);
-	}
+	///**
+	// * 個別パターン2 でキューに保存する
+	// * ・to_address　：　個別パターン2。メールアドレスのみで通知する (NCにいない人イメージ)
+	// *
+	// * @param string $contentKey コンテンツキー
+	// * @param string $toAddress 送信先メールアドレス
+	// * @param date $sendTime 送信日時
+	// * @return bool 成功 or 失敗
+	// */
+	//	public function saveQueueToAddress($contentKey, $toAddress, $sendTime = null) {
+	//		//public function saveQueueToAddress(NetCommonsMail $mail, $contentKey, $toAddress, $sendTime = null) {
+	//		//return $this->__saveQueue($mail, $contentKey, null, null, $toAddress, $sendTime);
+	//		return $this->__saveQueue($contentKey, null, null, $toAddress, $sendTime);
+	//	}
 
 	///**
 	// * キューに保存する

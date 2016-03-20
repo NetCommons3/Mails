@@ -103,7 +103,7 @@ class MailQueue extends MailsAppModel {
 	);
 
 /**
- * 複数人パターン でキューに保存する
+ * ルーム配信でキューに保存
  * ・room_id + ロール（block_role_permission）　：　複数人パターン
  *
  * @param NetCommonsMail $mail NetCommonsメール
@@ -121,7 +121,7 @@ class MailQueue extends MailsAppModel {
 	}
 
 /**
- * 個別パターン1 でキューに保存する
+ * ユーザ配信でキューに保存
  * ・user_id 　　：　個別パターン1。パスワード再発行等 (NCにいる人イメージ)
  *
  * @param NetCommonsMail $mail NetCommonsメール
@@ -135,6 +135,25 @@ class MailQueue extends MailsAppModel {
 		//public function saveQueueByUserId(Model $model, NetCommonsMail $mail, $languageId, $userId) {
 		//return $this->__readyData($model, $contentKey, $typeKey, null, $userId, null, $sendTime);
 		$data = $this->__readyData($mail, $contentKey, $languageId, null, $userId, null, $sendTime);
+		return $this->__saveQueue($data);
+	}
+
+/**
+ * メールアドレス配信でキューに保存
+ * ・to_address　：　個別パターン2。メールアドレスのみで通知する (NCにいない人イメージ)
+ *
+ * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $contentKey コンテンツキー
+ * @param int $languageId 言語ID
+ * @param string $toAddress 送信先メールアドレス
+ * @param date $sendTime 送信日時
+ * @return bool 成功 or 失敗
+ */
+	public function saveQueueByToAddress(NetCommonsMail $mail, $contentKey, $languageId, $toAddress, $sendTime = null) {
+		//public function saveQueueToAddress(NetCommonsMail $mail, $contentKey, $toAddress, $sendTime = null) {
+		//return $this->__saveQueue($mail, $contentKey, null, null, $toAddress, $sendTime);
+		//return $this->__saveQueue($contentKey, null, null, $toAddress, $sendTime);
+		$data = $this->__readyData($mail, $contentKey, $languageId, null, null, $toAddress, $sendTime);
 		return $this->__saveQueue($data);
 	}
 

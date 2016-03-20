@@ -32,7 +32,7 @@ class MailQueueBehavior extends ModelBehavior {
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
 
 /**
- * @var bool 削除済みか
+ * @var bool 削除済み
  */
 	private $__isDeleted = null;
 
@@ -60,7 +60,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
-		$this->settings[$model->alias]['addToAddresses'] = null;
+		//$this->settings[$model->alias]['addToAddresses'] = null;
 
 		$this->__isDeleted = false;
 	}
@@ -242,16 +242,16 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['addEmbedTagsValues'][$embedTag] = $value;
 	}
 
-/**
- * 追加で送信するメールアドレス セット
- *
- * @param Model $model モデル
- * @param array $toAddresses 埋め込みタグ
- * @return void
- */
-	public function setAddToAddresses(Model $model, $toAddresses) {
-		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
-	}
+	///**
+	// * 追加で送信するメールアドレス セット
+	// *
+	// * @param Model $model モデル
+	// * @param array $toAddresses 埋め込みタグ
+	// * @return void
+	// */
+	//	public function setAddToAddresses(Model $model, $toAddresses) {
+	//		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
+	//	}
 
 /**
  * メールを送るかどうか
@@ -312,9 +312,10 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $languageId 言語ID
  * @param date $sendTime メール送信日時
  * @param int $createdUserId 登録ユーザID
+ * @param string $toAddresses 送信先メールアドレス
  * @return NetCommonsMail
  */
-	private function __saveQueuePostMail(Model $model, $languageId, $sendTime, $createdUserId = null) {
+	private function __saveQueuePostMail(Model $model, $languageId, $sendTime, $createdUserId = null, $toAddresses = null) {
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		/** @see MailSetting::getMailSettingPlugin() */
@@ -334,6 +335,12 @@ class MailQueueBehavior extends ModelBehavior {
 			//登録者に配信
 			/** @see MailQueue::saveQueueByUserId() */
 			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $createdUserId);
+		} elseif (isset($toAddresses)) {
+			//メールアドレスに配信
+			foreach ($toAddresses as $toAddress) {
+				/** @see MailQueue::saveQueueByToAddress() */
+				$MailQueue->saveQueueByToAddress($postMail, $contentKey, $languageId, $toAddress);
+			}
 		} else {
 			// ルーム配信
 			/** @see MailQueue::saveQueueByRoomId() */
@@ -391,19 +398,33 @@ class MailQueueBehavior extends ModelBehavior {
 		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, $createdUserId);
 
 		// ルーム内の承認者達にメールを送る
-		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？
 		// 送信者データ取得
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($publishablePermission);
+		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			/** @see MailQueue::saveQueueByUserId() */
+			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
+		}
+	}
+
+/**
+ * ルーム内で該当パーミッションありのユーザ ゲット
+ *
+ * @param string $permission パーミッション
+ * @return array
+ */
+	private function __getRolesRoomsUsersByPermission($permission) {
+		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？
+		// 暫定対応：RolesRoomsUserモデルに、このfunction持っていきたいな。
 		$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$conditions = array(
 			'RolesRoomsUser.room_id' => Current::read('Room.id'),
-			//'RoomRolePermission.permission' => 'content_publishable',
-			'RoomRolePermission.permission' => $publishablePermission,
+			'RoomRolePermission.permission' => $permission,
 			'RoomRolePermission.value' => 1,
 		);
 		$rolesRoomsUsers = $RolesRoomsUser->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'RolesRoomsUser.user_id',
+				'RolesRoomsUser.*',
 			),
 			'joins' => array(
 				array(
@@ -417,6 +438,34 @@ class MailQueueBehavior extends ModelBehavior {
 			),
 			'conditions' => $conditions,
 		));
+		return $rolesRoomsUsers;
+	}
+
+/**
+ * 投稿メール - メールアドレスに配信 - メールキューSave
+ * 登録フォームの投稿を想定
+ *
+ * @param Model $model モデル
+ * @param string $toAddresses 送信先メールアドレス
+ * @param int $languageId 言語ID
+ * @param date $sendTime メール送信日時
+ * @return void
+ */
+	public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTime = null) {
+		if ($languageId === null) {
+			$languageId = Current::read('Language.id');
+		}
+
+		$MailQueue = ClassRegistry::init('Mails.MailQueue');
+		$contentKey = $model->data[$model->alias]['key'];
+
+		// --- 承認依頼
+		// 投稿メール - メールアドレスに配信 - メールキューSave
+		$postMail = $this->__saveQueuePostMail($model, $languageId, $sendTime, null, $toAddresses);
+
+		// ルーム内の承認者達にメールを送る
+		// 送信者データ取得
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission('content_publishable');
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			/** @see MailQueue::saveQueueByUserId() */
 			$MailQueue->saveQueueByUserId($postMail, $contentKey, $languageId, $rolesRoomsUser['RolesRoomsUser']['user_id']);
