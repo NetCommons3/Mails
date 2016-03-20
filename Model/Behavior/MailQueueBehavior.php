@@ -84,22 +84,20 @@ class MailQueueBehavior extends ModelBehavior {
 		$contentKey = $model->data[$model->alias]['key'];
 		$createdUserId = $model->data[$model->alias]['created_user'];
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$status = Hash::get($model->data, $model->alias . '.status');
 		$sendTime = $this->__getSendTime($model);
 
 		$MailSetting = ClassRegistry::init('Mails.MailSetting');
+		$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $MailSetting->getMailSettingPlugin($languageId);
 		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
 
-		// --- ワークフローのstatusによって送信内容を変える
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// --- ワークフローのstatusによって送信内容を変える
 			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
 			// 暫定対応：ここらへんのリファクタリングは後回し
 
-			$MailQueue = ClassRegistry::init('Mails.MailQueue');
-			$status = $model->data[$model->alias]['status'];
-
-			// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - メールキューSave
@@ -111,6 +109,7 @@ class MailQueueBehavior extends ModelBehavior {
 				/** @see MailQueue::saveQueueByRoomId() */
 				$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
 
+				// 暫定対応：現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
 				// 承認完了通知メール - メールキューSave
 				$completedMail = new NetCommonsMail();
 				$completedMail->initPlugin($languageId);
@@ -122,7 +121,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
-				// content_publishable
 				// 投稿メール - メールキューSave
 				$postMail = new NetCommonsMail();
 				$postMail->initPlugin($languageId);
@@ -134,6 +132,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 				// ルーム内の承認者達にメールを送る
 				// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？
+				// 送信者データ取得 content_publishable
 				$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 				$conditions = array(
 					'RolesRoomsUser.room_id' => Current::read('Room.id'),
@@ -177,13 +176,25 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- ここにコンテンツコメントの承認時の処理、書く
 			// content_comment_publishable
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
-			// --- ここにワークフローの機能自体、使ってないプラグインの処理を書く
-		}
+			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+				// --- 公開
+			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+				// --- 承認依頼
+			}
 
-//CakeLog::debug(print_r($model->data, true));
-//CakeLog::debug(print_r($this->settings, true));
-		// --- 送信者データ取得
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
+			// --- ワークフローの機能自体、使ってないプラグインの処理
+			// --- 公開
+			// 投稿メール - メールキューSave
+			$postMail = new NetCommonsMail();
+			$postMail->initPlugin($languageId);
+			$postMail->setMailFixedPhrasePlugin($languageId);
+			$postMail->setReplyTo($replyTo);
+			$postMail = $this->__convertPlainText($model, $postMail);
+			/** @see MailQueue::saveQueueByRoomId() */
+			$MailQueue->saveQueueByRoomId($postMail, $contentKey, $languageId, $sendTime);
+		}
 
 		return true;
 	}
