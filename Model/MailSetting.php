@@ -83,12 +83,39 @@ class MailSetting extends MailsAppModel {
 /**
  * メール設定 データ新規作成
  *
- * @return array
+ * @param int $languageId 言語ID
+ * @param string $typeKey メールの種類
+ * @return array メール設定データ配列
  */
-	public function createMailSetting() {
-		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
+	public function createMailSetting($languageId = null, $typeKey = 'contents') {
+		$pluginKey = Current::read('Plugin.key');
+		if ($languageId === null) {
+			$languageId = Current::read('Language.id');
+		}
 
-		$mailSetting = $this->createAll();
+		$conditions = array(
+			'language_id' => $languageId,
+			'plugin_key' => $pluginKey,
+			'type_key' => $typeKey,
+		);
+		$mailSetting = $this->getMailSetting($conditions);
+
+		if ($mailSetting) {
+			$mailSetting = Hash::remove($mailSetting, '{s}.id');
+		} else {
+			$mailSetting = $this->create();
+		}
+		if (! $mailSetting[$this->alias]['mail_fixed_phrase_subject']) {
+			$mailSetting[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
+		}
+		if (! $mailSetting[$this->alias]['mail_fixed_phrase_body']) {
+			$mailSetting[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
+		}
+
+		$mailSetting = Hash::remove($mailSetting, '{s}.created');
+		$mailSetting = Hash::remove($mailSetting, '{s}.created_user');
+		$mailSetting = Hash::remove($mailSetting, '{s}.modified');
+		$mailSetting = Hash::remove($mailSetting, '{s}.modified_user');
 		return $mailSetting;
 	}
 
@@ -115,7 +142,13 @@ class MailSetting extends MailsAppModel {
 			'block_key' => $blockKey,
 			'type_key' => $typeKey,
 		);
-		return $this->getMailSetting($conditions);
+		$mailSetting = $this->getMailSetting($conditions);
+
+		if (! $mailSetting) {
+			$mailSetting = $this->createMailSetting($languageId, $typeKey);
+		}
+
+		return $mailSetting;
 	}
 
 /**
@@ -164,7 +197,6 @@ class MailSetting extends MailsAppModel {
 		//バリデーション
 		$this->set($data);
 		if (! $this->validates()) {
-			$this->rollback();
 			return false;
 		}
 
