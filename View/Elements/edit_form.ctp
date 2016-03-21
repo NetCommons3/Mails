@@ -27,7 +27,7 @@ if (! isset($cancelUrl)) {
 	$cancelUrl = null;
 }
 if (! isset($mailTypeKey)) {
-	$mailTypeKey = 'contents';
+	$mailTypeKey = MailSetting::DEFAULT_TYPE;
 }
 ?>
 

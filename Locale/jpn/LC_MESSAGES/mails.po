@@ -67,6 +67,12 @@ msgstr ""
 "それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br /"
 ">"
 
-#: Plugin/Videos/Controller/VideoMailSettingsController.php:96
+# メール関連
 msgid "MailSetting.mail_fixed_phrase_subject"
-msgstr "[{X-SITE_NAME}]{X-PLUGIN_NAME}投稿({X-ROOM} {X-BLOCK_NAME})"
+msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})"
+
+msgid "MailSetting.mail_fixed_phrase_body"
+msgstr "{X-PLUGIN_NAME}にコンテンツが登録されたのでお知らせします。\nルーム名:{X-ROOM}\nブロック名:{X-BLOCK_NAME}\nタイトル:{X-SUBJECT}\n登録者:{X-USER}\n登録日時:{X-TO_DATE}\n\n{X-BODY}\n\nこの登録内容を確認するには下記のリンクをクリックして下さい。\n{X-URL}"
+
+msgid "MailSetting.mail_fixed_phrase_body.popover"
+msgstr "{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル<br />{X-USER} : 登録者<br />{X-TO_DATE} : 登録日時<br />{X-BODY} : 内容<br />{X-URL} : 登録内容のURL"
