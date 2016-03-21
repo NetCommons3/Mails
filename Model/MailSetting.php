@@ -20,6 +20,13 @@ App::uses('MailsAppModel', 'Mails.Model');
 class MailSetting extends MailsAppModel {
 
 /**
+ * typeのデフォルト値
+ *
+ * @var int
+ */
+	const DEFAULT_TYPE = 'contents';
+
+/**
  * Validation rules
  *
  * @var array
@@ -87,7 +94,7 @@ class MailSetting extends MailsAppModel {
  * @param string $typeKey メールの種類
  * @return array メール設定データ配列
  */
-	public function createMailSetting($languageId = null, $typeKey = 'contents') {
+	public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE) {
 		$pluginKey = Current::read('Plugin.key');
 		if ($languageId === null) {
 			$languageId = Current::read('Language.id');
