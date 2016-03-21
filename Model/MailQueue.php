@@ -107,38 +107,6 @@ class MailQueue extends MailsAppModel {
 	);
 
 /**
- * キューに保存する
- * ・メールキューの送信依頼テーブル(mail_queues)保存 - （メール生文を）
- * ・メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
- *
- * @param array $data データ
- * @return bool 成功 or 失敗
- */
-	public function saveQueue($data) {
-		$this->loadModels(array(
-			'MailQueueUser' => 'Mails.MailQueueUser',
-		));
-
-		// 暫定対応：新規登録
-		$this->create();
-		$this->MailQueueUser->create();
-
-		// メールキューテーブル(mail_queues)保存 - （メール生文を）
-		if (! $mailQueue = $this->saveMailQueue($data)) {
-			return false;
-		}
-
-		$data['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
-//var_dump($data);
-		// メールキュー送信先テーブル(mail_queue_users)保存 - （誰に）
-		if (! $mailQueueUser = $this->MailQueueUser->saveMailQueueUser($data)) {
-			return false;
-		}
-
-		return true;
-	}
-
-/**
  * メールキューデータ保存 - （メール生文を）
  *
  * @param array $data received post data
