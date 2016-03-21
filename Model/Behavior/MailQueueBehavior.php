@@ -48,16 +48,20 @@ class MailQueueBehavior extends ModelBehavior {
 	public function setup(Model $model, $settings = array()) {
 		$this->settings[$model->alias] = $settings;
 
-		//		// --- 設定ないパラメータの処理
-		//		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		//		if ($workflowType === null) {
-		//			// --- ワークフローのstatusによって送信内容を変える
-		//			if ($model->Behaviors->loaded('Workflow.Workflow')) {
-		//				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
-		//			} else {
-		//				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
-		//			}
-		//		}
+		// priorityを下記と モデルの$actsAs で設定したけど、機能しなかった。 http://book.cakephp.org/2.0/ja/core-libraries/collections.html#id6
+		//$this->settings[$model->alias]['priority'] = 15;
+
+		// --- 設定ないパラメータの処理
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType === null) {
+			// --- ワークフローのstatusによって送信内容を変える
+			if ($model->Behaviors->loaded('Workflow.Workflow')) {
+				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
+			} else {
+				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
+			}
+		}
+
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		//$this->settings[$model->alias]['addToAddresses'] = null;
