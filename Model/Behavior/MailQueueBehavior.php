@@ -249,7 +249,7 @@ class MailQueueBehavior extends ModelBehavior {
 				// 投稿メール - ルーム配信 - メールキューSave
 				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
 
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
+				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
 				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
 
@@ -267,9 +267,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメントの承認時の処理
-			// コンテンツコメントのみ、content_keyとcontent_keyが、通常と違う
+			// コンテンツコメントのみ、content_keyが、通常と違う
 			$contentKey = $model->data['ContentComment']['content_key'];
-			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため
+			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため  https://github.com/NetCommons3/Mails/issues/43
 			$pluginKey = $model->data['ContentComment']['plugin_key'];
 
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
@@ -277,7 +277,7 @@ class MailQueueBehavior extends ModelBehavior {
 				// 投稿メール - ルーム配信(即時) - メールキューSave
 				$this->__saveQueuePostMail($model, $languageId, $sendTimes, null, null, $contentKey, $pluginKey);
 
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定
+				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
 				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId, $contentKey, $pluginKey);
 
@@ -792,7 +792,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return array
  */
 	private function __getRolesRoomsUsersByPermission(Model $model, $permission) {
-		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？
+		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？  https://github.com/NetCommons3/Mails/issues/45
 		// 暫定対応：RolesRoomsUserモデルに、このfunction持っていきたいな。
 		//$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$conditions = array(
