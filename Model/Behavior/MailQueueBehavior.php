@@ -28,6 +28,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	const
 		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
+		//MAIL_QUEUE_WORKFLOW_TYPE_registration = 'registration',
 		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
 
@@ -61,6 +62,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		//$this->settings[$model->alias]['addToAddresses'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
+		$this->settings[$model->alias]['sendTimeReminders'] = null;
+		$this->settings[$model->alias]['useReminder'] = 0;
 
 		$this->__isDeleted = false;
 
@@ -84,39 +87,38 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$sendTime = $this->__getSendTimePublish($model);
-		$sendTimes = array($sendTime);
+		$useReminder = $this->settings[$model->alias]['useReminder'];
+		// --- リマインダー利用する
+		if ($useReminder) {
+			$this->saveQueueReminder($model);
+		}
+
 		// --- メールを送るかどうか
-		if (! $this->isMailSend($model, false, $sendTimes)) {
+		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
-		return $this->__saveQueue($model, $sendTimes);
+		$sendTime = $this->__getSendTimePublish($model);
+		$this->__saveQueue($model, array($sendTime));
+
+		return true;
 	}
 
 /**
  * リマインダーでキュー保存
  *
  * @param Model $model モデル
- * @param array $sendTimes メール送信日時 配列
  * @return bool
  */
-	public function saveQueueReminder(Model $model, $sendTimes) {
+	public function saveQueueReminder(Model $model) {
+		//public function saveQueueReminder(Model $model, $sendTimes) {
 		// --- メールを送るかどうか
-		if (! $this->isMailSend($model, true, $sendTimes)) {
+		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
-		$now = NetCommonsTime::getNowDatetime();
-		foreach ($sendTimes as $key => $sendTime) {
-			// リマインダーで日時が過ぎてたら、メール送らないので、除外する
-			// isMailSendでリマインダーの複数日全てが、日時過ぎている場合は、この処理まで到達しないので、$sendTimesは空にならない想定
-			if (strtotime($now) > strtotime($sendTime)) {
-				unset($sendTimes[$key]);
-			}
-		}
-
-		return $this->__saveQueue($model, $sendTimes);
+		$sendTimeReminders = $this->settings[$model->alias]['sendTimeReminders'];
+		return $this->__saveQueue($model, $sendTimeReminders);
 	}
 
 /**
@@ -131,7 +133,7 @@ class MailQueueBehavior extends ModelBehavior {
 	public function saveQueuePostMailByToAddress(Model $model, $toAddresses) {
 		//public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTimeFuture = null) {
 		// --- メールを送るかどうか
-		if (! $this->isMailSend($model, false)) {
+		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
@@ -228,9 +230,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
 
-		// コンテンツコメント承認時に利用。update時は created_user がセットされないので、findする
+		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 		if ($createdUserId === null) {
+			// コンテンツコメント承認時に利用
 			$data = $model->find('first', array(
 				'recursive' => -1,
 				'conditions' => array(
@@ -298,17 +301,28 @@ class MailQueueBehavior extends ModelBehavior {
 		return true;
 	}
 
-	///**
-	// * メール送信日時 セット
-	// *
-	// * @param Model $model モデル
-	// * @param date $mailSendTime 送信日時
-	// * @return void
-	// */
-	//	public function setMailSendTime(Model $model, $mailSendTime) {
-	//		$this->settings[$model->alias]['mailSendTime'] = $mailSendTime;
-	//		//$this->__mailSendTime = $mailSendTime;
-	//	}
+/**
+ * リマインダー送信日時 セット
+ *
+ * @param Model $model モデル
+ * @param array $sendTimeReminders リマインダー送信日時 配列
+ * @return void
+ */
+	public function setSendTimeReminder(Model $model, $sendTimeReminders) {
+		$now = NetCommonsTime::getNowDatetime();
+		foreach ($sendTimeReminders as $key => $sendTime) {
+			// リマインダーで日時が過ぎてたら、メール送らないので、除外する
+			if (strtotime($now) > strtotime($sendTime)) {
+				unset($sendTimeReminders[$key]);
+			}
+		}
+		if (empty($sendTimeReminders)) {
+			return;
+		}
+
+		$this->settings[$model->alias]['sendTimeReminders'] = $sendTimeReminders;
+		$this->settings[$model->alias]['useReminder'] = 1;
+	}
 
 /**
  * 公開するメール送信日時 ゲット
@@ -375,11 +389,10 @@ class MailQueueBehavior extends ModelBehavior {
  * メールを送るかどうか
  *
  * @param Model $model モデル
- * @param bool $useReminder リマインダー使う
- * @param arrya $sendTimeReminders リマインダー送信日時
  * @return bool
  */
-	public function isMailSend(Model $model, $useReminder, $sendTimeReminders = null) {
+	public function isMailSend(Model $model) {
+		//public function isMailSend(Model $model, $useReminder, $sendTimeReminders = null) {
 		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $model->MailSetting->getMailSettingPlugin();
@@ -390,12 +403,15 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
+		$useReminder = $this->settings[$model->alias]['useReminder'];
+
 		if ($useReminder) {
 			// --- リマインダー
 			// リマインダーが複数日あって、全て日時が過ぎてたら、メール送らない
 			$isMailSendReminder = false;
+			$sendTimeReminders = $this->settings[$model->alias]['sendTimeReminders'];
 			foreach ($sendTimeReminders as $sendTime) {
-				if ($this->__isMailSendTime($model, $useReminder, $sendTime)) {
+				if ($this->__isMailSendTime($model, $sendTime)) {
 					$isMailSendReminder = true;
 				}
 			}
@@ -408,7 +424,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// 公開日時 ゲット
 			$sendTime = $this->__getSendTimePublish($model);
 
-			if (! $this->__isMailSendTime($model, $useReminder, $sendTime)) {
+			if (! $this->__isMailSendTime($model, $sendTime)) {
 				return false;
 			}
 		}
@@ -425,6 +441,11 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
+		// リマインダーの公開以外はメール送らない
+		if ($useReminder && $status != WorkflowComponent::STATUS_PUBLISHED) {
+			return false;
+		}
+
 		return true;
 	}
 
@@ -432,11 +453,11 @@ class MailQueueBehavior extends ModelBehavior {
  * メール送信日時で送るかどうか
  *
  * @param Model $model モデル
- * @param bool $useReminder リマインダー使う
  * @param date $sendTime メール送信日時
  * @return bool
  */
-	private function __isMailSendTime(Model $model, $useReminder, $sendTime) {
+	private function __isMailSendTime(Model $model, $sendTime) {
+		//private function __isMailSendTime(Model $model, $useReminder, $sendTime) {
 		if ($sendTime === null) {
 			return true;
 		}
@@ -456,6 +477,8 @@ class MailQueueBehavior extends ModelBehavior {
 		if (empty($useCron) && strtotime($now) < strtotime($sendTime)) {
 			return false;
 		}
+
+		$useReminder = $this->settings[$model->alias]['useReminder'];
 
 		if (! $useReminder) {
 			return true;
@@ -510,7 +533,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		//$replyTo = key($postMail->replyTo());
 		// MailQueueは新規登録
-		$mailQueue = $model->MailQueue->create();
+		//$mailQueue = $model->MailQueue->create();
 		$mailQueue['MailQueue'] = array(
 			'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
@@ -523,7 +546,7 @@ class MailQueueBehavior extends ModelBehavior {
 		);
 
 		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create();
+		//$mailQueueUser = $model->MailQueueUser->create();
 		$mailQueueUser['MailQueueUser'] = array(
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
@@ -532,61 +555,44 @@ class MailQueueBehavior extends ModelBehavior {
 			'room_id' => null,
 			'to_address' => null,
 		);
-		//		$data = array(
-		//			'MailQueue' => array(
-		//				'language_id' => $languageId,
-		//				'plugin_key' => $pluginKey,
-		//				'block_key' => $blockKey,
-		//				'content_key' => $contentKey,
-		//				'replay_to' => $replyTo,
-		//				'mail_subject' => $postMail->subject,
-		//				'mail_body' => $postMail->body,
-		//				'send_time' => null,
-		//			),
-		//			'MailQueueUser' => array(
-		//				'plugin_key' => $pluginKey,
-		//				'block_key' => $blockKey,
-		//				'content_key' => $contentKey,
-		//				'user_id' => null,
-		//				'room_id' => null,
-		//				'to_address' => null,
-		//			)
-		//		);
-		//		$data = array_merge($mailQueue, $data);
 
 		if (isset($createdUserId)) {
 			// 登録者に配信
 			// ここを実行する時は、承認依頼時を想定
-			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
-			$mailQueueUser['MailQueueUser']['user_id'] = $createdUserId;
 
+			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			$mailQueue = $model->MailQueue->create($mailQueue);
 			/** @see MailQueue::saveMailQueue() */
-			if (! $mailQueue = $model->MailQueue->saveMailQueue($mailQueue)) {
+			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
-			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
 
+			$mailQueueUser['MailQueueUser']['user_id'] = $createdUserId;
+			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
+			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
 		} elseif (isset($toAddresses)) {
 			// メールアドレスに配信
 			// ここを実行する時は、公開時を想定
-			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
 
+			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			$mailQueue = $model->MailQueue->create($mailQueue);
 			/** @see MailQueue::saveMailQueue() */
-			if (! $mailQueue = $model->MailQueue->saveMailQueue($mailQueue)) {
+			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
-			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
+
+			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
 			foreach ($toAddresses as $toAddress) {
 				$mailQueueUser['MailQueueUser']['to_address'] = $toAddress;
-
+				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 				/** @see MailQueueUser::saveMailQueueUser() */
-				if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 				}
 			}
@@ -595,20 +601,23 @@ class MailQueueBehavior extends ModelBehavior {
 			foreach ($sendTimes as $sendTime) {
 				// ルーム配信
 				// ここを実行する時は、公開時を想定
-				$roomId = Current::read('Room.id');
+
 				$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime($sendTime);
-				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
-
+				$mailQueue = $model->MailQueue->create($mailQueue);
 				/** @see MailQueue::saveMailQueue() */
-				if (! $mailQueue = $model->MailQueue->saveMailQueue($mailQueue)) {
+				if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 				}
-				$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
 
+				$roomId = Current::read('Room.id');
+				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
+				$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
+				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 				/** @see MailQueueUser::saveMailQueueUser() */
-				if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 				}
+
 				// ルームIDをクリア
 				$mailQueueUser['MailQueueUser']['room_id'] = null;
 
@@ -616,8 +625,8 @@ class MailQueueBehavior extends ModelBehavior {
 				if (isset($this->settings[$model->alias]['addUserIds'])) {
 					foreach ($this->settings[$model->alias]['addUserIds'] as $addUserId) {
 						$mailQueueUser['MailQueueUser']['user_id'] = $addUserId;
-
-						if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+						$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+						if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 							throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 						}
 					}
@@ -625,12 +634,7 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 		}
 
-		// $createdUserId と $toAddresses のパターンで $mailQueueUser を使いまわすため、3パターンの値クリア
-		//		$mailQueueUser['MailQueueUser']['user_id'] = null;
-		//		$mailQueueUser['MailQueueUser']['room_id'] = null;
-		//		$mailQueueUser['MailQueueUser']['to_address'] = null;
-
-		return $mailQueue['MailQueue']['id'];
+		return $mailQueueResult['MailQueue']['id'];
 	}
 
 /**
@@ -665,7 +669,6 @@ class MailQueueBehavior extends ModelBehavior {
 		// 通知メール - （承認完了、差戻し）(即時) - メールキューSave
 		$noticeMail = new NetCommonsMail();
 		$noticeMail->initPlugin($languageId);
-		//$completedMail->setMailFixedPhraseSiteSetting($languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION);
 		$noticeMail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType);
 		$noticeMail->setReplyTo($replyTo);
 		$noticeMail = $this->__convertPlainText($model, $noticeMail);
@@ -698,36 +701,15 @@ class MailQueueBehavior extends ModelBehavior {
 			'to_address' => null,
 		);
 
-		//		$data = array(
-		//			'MailQueue' => array(
-		//				'language_id' => $languageId,
-		//				'plugin_key' => $pluginKey,
-		//				'block_key' => $blockKey,
-		//				'content_key' => $contentKey,
-		//				'replay_to' => $replyTo,
-		//				'mail_subject' => $noticeMail->subject,
-		//				'mail_body' => $noticeMail->body,
-		//				'send_time' => $now,
-		//			),
-		//			'MailQueueUser' => array(
-		//				'plugin_key' => $pluginKey,
-		//				'block_key' => $blockKey,
-		//				'content_key' => $contentKey,
-		//				'user_id' => $createdUserId,
-		//				'room_id' => null,
-		//				'to_address' => null,
-		//			)
-		//		);
-
 		// 登録者に配信
 		/** @see MailQueue::saveMailQueue() */
-		if (! $mailQueue = $model->MailQueue->saveMailQueue($mailQueue)) {
+		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
-		$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueue['MailQueue']['id'];
+		$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
 		/** @see MailQueueUser::saveMailQueueUser() */
-		if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+		if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 	}
@@ -760,7 +742,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, $createdUserId, null, $contentKey, $pluginKey);
 
 		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create();
 		$mailQueueUser['MailQueueUser'] = array(
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
@@ -776,9 +757,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishablePermission);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 
 			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 		}
