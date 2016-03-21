@@ -139,7 +139,7 @@ class MailQueue extends MailsAppModel {
 	}
 
 /**
- * メールキューデータ保存
+ * メールキューデータ保存 - （メール生文を）
  *
  * @param array $data received post data
  * @return mixed On success Model::$data if its not empty or true, false on failure

@@ -113,7 +113,7 @@ class MailQueueUser extends MailsAppModel {
 	);
 
 /**
- * キューの配信先データ保存
+ * キューの配信先データ保存 - （誰に）
  *
  * セットするパターンが３つ。いずれかをセットする
  * ・room_id + ロール（block_role_permission）　：　複数人パターン
