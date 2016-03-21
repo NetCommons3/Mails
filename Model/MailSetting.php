@@ -93,29 +93,32 @@ class MailSetting extends MailsAppModel {
 			$languageId = Current::read('Language.id');
 		}
 
+		//デフォルトデータ取得
 		$conditions = array(
 			'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
+			'block_key' => null,
 			'type_key' => $typeKey,
 		);
 		$mailSetting = $this->getMailSetting($conditions);
-
 		if ($mailSetting) {
 			$mailSetting = Hash::remove($mailSetting, '{s}.id');
 		} else {
 			$mailSetting = $this->create();
 		}
+
+		//初期データセット
 		if (! $mailSetting[$this->alias]['mail_fixed_phrase_subject']) {
 			$mailSetting[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
 		}
 		if (! $mailSetting[$this->alias]['mail_fixed_phrase_body']) {
 			$mailSetting[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
 		}
-
 		$mailSetting = Hash::remove($mailSetting, '{s}.created');
 		$mailSetting = Hash::remove($mailSetting, '{s}.created_user');
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified');
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified_user');
+
 		return $mailSetting;
 	}
 

@@ -14,10 +14,24 @@ App::uses('AppController', 'Controller');
 /**
  * メール設定 Controller
  *
+ * 各プラグインで継承して使用する
+ *
+ * #### サンプルコード
+ * ##### Controller
+ * ```
+ * class LinkMailSettingsController extends MailSettingsController {
+ *
+ * }
+ * ```
+ * ##### View
+ * ```
+ * Links/View/LinkMailSettings/edit.ctpファイルを作成する
+ * ```
+ * 
  * @author Shohei Nakajima <nakajimashouhei@gmail.com>
  * @package NetCommons\Mails\Controller
  */
-class MailSettingsAppController extends AppController {
+class MailSettingsController extends AppController {
 
 /**
  * 使用レイアウト
