@@ -90,20 +90,8 @@ class MailSendShell extends AppShell {
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
 				'App.site_name',
-				//'Config.language',
 			)
 		));
-
-		//		$languageCode = Hash::get($siteSetting['Config.language'], '0.value');
-		//
-		//		// Language.id取得
-		//		$languages = $this->Language->find('first', array(
-		//			'recursive' => -1,
-		//			'conditions' => array(
-		//				'Language.code' => $languageCode,
-		//			)
-		//		));
-		//		$languageId = Hash::get($languages, 'Language.id');
 
 		foreach ($mailQueues as $mailQueue) {
 
