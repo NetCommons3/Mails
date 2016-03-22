@@ -85,6 +85,115 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * 追加の埋め込みタグ セット
+ * ・追加タグをセットできる
+ * ・X-URL等、既存タグ値の上書きできる
+ *
+ * @param Model $model モデル
+ * @param string $embedTag 埋め込みタグ
+ * @param string $value タグから置き換わる値
+ * @return void
+ */
+	public function setAddEmbedTagValue(Model $model, $embedTag, $value) {
+		$this->settings[$model->alias]['addEmbedTagsValues'][$embedTag] = $value;
+	}
+
+/**
+ * 追加で送信するユーザID セット
+ * グループ送信（回覧板、カレンダー等）を想定
+ *
+ * @param Model $model モデル
+ * @param array $userIds ユーザID配列
+ * @return void
+ */
+	public function setAddUserIds(Model $model, $userIds) {
+		$this->settings[$model->alias]['addUserIds'] = $userIds;
+	}
+
+/**
+ * 通知メールのON, OFF セット
+ * 回覧板、カレンダー等の利用を想定
+ *
+ * @param Model $model モデル
+ * @param int $isMailSendNotice 0:通知しない、1:通知する(デフォルト)
+ * @return void
+ */
+	public function setIsMailSendNotice(Model $model, $isMailSendNotice) {
+		$this->settings[$model->alias]['isMailSendNotice'] = $isMailSendNotice;
+	}
+
+	///**
+	// * 追加で送信するメールアドレス セット
+	// *
+	// * @param Model $model モデル
+	// * @param array $toAddresses メールアドレス 配列
+	// * @return void
+	// */
+	//	public function setAddToAddresses(Model $model, $toAddresses) {
+	//		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
+	//	}
+
+/**
+ * 登録フォームで送信するメールアドレス セット
+ *
+ * @param Model $model モデル
+ * @param array $toAddresses メールアドレス 配列
+ * @return void
+ */
+	public function setRegistrationToAddresses(Model $model, $toAddresses) {
+		$this->settings[$model->alias]['registration']['toAddresses'] = $toAddresses;
+		// 承認機能の種類 セット
+		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION;
+	}
+
+/**
+ * リマインダー送信日時 セット
+ *
+ * @param Model $model モデル
+ * @param array $sendTimeReminders リマインダー送信日時 配列
+ * @return void
+ */
+	public function setSendTimeReminder(Model $model, $sendTimeReminders) {
+		$now = NetCommonsTime::getNowDatetime();
+		foreach ($sendTimeReminders as $key => $sendTime) {
+			// リマインダーで日時が過ぎてたら、メール送らないので、除外する
+			if (strtotime($now) > strtotime($sendTime)) {
+				unset($sendTimeReminders[$key]);
+			}
+		}
+		if (empty($sendTimeReminders)) {
+			return;
+		}
+
+		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
+	}
+
+/**
+ * 公開するメール送信日時 ゲット
+ *
+ * @param Model $model モデル
+ * @return date 送信日時
+ */
+	private function __getSendTimePublish(Model $model) {
+		// DBに項目があり期限付き公開の時のみ、公開日時を取得する（ブログを想定）。その後、未来日メール送られる
+		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
+			return $model->data[$model->alias]['publish_start'];
+		}
+		return null;
+	}
+
+/**
+ * save時のメール送信日時 ゲット
+ *
+ * @param date $sendTime モデル
+ * @return date 送信日時
+ */
+	private function __getSaveSendTime($sendTime) {
+		return isset($sendTime) ? $sendTime : NetCommonsTime::getNowDatetime();
+	}
+
+/**
  * afterSave is called after a model is saved.
  *
  * @param Model $model モデル
@@ -132,62 +241,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 		return $this->__saveQueue($model, $sendTimeReminders);
-	}
-
-/**
- * 投稿メール - メールアドレスに配信(即時) - メールキューSave
- * 登録フォームの投稿を想定
- *
- * @param Model $model モデル
- * @return bool
- * @throws InternalErrorException
- */
-	private function __saveQueuePostMailByToAddress(Model $model) {
-		//public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTimeFuture = null) {
-		//private function __saveQueuePostMailByToAddress(Model $model, $toAddresses) {
-		//		// --- メールを送るかどうか
-		//		if (! $this->isMailSend($model)) {
-		//			return true;
-		//		}
-
-		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
-
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		//$contentKey = $model->data[$model->alias]['key'];
-		$languageId = Current::read('Language.id');
-
-		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
-		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, null, $toAddresses);
-
-		$contentKey = $model->data[$model->alias]['key'];
-		$pluginKey = Current::read('Plugin.key');
-		$blockKey = Current::read('Block.key');
-
-		// MailQueueUserは新規登録
-		$mailQueueUser['MailQueueUser'] = array(
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'mail_queue_id' => $mailQueueId,
-			'user_id' => null,
-			'room_id' => null,
-			'to_address' => null,
-		);
-
-		// ルーム内の承認者達に配信(即時)
-		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
-		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
-			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
-			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-
-			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-		}
-
-		return true;
 	}
 
 /**
@@ -245,202 +298,6 @@ class MailQueueBehavior extends ModelBehavior {
 		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.content_key' => $contentKey), false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
-	}
-
-/**
- * キュー保存
- *
- * @param Model $model モデル
- * @param array $sendTimes メール送信日時 配列
- * @return bool
- */
-	private function __saveQueue(Model $model, $sendTimes) {
-		$languageId = Current::read('Language.id');
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$status = Hash::get($model->data, $model->alias . '.status');
-
-		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
-		if ($createdUserId === null) {
-			// コンテンツコメント承認時に利用
-			$data = $model->find('first', array(
-				'recursive' => -1,
-				'conditions' => array(
-					'id' => $model->data[$model->alias]['id']
-				)
-			));
-			$createdUserId = $data[$model->alias]['created_user'];
-		}
-
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			// --- ワークフローのstatusによって送信内容を変える
-			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
-
-			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-				// --- 公開
-				// 投稿メール - ルーム配信 - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
-
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
-				// 承認完了通知メール - 登録者に配信 - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
-
-			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-				// --- 承認依頼
-				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_publishable');
-				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_publishable');
-
-			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
-				// --- 差戻し
-				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL, $createdUserId);
-			}
-
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// --- コンテンツコメントの承認時の処理
-			// コンテンツコメントのみ、content_keyが、通常と違う
-			$contentKey = $model->data['ContentComment']['content_key'];
-			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため  https://github.com/NetCommons3/Mails/issues/43
-			$pluginKey = $model->data['ContentComment']['plugin_key'];
-
-			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-				// --- 公開
-				// 投稿メール - ルーム配信(即時) - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTimes, null, null, $contentKey, $pluginKey);
-
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
-				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId, $contentKey, $pluginKey);
-
-			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-				// --- 承認依頼
-				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_comment_publishable');
-				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable', $contentKey, $pluginKey);
-			}
-
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
-			// --- ワークフローの機能自体、使ってないプラグインの処理
-			// --- 公開
-			// 投稿メール - ルーム配信 - メールキューSave
-			$this->__saveQueuePostMail($model, $languageId, $sendTimes);
-
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION) {
-			// --- 登録フォーム
-			$this->__saveQueuePostMailByToAddress($model);
-		}
-
-		return true;
-	}
-
-/**
- * リマインダー送信日時 セット
- *
- * @param Model $model モデル
- * @param array $sendTimeReminders リマインダー送信日時 配列
- * @return void
- */
-	public function setSendTimeReminder(Model $model, $sendTimeReminders) {
-		$now = NetCommonsTime::getNowDatetime();
-		foreach ($sendTimeReminders as $key => $sendTime) {
-			// リマインダーで日時が過ぎてたら、メール送らないので、除外する
-			if (strtotime($now) > strtotime($sendTime)) {
-				unset($sendTimeReminders[$key]);
-			}
-		}
-		if (empty($sendTimeReminders)) {
-			return;
-		}
-
-		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
-		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
-	}
-
-/**
- * 公開するメール送信日時 ゲット
- *
- * @param Model $model モデル
- * @return date 送信日時
- */
-	private function __getSendTimePublish(Model $model) {
-		// DBに項目があり期限付き公開の時のみ、公開日時を取得する（ブログを想定）。その後、未来日メール送られる
-		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
-			return $model->data[$model->alias]['publish_start'];
-		}
-		return null;
-	}
-
-/**
- * save時のメール送信日時 ゲット
- *
- * @param date $sendTime モデル
- * @return date 送信日時
- */
-	private function __getSaveSendTime($sendTime) {
-		return isset($sendTime) ? $sendTime : NetCommonsTime::getNowDatetime();
-	}
-
-/**
- * 追加の埋め込みタグ セット
- * ・追加タグをセットできる
- * ・X-URL等、既存タグ値の上書きできる
- *
- * @param Model $model モデル
- * @param string $embedTag 埋め込みタグ
- * @param string $value タグから置き換わる値
- * @return void
- */
-	public function setAddEmbedTagValue(Model $model, $embedTag, $value) {
-		$this->settings[$model->alias]['addEmbedTagsValues'][$embedTag] = $value;
-	}
-
-	///**
-	// * 追加で送信するメールアドレス セット
-	// *
-	// * @param Model $model モデル
-	// * @param array $toAddresses メールアドレス 配列
-	// * @return void
-	// */
-	//	public function setAddToAddresses(Model $model, $toAddresses) {
-	//		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
-	//	}
-
-/**
- * 登録フォームで送信するメールアドレス セット
- *
- * @param Model $model モデル
- * @param array $toAddresses メールアドレス 配列
- * @return void
- */
-	public function setRegistrationToAddresses(Model $model, $toAddresses) {
-		$this->settings[$model->alias]['registration']['toAddresses'] = $toAddresses;
-		// 承認機能の種類 セット
-		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION;
-	}
-
-/**
- * 追加で送信するユーザID セット
- * グループ送信（回覧板、カレンダー等）を想定
- *
- * @param Model $model モデル
- * @param array $userIds ユーザID配列
- * @return void
- */
-	public function setAddUserIds(Model $model, $userIds) {
-		$this->settings[$model->alias]['addUserIds'] = $userIds;
-	}
-
-/**
- * 通知メールのON, OFF セット
- * 回覧板、カレンダー等の利用を想定
- *
- * @param Model $model モデル
- * @param int $isMailSendNotice 0:通知しない、1:通知する(デフォルト)
- * @return void
- */
-	public function setIsMailSendNotice(Model $model, $isMailSendNotice) {
-		$this->settings[$model->alias]['isMailSendNotice'] = $isMailSendNotice;
 	}
 
 /**
@@ -551,6 +408,93 @@ class MailQueueBehavior extends ModelBehavior {
 		// リマインダーで日時が過ぎてたら、メール送らない
 		if (strtotime($now) > strtotime($sendTime)) {
 			return false;
+		}
+
+		return true;
+	}
+
+/**
+ * キュー保存
+ *
+ * @param Model $model モデル
+ * @param array $sendTimes メール送信日時 配列
+ * @return bool
+ */
+	private function __saveQueue(Model $model, $sendTimes) {
+		$languageId = Current::read('Language.id');
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$status = Hash::get($model->data, $model->alias . '.status');
+
+		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		if ($createdUserId === null) {
+			// コンテンツコメント承認時に利用
+			$data = $model->find('first', array(
+				'recursive' => -1,
+				'conditions' => array(
+					'id' => $model->data[$model->alias]['id']
+				)
+			));
+			$createdUserId = $data[$model->alias]['created_user'];
+		}
+
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// --- ワークフローのstatusによって送信内容を変える
+			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
+
+			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+				// --- 公開
+				// 投稿メール - ルーム配信 - メールキューSave
+				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+
+				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+				// 承認完了通知メール - 登録者に配信 - メールキューSave
+				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
+
+			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+				// --- 承認依頼
+				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
+				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_publishable');
+
+			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
+				// --- 差戻し
+				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
+				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL, $createdUserId);
+			}
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// --- コンテンツコメントの承認時の処理
+			// コンテンツコメントのみ、content_keyが、通常と違う
+			$contentKey = $model->data['ContentComment']['content_key'];
+			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため  https://github.com/NetCommons3/Mails/issues/43
+			$pluginKey = $model->data['ContentComment']['plugin_key'];
+
+			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+				// --- 公開
+				// 投稿メール - ルーム配信(即時) - メールキューSave
+				$this->__saveQueuePostMail($model, $languageId, $sendTimes, null, null, $contentKey, $pluginKey);
+
+				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
+				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId, $contentKey, $pluginKey);
+
+			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+				// --- 承認依頼
+				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
+				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_comment_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable', $contentKey, $pluginKey);
+			}
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
+			// --- ワークフローの機能自体、使ってないプラグインの処理
+			// --- 公開
+			// 投稿メール - ルーム配信 - メールキューSave
+			$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION) {
+			// --- 登録フォーム
+			$this->__saveQueuePostMailByToAddress($model);
 		}
 
 		return true;
@@ -699,6 +643,62 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		return $mailQueueResult['MailQueue']['id'];
+	}
+
+/**
+ * 投稿メール - メールアドレスに配信(即時) - メールキューSave
+ * 登録フォームの投稿を想定
+ *
+ * @param Model $model モデル
+ * @return bool
+ * @throws InternalErrorException
+ */
+	private function __saveQueuePostMailByToAddress(Model $model) {
+		//public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTimeFuture = null) {
+		//private function __saveQueuePostMailByToAddress(Model $model, $toAddresses) {
+		//		// --- メールを送るかどうか
+		//		if (! $this->isMailSend($model)) {
+		//			return true;
+		//		}
+
+		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
+
+		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
+		//$contentKey = $model->data[$model->alias]['key'];
+		$languageId = Current::read('Language.id');
+
+		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
+		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, null, $toAddresses);
+
+		$contentKey = $model->data[$model->alias]['key'];
+		$pluginKey = Current::read('Plugin.key');
+		$blockKey = Current::read('Block.key');
+
+		// MailQueueUserは新規登録
+		$mailQueueUser['MailQueueUser'] = array(
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'mail_queue_id' => $mailQueueId,
+			'user_id' => null,
+			'room_id' => null,
+			'to_address' => null,
+		);
+
+		// ルーム内の承認者達に配信(即時)
+		// 送信者データ取得
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+
+			/** @see MailQueueUser::saveMailQueueUser() */
+			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+		}
+
+		return true;
 	}
 
 /**
