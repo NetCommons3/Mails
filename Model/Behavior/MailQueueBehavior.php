@@ -194,6 +194,54 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * コンテンツキー ゲット
+ *
+ * @param Model $model モデル
+ * @return string コンテンツキー
+ */
+	private function __getContentKey(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// コンテンツコメント
+			return $model->data[$model->alias]['content_key'];
+		}
+		// 通常
+		return $model->data[$model->alias]['key'];
+	}
+
+/**
+ * プラグインキー ゲット
+ *
+ * @param Model $model モデル
+ * @return string コンテンツキー
+ */
+	private function __getPluginKey(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// コンテンツコメントは pluginsテーブルに登録なしで Current::read('Plugin') とれないため、ここで直セット
+			return 'content_comments';
+		}
+		// 通常
+		return Current::read('Plugin.key');
+	}
+
+/**
+ * プラグイン名 ゲット
+ *
+ * @param Model $model モデル
+ * @return string コンテンツキー
+ */
+	private function __getPluginName(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// コンテンツコメントは pluginsテーブルに登録なしで Current::read('Plugin') とれないため、ここで直セット
+			return __d('content_comments', 'comment');
+		}
+		// 通常
+		return Current::read('Plugin.Name');
+	}
+
+/**
  * afterSave is called after a model is saved.
  *
  * @param Model $model モデル
@@ -445,7 +493,8 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// リマインダーは delete->insert
-		$contentKey = $model->data[$model->alias]['key'];
+		//$contentKey = $model->data[$model->alias]['key'];
+		$contentKey = $this->__getContentKey($model);
 		$this->__deleteQueue($model, $contentKey);
 
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
@@ -503,16 +552,10 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメント
-
-			// コンテンツコメントのみ、content_keyが、通常と違う
-			$contentKey = $model->data['ContentComment']['content_key'];
-			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため  https://github.com/NetCommons3/Mails/issues/43
-			$pluginKey = $model->data['ContentComment']['plugin_key'];
-
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - ルーム配信(即時) - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTimes, null, null, $contentKey, $pluginKey);
+				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// コメント承認しないなら、承認完了通知メール送らない
 				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.requestDataKeys.useCommentApproval');
@@ -522,13 +565,12 @@ class MailQueueBehavior extends ModelBehavior {
 				}
 
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId, $contentKey, $pluginKey);
+				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
 				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_comment_publishable');
-				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable', $contentKey, $pluginKey);
+				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable');
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
@@ -553,12 +595,11 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $sendTimes メール送信日時 配列
  * @param int $createdUserId 登録ユーザID
  * @param string $toAddresses 送信先メールアドレス
- * @param string $contentKey コンテンツキー
- * @param string $pluginKey プラグインキー
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null, $contentKey = null, $pluginKey = null) {
+	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null) {
+		//private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null, $contentKey = null, $pluginKey = null) {
 		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		//$MailQueueUser = ClassRegistry::init('Mails.MailQueueUser');
@@ -566,20 +607,17 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
-		if ($contentKey === null) {
-			$contentKey = $model->data[$model->alias]['key'];
-		}
-		if ($pluginKey === null) {
-			$pluginKey = Current::read('Plugin.key');
-		}
 		if (empty($replyTo)) {
 			$replyTo = null;
 		}
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
+		$pluginName = $this->__getPluginName($model);
 		$blockKey = Current::read('Block.key');
 
 		// 投稿メール - メールキューSave
 		$postMail = new NetCommonsMail();
-		$postMail->initPlugin($languageId);
+		$postMail->initPlugin($languageId, $pluginName);
 		$postMail->setMailFixedPhrasePlugin($mailSettings);
 		$postMail->setReplyTo($replyTo);
 		$postMail = $this->__convertPlainText($model, $postMail);
@@ -715,8 +753,10 @@ class MailQueueBehavior extends ModelBehavior {
 		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
 		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, null, $toAddresses);
 
-		$contentKey = $model->data[$model->alias]['key'];
-		$pluginKey = Current::read('Plugin.key');
+		//$contentKey = $model->data[$model->alias]['key'];
+		//$pluginKey = Current::read('Plugin.key');
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
 		$blockKey = Current::read('Block.key');
 
 		// MailQueueUserは新規登録
@@ -753,31 +793,27 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $languageId 言語ID
  * @param string $fixedPhraseType 定型文の種類
  * @param int $createdUserId 登録ユーザID
- * @param string $contentKey コンテンツキー
- * @param string $pluginKey プラグインキー
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId, $contentKey = null, $pluginKey = null) {
+	private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId) {
+		//private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId, $contentKey = null, $pluginKey = null) {
 		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
-		if ($contentKey === null) {
-			$contentKey = $model->data[$model->alias]['key'];
-		}
-		if ($pluginKey === null) {
-			$pluginKey = Current::read('Plugin.key');
-		}
 		if (empty($replyTo)) {
 			$replyTo = null;
 		}
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
+		$pluginName = $this->__getPluginName($model);
 
 		// 通知メール - （承認完了、差戻し）(即時) - メールキューSave
 		$noticeMail = new NetCommonsMail();
-		$noticeMail->initPlugin($languageId);
+		$noticeMail->initPlugin($languageId, $pluginName);
 		$noticeMail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType);
 		$noticeMail->setReplyTo($replyTo);
 		$noticeMail = $this->__convertPlainText($model, $noticeMail);
@@ -830,25 +866,20 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $languageId 言語ID
  * @param int $createdUserId 登録ユーザID
  * @param string $publishablePermission 公開パーミッション content_publishable or content_comment_publishable
- * @param string $contentKey コンテンツキー
- * @param string $pluginKey プラグインキー
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission, $contentKey = null, $pluginKey = null) {
+	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission) {
 		//private function __saveQueueApprovalMail(Model $model, $languageId, $sendTime, $createdUserId, $publishablePermission) {
+		//private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission, $contentKey = null, $pluginKey = null) {
 		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		if ($contentKey === null) {
-			$contentKey = $model->data[$model->alias]['key'];
-		}
-		if ($pluginKey === null) {
-			$pluginKey = Current::read('Plugin.key');
-		}
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
 		$blockKey = Current::read('Block.key');
 
 		// --- 承認依頼
 		// 投稿メール - 登録者に配信(即時) - メールキューSave
-		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, $createdUserId, null, $contentKey, $pluginKey);
+		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, $createdUserId);
 
 		// MailQueueUserは新規登録
 		$mailQueueUser['MailQueueUser'] = array(
@@ -928,7 +959,8 @@ class MailQueueBehavior extends ModelBehavior {
 		//$mail->assignTags($this->tags);
 
 		//$contentKey = $model->data[$model->alias]['key'];
-		$contentKey = Hash::get($model->data, $model->alias . '.key');
+		//$contentKey = Hash::get($model->data, $model->alias . '.key');
+		$contentKey = $this->__getContentKey($model);
 
 		// fullpassのURL
 		$url = NetCommonsUrl::actionUrl(array(

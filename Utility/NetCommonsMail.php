@@ -88,10 +88,11 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定 プラグイン用
  *
  * @param int $languageId 言語ID
+ * @param string $pluginName プラグイン名
  * @return void
  * @see CakeEmail::$charset
  */
-	public function initPlugin($languageId) {
+	public function initPlugin($languageId, $pluginName = null) {
 		//public function initPlugin($data, $languageId, $typeKey = 'contents') {
 		//public function initPlugin($languageId, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
@@ -122,7 +123,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->__initConfig();
 
 		//		$this->__setTags($data, $languageId);
-		$this->__setTags($languageId);
+		$this->__setTags($languageId, $pluginName);
 		//$this->setMailSettingPlugin($languageId, $typeKey);
 	}
 
@@ -203,12 +204,16 @@ class NetCommonsMail extends CakeEmail {
  * 初期設定 タグ
  *
  * @param int $languageId 言語ID
+ * @param string $pluginName プラグイン名
  * @return void
  */
-	private function __setTags($languageId) {
+	private function __setTags($languageId, $pluginName = null) {
 		//private function __initTags($siteSetting, $data) {
 		//private function __setTags($data, $languageId) {
 		//public function setTags($data, $languageId) {
+		if ($pluginName === null) {
+			$pluginName = Current::read('Plugin.name');
+		}
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
@@ -218,7 +223,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-FROM_NAME', htmlspecialchars($fromName));
 		$this->assignTag('X-SITE_NAME', htmlspecialchars($siteName));
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
-		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars(Current::read('Plugin.name')));
+		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag('X-TO_DATE', date('Y/m/d H:i:s'));
