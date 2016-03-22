@@ -67,7 +67,10 @@ class MailQueueBehavior extends ModelBehavior {
 		//$this->settings[$model->alias]['addToAddresses'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
 		$this->settings[$model->alias]['sendTimeReminders'] = null;
+		// リマインダー使わない
 		$this->settings[$model->alias]['useReminder'] = 0;
+		// 通知メール送る
+		$this->settings[$model->alias]['isMailSendNotice'] = 1;
 
 		$this->__isDeleted = false;
 
@@ -97,7 +100,8 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->saveQueueReminder($model);
 		}
 
-		// --- メールを送るかどうか
+		// --- 周知メール
+		// メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
 		}
@@ -116,7 +120,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function saveQueueReminder(Model $model) {
 		//public function saveQueueReminder(Model $model, $sendTimes) {
-		// --- メールを送るかどうか
+		// メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
 		}
@@ -390,6 +394,18 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * 通知メールのON, OFF セット
+ * 回覧板、カレンダー等の利用を想定
+ *
+ * @param Model $model モデル
+ * @param int $isMailSendNotice 0:通知しない、1:通知する(デフォルト)
+ * @return void
+ */
+	public function setIsMailSendNotice(Model $model, $isMailSendNotice) {
+		$this->settings[$model->alias]['isMailSendNotice'] = $isMailSendNotice;
+	}
+
+/**
  * メールを送るかどうか
  *
  * @param Model $model モデル
@@ -425,6 +441,12 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} else {
 			// --- 通常の投稿
+			// 通知メール送らない
+			$isMailSendNotice = $this->settings[$model->alias]['isMailSendNotice'];
+			if (! $isMailSendNotice) {
+				return false;
+			}
+
 			// 公開日時 ゲット
 			$sendTime = $this->__getSendTimePublish($model);
 
