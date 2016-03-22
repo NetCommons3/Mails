@@ -207,7 +207,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		// --- リマインダー利用する
 		if ($useReminder) {
-			$this->saveQueueReminder($model);
+			$this->__saveQueueReminder($model);
 		}
 
 		// --- 周知メール
@@ -228,8 +228,9 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @return bool
  */
-	public function saveQueueReminder(Model $model) {
+	private function __saveQueueReminder(Model $model) {
 		//public function saveQueueReminder(Model $model, $sendTimes) {
+		//public function saveQueueReminder(Model $model) {
 		// メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
