@@ -265,7 +265,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$sendTime = $this->__getSendTimePublish($model);
-		$this->__saveQueue($model, array($sendTime));
+		$this->saveQueue($model, array($sendTime));
 
 		return true;
 	}
@@ -498,7 +498,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->__deleteQueue($model, $contentKey);
 
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
-		return $this->__saveQueue($model, $sendTimeReminders);
+		return $this->saveQueue($model, $sendTimeReminders);
 	}
 
 /**
@@ -508,7 +508,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $sendTimes メール送信日時 配列
  * @return bool
  */
-	private function __saveQueue(Model $model, $sendTimes) {
+	public function saveQueue(Model $model, $sendTimes) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
