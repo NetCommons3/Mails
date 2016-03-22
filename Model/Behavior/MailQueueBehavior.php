@@ -66,11 +66,11 @@ class MailQueueBehavior extends ModelBehavior {
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
-		// 投稿メール送る
-		$this->settings[$model->alias]['isMailSendPost'] = 1;
+		$this->settings[$model->alias]['isMailSendPost'] = null;
+		$this->settings[$model->alias]['beforeStatus'] = null;
+		$this->settings[$model->alias]['isEdit'] = null;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
-		// リマインダー使わない
-		$this->settings[$model->alias]['reminder']['useReminder'] = 0;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		$this->settings[$model->alias]['registration']['toAddresses'] = null;
 
 		$this->__isDeleted = false;
@@ -243,7 +243,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// コンテンツ取得
 		$content = $model->find('first', array(
-			'conditions' => array($model->alias . '.id' => $model->id)
+			'recursive' => -1,
+			'conditions' => array($model->alias . '.id' => $model->id),
+			'callbacks' => false,
 		));
 
 		$contentKey = $content[$model->alias]['key'];
@@ -296,7 +298,38 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
+		// --- 編集フラグセット
+		$isEdit = $this->settings[$model->alias]['isEdit'];
+		if ($isEdit === null) {
+			$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+			if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+				// コンテンツコメント
+				$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
+			} else {
+				// 通常
+				$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
+			}
+			$data = $model->find('all', array(
+				'recursive' => -1,
+				'conditions' => $conditions,
+				'order' => array($model->alias . '.modified DESC'),
+				'callbacks' => false,
+			));
+
+			// keyに対して2件以上記事がある = 編集
+			if (count($data) >= 2) {
+				$this->settings[$model->alias]['isEdit'] = 1;
+				$isEdit = 1;
+				// 1つ前のコンテンツのステータス
+				$this->settings[$model->alias]['beforeStatus'] = $data[1][$model->alias]['status'];
+			} else {
+				$this->settings[$model->alias]['isEdit'] = 0;
+				$isEdit = 0;
+			}
+		}
+
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
+		$status = Hash::get($model->data, $model->alias . '.status');
 
 		if ($useReminder) {
 			// --- リマインダー
@@ -316,7 +349,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- 通常の投稿
 			// 投稿メールOFFなら、メール送らない
 			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
-			if (! $isMailSendPost) {
+			if (isset($isMailSendPost) && !$isMailSendPost) {
 				return false;
 			}
 
@@ -325,15 +358,22 @@ class MailQueueBehavior extends ModelBehavior {
 			if (! $this->__isMailSendTime($model, $sendTime)) {
 				return false;
 			}
+
+			// 投稿メールフラグが未設定の場合のみ処理（カレンダー、回覧板のメール通知を想定）
+			if ($isEdit && $isMailSendPost === null) {
+				// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、メール送らない
+				// ・承認ONで、承認者が公開中の記事を編集しても、メール送らない
+				// ・承認OFFで、公開中の記事を編集しても、メール送らない
+				// ・・公開中の記事（１つ前の記事のstatus=1）
+				// ・・編集した記事が公開（status=1）
+				// ※承認ONで公開中の記事を編集して、編集した記事が公開なのは、承認者だけ
+				$beforeStatus = $this->settings[$model->alias]['beforeStatus'];
+				if ($beforeStatus == WorkflowComponent::STATUS_PUBLISHED && $status == WorkflowComponent::STATUS_PUBLISHED) {
+					return false;
+				}
+			}
 		}
 
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		// ここまで処理して承認機能なしなら、メール送る
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
-			return true;
-		}
-
-		$status = Hash::get($model->data, $model->alias . '.status');
 		// 一時保存はメール送らない
 		if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
 			return false;
@@ -430,9 +470,8 @@ class MailQueueBehavior extends ModelBehavior {
 			// コンテンツコメント承認時に利用
 			$data = $model->find('first', array(
 				'recursive' => -1,
-				'conditions' => array(
-					'id' => $model->data[$model->alias]['id']
-				)
+				'conditions' => array('id' => $model->data[$model->alias]['id']),
+				'callbacks' => false,
 			));
 			$createdUserId = $data[$model->alias]['created_user'];
 		}
