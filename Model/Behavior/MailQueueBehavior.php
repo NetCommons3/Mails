@@ -223,28 +223,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * リマインダーでキュー保存
- *
- * @param Model $model モデル
- * @return bool
- */
-	private function __saveQueueReminder(Model $model) {
-		//public function saveQueueReminder(Model $model, $sendTimes) {
-		//public function saveQueueReminder(Model $model) {
-		// メールを送るかどうか
-		if (! $this->isMailSend($model)) {
-			return true;
-		}
-
-		// リマインダーは delete->insert
-		$contentKey = $model->data[$model->alias]['key'];
-		$this->__deleteQueue($contentKey);
-
-		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
-		return $this->__saveQueue($model, $sendTimeReminders);
-	}
-
-/**
  * beforeDelete
  * コンテンツが削除されたら、キューに残っているメールも削除
  *
@@ -412,6 +390,28 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		return true;
+	}
+
+/**
+ * リマインダーでキュー保存
+ *
+ * @param Model $model モデル
+ * @return bool
+ */
+	private function __saveQueueReminder(Model $model) {
+		//public function saveQueueReminder(Model $model, $sendTimes) {
+		//public function saveQueueReminder(Model $model) {
+		// メールを送るかどうか
+		if (! $this->isMailSend($model)) {
+			return true;
+		}
+
+		// リマインダーは delete->insert
+		$contentKey = $model->data[$model->alias]['key'];
+		$this->__deleteQueue($contentKey);
+
+		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
+		return $this->__saveQueue($model, $sendTimeReminders);
 	}
 
 /**
