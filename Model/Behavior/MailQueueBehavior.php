@@ -125,6 +125,10 @@ class MailQueueBehavior extends ModelBehavior {
 			return true;
 		}
 
+		// リマインダーは delete->insert
+		$contentKey = $model->data[$model->alias]['key'];
+		$this->__deleteQueue($contentKey);
+
 		$sendTimeReminders = $this->settings[$model->alias]['sendTimeReminders'];
 		return $this->__saveQueue($model, $sendTimeReminders);
 	}
@@ -207,23 +211,37 @@ class MailQueueBehavior extends ModelBehavior {
 			'conditions' => array($model->alias . '.id' => $model->id)
 		));
 
+		$contentKey = $content[$model->alias]['key'];
+		$this->__deleteQueue($contentKey);
+
+		$this->__isDeleted = true;
+		return true;
+	}
+
+
+/**
+ * キュー削除
+ *
+ * @param Model $model モデル
+ * @param string $contentKey コンテンツキー
+ * @return void
+ * @throws InternalErrorException
+ */
+	private function __deleteQueue(Model $model, $contentKey) {
 		$model->loadModels([
 			'MailQueue' => 'Mails.MailQueue',
 			'MailQueueUser' => 'Mails.MailQueueUser',
 		]);
 
 		// キューの配信先 削除
-		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.content_key' => $content[$model->alias]['key']), false)) {
+		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.content_key' => $contentKey), false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 
 		// キュー 削除
-		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.content_key' => $content[$model->alias]['key']), false)) {
+		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.content_key' => $contentKey), false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
-
-		$this->__isDeleted = true;
-		return true;
 	}
 
 /**
