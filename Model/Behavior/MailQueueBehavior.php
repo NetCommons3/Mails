@@ -247,7 +247,7 @@ class MailQueueBehavior extends ModelBehavior {
 		));
 
 		$contentKey = $content[$model->alias]['key'];
-		$this->__deleteQueue($contentKey);
+		$this->__deleteQueue($model, $contentKey);
 
 		$this->__isDeleted = true;
 		return true;
@@ -408,7 +408,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// リマインダーは delete->insert
 		$contentKey = $model->data[$model->alias]['key'];
-		$this->__deleteQueue($contentKey);
+		$this->__deleteQueue($model, $contentKey);
 
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 		return $this->__saveQueue($model, $sendTimeReminders);
