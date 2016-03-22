@@ -231,7 +231,8 @@ class NetCommonsMail extends CakeEmail {
 			'conditions' => array(
 				'room_id' => $roomId,
 				'language_id' => $languageId,
-			)
+			),
+			'callbacks' => false,
 		));
 		$roomName = Hash::get($roomsLanguage, 'RoomsLanguage.name');
 		$this->assignTag('X-ROOM', htmlspecialchars($roomName));
@@ -565,9 +566,8 @@ class NetCommonsMail extends CakeEmail {
 			// --- user単位でメール配信
 			$user = $this->User->find('first', array(
 				'recursive' => -1,
-				'conditions' => array(
-					'id' => $userId,
-				)
+				'conditions' => array('id' => $userId),
+				'callbacks' => false,
 			));
 			// 暫定対応：userテーブルにlanguage_id追加になったら、ここ改修
 			//$languageId = Hash::get($user, 'user.language_id');
