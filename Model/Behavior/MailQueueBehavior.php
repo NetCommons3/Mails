@@ -68,13 +68,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['addUserIds'] = null;
 		// 通知メール送る
 		$this->settings[$model->alias]['isMailSendNotice'] = 1;
-
-		// --- リマインダー系
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		// リマインダー使わない
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0;
-
-		// --- 登録フォーム系
 		$this->settings[$model->alias]['registration']['toAddresses'] = null;
 
 		$this->__isDeleted = false;
