@@ -301,7 +301,8 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- 編集フラグセット
 		$isEdit = $this->settings[$model->alias]['isEdit'];
 		if ($isEdit === null) {
-			if ($model->hasField('content_key')) {
+			$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+			if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 				// コンテンツコメント
 				$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
 			} else {
@@ -314,6 +315,7 @@ class MailQueueBehavior extends ModelBehavior {
 				'order' => array($model->alias . '.modified DESC'),
 				'callbacks' => false,
 			));
+
 			// keyに対して2件以上記事がある = 編集
 			if (count($data) >= 2) {
 				$this->settings[$model->alias]['isEdit'] = 1;
@@ -370,12 +372,6 @@ class MailQueueBehavior extends ModelBehavior {
 					return false;
 				}
 			}
-		}
-
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		// ここまで処理して承認機能なしなら、メール送る
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
-			return true;
 		}
 
 		// 一時保存はメール送らない
