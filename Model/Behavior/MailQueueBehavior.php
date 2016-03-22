@@ -253,7 +253,6 @@ class MailQueueBehavior extends ModelBehavior {
 		return true;
 	}
 
-
 /**
  * キュー削除
  *
@@ -465,7 +464,8 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// --- コンテンツコメントの承認時の処理
+			// --- コンテンツコメント
+
 			// コンテンツコメントのみ、content_keyが、通常と違う
 			$contentKey = $model->data['ContentComment']['content_key'];
 			// 暫定対応：コンテンツコメントで Current::read('Plugin.name') や Current::read('Plugin.key') が取得できていないバグのため  https://github.com/NetCommons3/Mails/issues/43
@@ -476,7 +476,13 @@ class MailQueueBehavior extends ModelBehavior {
 				// 投稿メール - ルーム配信(即時) - メールキューSave
 				$this->__saveQueuePostMail($model, $languageId, $sendTimes, null, null, $contentKey, $pluginKey);
 
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+				// コメント承認しないなら、承認完了通知メール送らない
+				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.requestDataKeys.useCommentApproval');
+				$useCommentApproval = Hash::get($model->data, $useCommentApprovalKey);
+				if (! $useCommentApproval) {
+					return true;
+				}
+
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
 				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId, $contentKey, $pluginKey);
 
@@ -901,7 +907,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
 
 		// --- 定型文の埋め込みタグをセット
-		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
+		$embedTags = Hash::get($this->settings, $model->alias . '.requestDataKeys.embedTags');
 		foreach ($embedTags as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
 			$mail->assignTag($embedTag, $dataValue);
