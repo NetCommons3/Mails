@@ -244,7 +244,8 @@ class MailQueueBehavior extends ModelBehavior {
 		// コンテンツ取得
 		$content = $model->find('first', array(
 			'recursive' => -1,
-			'conditions' => array($model->alias . '.id' => $model->id)
+			'conditions' => array($model->alias . '.id' => $model->id),
+			'callbacks' => false,
 		));
 
 		$contentKey = $content[$model->alias]['key'];
@@ -431,9 +432,8 @@ class MailQueueBehavior extends ModelBehavior {
 			// コンテンツコメント承認時に利用
 			$data = $model->find('first', array(
 				'recursive' => -1,
-				'conditions' => array(
-					'id' => $model->data[$model->alias]['id']
-				)
+				'conditions' => array('id' => $model->data[$model->alias]['id']),
+				'callbacks' => false,
 			));
 			$createdUserId = $data[$model->alias]['created_user'];
 		}
