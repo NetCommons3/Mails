@@ -314,15 +314,14 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} else {
 			// --- 通常の投稿
-			// 投稿メール送らない
+			// 投稿メールOFFなら、メール送らない
 			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
 			if (! $isMailSendPost) {
 				return false;
 			}
 
-			// 公開日時 ゲット
+			// 公開日時
 			$sendTime = $this->__getSendTimePublish($model);
-
 			if (! $this->__isMailSendTime($model, $sendTime)) {
 				return false;
 			}
