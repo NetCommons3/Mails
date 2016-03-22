@@ -23,12 +23,13 @@ class MailQueueBehavior extends ModelBehavior {
  * 承認機能の種類
  *
  * @var string 承認機能なし
+ * @var string 承認機能なし-登録フォーム
  * @var string ワークフロー
  * @var string コンテンツコメント
  */
 	const
 		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
-		//MAIL_QUEUE_WORKFLOW_TYPE_registration = 'registration',
+		MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION = 'registration',
 		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
 
@@ -63,14 +64,19 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		//$this->settings[$model->alias]['mailSendTime'] = null;
+		// --- 共通系
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
-		//$this->settings[$model->alias]['addToAddresses'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
+		// 通知メール送る
+		$this->settings[$model->alias]['isMailSendNotice'] = 1;
+
+		// --- リマインダー系
 		$this->settings[$model->alias]['sendTimeReminders'] = null;
 		// リマインダー使わない
 		$this->settings[$model->alias]['useReminder'] = 0;
-		// 通知メール送る
-		$this->settings[$model->alias]['isMailSendNotice'] = 1;
+
+		// --- 登録フォーム系
+		$this->settings[$model->alias]['registration']['toAddresses'] = null;
 
 		$this->__isDeleted = false;
 
@@ -138,16 +144,18 @@ class MailQueueBehavior extends ModelBehavior {
  * 登録フォームの投稿を想定
  *
  * @param Model $model モデル
- * @param string $toAddresses 送信先メールアドレス
  * @return bool
  * @throws InternalErrorException
  */
-	public function saveQueuePostMailByToAddress(Model $model, $toAddresses) {
+	private function __saveQueuePostMailByToAddress(Model $model) {
 		//public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTimeFuture = null) {
-		// --- メールを送るかどうか
-		if (! $this->isMailSend($model)) {
-			return true;
-		}
+		//private function __saveQueuePostMailByToAddress(Model $model, $toAddresses) {
+		//		// --- メールを送るかどうか
+		//		if (! $this->isMailSend($model)) {
+		//			return true;
+		//		}
+
+		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
 
 		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		//$contentKey = $model->data[$model->alias]['key'];
@@ -161,7 +169,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$blockKey = Current::read('Block.key');
 
 		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create();
 		$mailQueueUser['MailQueueUser'] = array(
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
@@ -177,9 +184,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 
 			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $mailQueueUser = $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 		}
@@ -322,6 +330,10 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- 公開
 			// 投稿メール - ルーム配信 - メールキューSave
 			$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION) {
+			// --- 登録フォーム
+			$this->__saveQueuePostMailByToAddress($model);
 		}
 
 		return true;
@@ -392,12 +404,25 @@ class MailQueueBehavior extends ModelBehavior {
 	// * 追加で送信するメールアドレス セット
 	// *
 	// * @param Model $model モデル
-	// * @param array $toAddresses 埋め込みタグ
+	// * @param array $toAddresses メールアドレス 配列
 	// * @return void
 	// */
 	//	public function setAddToAddresses(Model $model, $toAddresses) {
 	//		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
 	//	}
+
+/**
+ * 登録フォームで送信するメールアドレス セット
+ *
+ * @param Model $model モデル
+ * @param array $toAddresses メールアドレス 配列
+ * @return void
+ */
+	public function setRegistrationToAddresses(Model $model, $toAddresses) {
+		$this->settings[$model->alias]['registration']['toAddresses'] = $toAddresses;
+		// 承認機能の種類 セット
+		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION;
+	}
 
 /**
  * 追加で送信するユーザID セット
