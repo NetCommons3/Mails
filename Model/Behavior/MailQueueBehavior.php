@@ -66,13 +66,11 @@ class MailQueueBehavior extends ModelBehavior {
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
-		// 投稿メール送る
-		$this->settings[$model->alias]['isMailSendPost'] = 1;
+		$this->settings[$model->alias]['isMailSendPost'] = null;
 		$this->settings[$model->alias]['beforeStatus'] = null;
 		$this->settings[$model->alias]['isEdit'] = null;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
-		// リマインダー使わない
-		$this->settings[$model->alias]['reminder']['useReminder'] = 0;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		$this->settings[$model->alias]['registration']['toAddresses'] = null;
 
 		$this->__isDeleted = false;
@@ -303,9 +301,16 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- 編集フラグセット
 		$isEdit = $this->settings[$model->alias]['isEdit'];
 		if ($isEdit === null) {
+			if ($model->hasField('content_key')) {
+				// コンテンツコメント
+				$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
+			} else {
+				// 通常
+				$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
+			}
 			$data = $model->find('all', array(
 				'recursive' => -1,
-				'conditions' => array($model->alias . '.key' => $model->data[$model->alias]['key']),
+				'conditions' => $conditions,
 				'order' => array($model->alias . '.modified DESC'),
 				'callbacks' => false,
 			));
@@ -342,7 +347,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- 通常の投稿
 			// 投稿メールOFFなら、メール送らない
 			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
-			if (! $isMailSendPost) {
+			if (isset($isMailSendPost) && !$isMailSendPost) {
 				return false;
 			}
 
@@ -352,7 +357,8 @@ class MailQueueBehavior extends ModelBehavior {
 				return false;
 			}
 
-			if ($isEdit) {
+			// 投稿メールフラグが未設定の場合のみ処理（カレンダー、回覧板のメール通知を想定）
+			if ($isEdit && $isMailSendPost === null) {
 				// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、メール送らない
 				// ・承認ONで、承認者が公開中の記事を編集しても、メール送らない
 				// ・承認OFFで、公開中の記事を編集しても、メール送らない
