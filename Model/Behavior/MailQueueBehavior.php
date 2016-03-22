@@ -64,16 +64,15 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		//$this->settings[$model->alias]['mailSendTime'] = null;
-		// --- 共通系
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
 		// 通知メール送る
 		$this->settings[$model->alias]['isMailSendNotice'] = 1;
 
 		// --- リマインダー系
-		$this->settings[$model->alias]['sendTimeReminders'] = null;
+		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		// リマインダー使わない
-		$this->settings[$model->alias]['useReminder'] = 0;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 0;
 
 		// --- 登録フォーム系
 		$this->settings[$model->alias]['registration']['toAddresses'] = null;
@@ -100,7 +99,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$useReminder = $this->settings[$model->alias]['useReminder'];
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		// --- リマインダー利用する
 		if ($useReminder) {
 			$this->saveQueueReminder($model);
@@ -135,7 +134,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$contentKey = $model->data[$model->alias]['key'];
 		$this->__deleteQueue($contentKey);
 
-		$sendTimeReminders = $this->settings[$model->alias]['sendTimeReminders'];
+		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 		return $this->__saveQueue($model, $sendTimeReminders);
 	}
 
@@ -358,8 +357,8 @@ class MailQueueBehavior extends ModelBehavior {
 			return;
 		}
 
-		$this->settings[$model->alias]['sendTimeReminders'] = $sendTimeReminders;
-		$this->settings[$model->alias]['useReminder'] = 1;
+		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
 	}
 
 /**
@@ -466,13 +465,13 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		$useReminder = $this->settings[$model->alias]['useReminder'];
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 
 		if ($useReminder) {
 			// --- リマインダー
 			// リマインダーが複数日あって、全て日時が過ぎてたら、メール送らない
 			$isMailSendReminder = false;
-			$sendTimeReminders = $this->settings[$model->alias]['sendTimeReminders'];
+			$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 			foreach ($sendTimeReminders as $sendTime) {
 				if ($this->__isMailSendTime($model, $sendTime)) {
 					$isMailSendReminder = true;
@@ -547,7 +546,7 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		$useReminder = $this->settings[$model->alias]['useReminder'];
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 
 		if (! $useReminder) {
 			return true;
