@@ -243,6 +243,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// コンテンツ取得
 		$content = $model->find('first', array(
+			'recursive' => -1,
 			'conditions' => array($model->alias . '.id' => $model->id)
 		));
 
