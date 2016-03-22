@@ -66,8 +66,8 @@ class MailQueueBehavior extends ModelBehavior {
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['addUserIds'] = null;
-		// 通知メール送る
-		$this->settings[$model->alias]['isMailSendNotice'] = 1;
+		// 投稿メール送る
+		$this->settings[$model->alias]['isMailSendPost'] = 1;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		// リマインダー使わない
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0;
@@ -111,15 +111,15 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 通知メールのON, OFF セット
+ * 投稿メールのON, OFF セット
  * 回覧板、カレンダー等の利用を想定
  *
  * @param Model $model モデル
- * @param int $isMailSendNotice 0:通知しない、1:通知する(デフォルト)
+ * @param int $isMailSendPost 0:通知しない、1:通知する(デフォルト)
  * @return void
  */
-	public function setIsMailSendNotice(Model $model, $isMailSendNotice) {
-		$this->settings[$model->alias]['isMailSendNotice'] = $isMailSendNotice;
+	public function setIsMailSendNotice(Model $model, $isMailSendPost) {
+		$this->settings[$model->alias]['isMailSendPost'] = $isMailSendPost;
 	}
 
 	///**
@@ -315,9 +315,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} else {
 			// --- 通常の投稿
-			// 通知メール送らない
-			$isMailSendNotice = $this->settings[$model->alias]['isMailSendNotice'];
-			if (! $isMailSendNotice) {
+			// 投稿メール送らない
+			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
+			if (! $isMailSendPost) {
 				return false;
 			}
 
