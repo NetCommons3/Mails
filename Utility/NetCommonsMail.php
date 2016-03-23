@@ -13,6 +13,8 @@
 App::uses('CakeEmail', 'Network/Email');
 App::uses('ConvertHtml', 'Mails.Utility');
 App::uses('SiteSetting', 'SiteManager.Model');
+App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('ComponentCollection', 'Controller');
 
 /**
  * NetCommonsメール Utility
@@ -484,7 +486,7 @@ class NetCommonsMail extends CakeEmail {
 		//$max_line_length = 300;
 		$linesOut = array();
 
-		while (list(, $line) = @each($lines)) {
+		while (list(, $line) = each($lines)) {
 			// 1行が300文字以下になったら抜ける
 			while (mb_strlen($line) > $this::MAX_LINE_LENGTH) {
 				// 1行300文字で改行。なので配列にセット。
@@ -539,7 +541,16 @@ class NetCommonsMail extends CakeEmail {
 		if (isset($roomId)) {
 			// --- ルーム単位でメール配信
 			// 途中
-			//$permissions = $this->Workflow->getBlockRolePermissions(array('mail_content_receivable'));
+			$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
+			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'));
+
+			$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
+			$conditions = array(
+				'Room.id' => $roomId,
+				'RolesRoom.role_key' => $roleKeys,
+			);
+			$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
+			//var_dump($rolesRoomsUsers);
 
 			return false;
 
