@@ -179,7 +179,7 @@ class NetCommonsMail extends CakeEmail {
  * @param int $languageId 言語ID
  * @return void
  */
-	private function __setFrom($languageId) {
+	public function setFrom($languageId) {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		parent::from($from, $fromName);
@@ -445,10 +445,12 @@ class NetCommonsMail extends CakeEmail {
 		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
 		//		$mobile_body = $this->insertNewLine($mobile_body);
 
-		if (parent::emailFormat() == 'text') {
-			$this->body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
-		} else {
-			$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
+		if (Hash::get($this->assignTags, 'X-URL')) {
+			if (parent::emailFormat() == 'text') {
+				$this->body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
+			} else {
+				$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
+			}
 		}
 
 		// URLの置換は一度きり
@@ -558,14 +560,14 @@ class NetCommonsMail extends CakeEmail {
 				//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 				return false;
 			}
-			$this->__setFrom($languageId);
+			$this->setFrom($languageId);
 			parent::to($userEmail);
 			parent::subject($this->subject);
 			$messages = parent::send($this->body);
 
 		} elseif (isset($toAddress)) {
 			// --- メールアドレス単位でメール配信
-			$this->__setFrom($mailQueueLanguageId);
+			$this->setFrom($mailQueueLanguageId);
 			parent::to($toAddress);
 			parent::subject($this->subject);
 			$messages = parent::send($this->body);

@@ -92,12 +92,15 @@ class MailSetting extends MailsAppModel {
  *
  * @param int $languageId 言語ID
  * @param string $typeKey メールの種類
+ * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE) {
-		$pluginKey = Current::read('Plugin.key');
+	public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
 		if ($languageId === null) {
 			$languageId = Current::read('Language.id');
+		}
+		if ($pluginKey === null) {
+			$pluginKey = Current::read('Plugin.key');
 		}
 
 		//デフォルトデータ取得
@@ -134,20 +137,25 @@ class MailSetting extends MailsAppModel {
  *
  * @param int $languageId 言語ID
  * @param string $typeKey メールの種類
+ * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($languageId = null, $typeKey = 'contents') {
+	public function getMailSettingPlugin($languageId = null, $typeKey = 'contents', $pluginKey = null) {
 		//if ($blockKey === null) {
 		//	$blockKey = Current::read('Block.key');
 		//}
 		if ($languageId === null) {
 			$languageId = Current::read('Language.id');
 		}
+		if ($pluginKey === null) {
+			$pluginKey = Current::read('Plugin.key');
+		}
 		$blockKey = Current::read('Block.key');
 
 		// $blockKey, $typeKeyで、mail_settings を SELECT する
 		$conditions = array(
 			'language_id' => $languageId,
+			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
 			'type_key' => $typeKey,
 		);
