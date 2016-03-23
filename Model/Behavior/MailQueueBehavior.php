@@ -10,6 +10,8 @@
  */
 
 App::uses('NetCommonsMail', 'Mails.Utility');
+App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('ComponentCollection', 'Controller');
 
 /**
  * メールキュー Behavior
@@ -895,36 +897,23 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param string $permission パーミッション
+ * @param string $roomId ルームID
  * @return array
  */
-	private function __getRolesRoomsUsersByPermission(Model $model, $permission) {
-		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？  https://github.com/NetCommons3/Mails/issues/45
-		// 暫定対応：RolesRoomsUserモデルに、このfunction持っていきたいな。
-		//$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
-		// →これ、近いうちに使わなくする
+	private function __getRolesRoomsUsersByPermission(Model $model, $permission, $roomId = null) {
+		if ($roomId === null) {
+			$roomId = Current::read('Room.id');
+		}
 
+		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
+		$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
+
+		$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
 		$conditions = array(
-			'RolesRoomsUser.room_id' => Current::read('Room.id'),
-			'RoomRolePermission.permission' => $permission,
-			'RoomRolePermission.value' => 1,
+			'Room.id' => $roomId,
+			'RolesRoom.role_key' => $roleKeys,
 		);
-		$rolesRoomsUsers = $model->RolesRoomsUser->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'RolesRoomsUser.*',
-			),
-			'joins' => array(
-				array(
-					'table' => 'room_role_permissions',
-					'alias' => 'RoomRolePermission',
-					'type' => 'INNER',
-					'conditions' => array(
-						'RolesRoomsUser.roles_room_id' . ' = RoomRolePermission.roles_room_id',
-					),
-				),
-			),
-			'conditions' => $conditions,
-		));
+		$rolesRoomsUsers = $model->RolesRoomsUser->getRolesRoomsUsers($conditions);
 		return $rolesRoomsUsers;
 	}
 
