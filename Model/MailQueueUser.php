@@ -43,13 +43,13 @@ class MailQueueUser extends MailsAppModel {
 					'required' => true,
 				),
 			),
-			'block_key' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					'message' => __d('net_commons', 'Invalid request.'),
-					'required' => true,
-				),
-			),
+			//'block_key' => array(
+			//	'notBlank' => array(
+			//		'rule' => array('notBlank'),
+			//		'message' => __d('net_commons', 'Invalid request.'),
+			//		'required' => true,
+			//	),
+			//),
 			'mail_queue_id' => array(
 				'numeric' => array(
 					'rule' => array('numeric'),

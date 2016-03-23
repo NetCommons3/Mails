@@ -538,7 +538,7 @@ class MailQueueBehavior extends ModelBehavior {
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - ルーム配信 - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
@@ -561,7 +561,7 @@ class MailQueueBehavior extends ModelBehavior {
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - ルーム配信(即時) - メールキューSave
-				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// コメント承認しないなら、承認完了通知メール送らない
 				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.useCommentApproval');
@@ -583,7 +583,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフローの機能自体、使ってないプラグインの処理
 			// --- 公開
 			// 投稿メール - ルーム配信 - メールキューSave
-			$this->__saveQueuePostMail($model, $languageId, $sendTimes);
+			$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION) {
 			// --- 登録フォーム
@@ -604,7 +604,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null) {
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
@@ -743,7 +743,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$languageId = Current::read('Language.id');
 
 		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
-		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, null, $toAddresses);
+		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses);
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
@@ -863,7 +863,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// --- 承認依頼
 		// 投稿メール - 登録者に配信(即時) - メールキューSave
-		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, $createdUserId);
+		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $createdUserId);
 
 		// MailQueueUserは新規登録
 		$mailQueueUser['MailQueueUser'] = array(
