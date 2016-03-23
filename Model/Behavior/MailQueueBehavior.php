@@ -558,7 +558,7 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->__saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// コメント承認しないなら、承認完了通知メール送らない
-				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.requestDataKeys.useCommentApproval');
+				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.useCommentApproval');
 				$useCommentApproval = Hash::get($model->data, $useCommentApprovalKey);
 				if (! $useCommentApproval) {
 					return true;
@@ -917,6 +917,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？  https://github.com/NetCommons3/Mails/issues/45
 		// 暫定対応：RolesRoomsUserモデルに、このfunction持っていきたいな。
 		//$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
+
 		$conditions = array(
 			'RolesRoomsUser.room_id' => Current::read('Room.id'),
 			'RoomRolePermission.permission' => $permission,
@@ -977,7 +978,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
 
 		// --- 定型文の埋め込みタグをセット
-		$embedTags = Hash::get($this->settings, $model->alias . '.requestDataKeys.embedTags');
+		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
 		foreach ($embedTags as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
 			$mail->assignTag($embedTag, $dataValue);
