@@ -137,7 +137,6 @@ class MailSetting extends MailsAppModel {
  * @return array メール設定データ配列
  */
 	public function getMailSettingPlugin($languageId = null, $typeKey = 'contents') {
-		//public function getMailSettingPlugin($blockKey = null, $typeKey = 'contents') {
 		//if ($blockKey === null) {
 		//	$blockKey = Current::read('Block.key');
 		//}

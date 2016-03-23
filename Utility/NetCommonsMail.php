@@ -95,8 +95,6 @@ class NetCommonsMail extends CakeEmail {
  * @see CakeEmail::$charset
  */
 	public function initPlugin($languageId, $pluginName = null) {
-		//public function initPlugin($data, $languageId, $typeKey = 'contents') {
-		//public function initPlugin($languageId, $typeKey = 'contents') {
 		// SiteSettingからメール設定を取得する
 		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
@@ -120,13 +118,8 @@ class NetCommonsMail extends CakeEmail {
 			)
 		));
 
-		//$languageId = Current::read('Language.id');
-		//$this->__initConfig($languageId);
 		$this->__initConfig();
-
-		//		$this->__setTags($data, $languageId);
 		$this->__setTags($languageId, $pluginName);
-		//$this->setMailSettingPlugin($languageId, $typeKey);
 	}
 
 /**
@@ -137,9 +130,7 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	public function initShell($siteSetting, $mailQueue) {
-		//public function initShell($siteSetting, $mailQueue, $languageId) {
 		$this->siteSetting = $siteSetting;
-		//$this->__initConfig($languageId);
 		$this->__initConfig();
 		$this->__setMailSettingQueue($mailQueue);
 	}
@@ -150,14 +141,7 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __initConfig() {
-		//private function __initConfig($siteSetting) {
-		//private function __initConfig($languageId) {
-		//		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
-		//		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
-
 		$config = array();
-		//		$config['from'] = array($from => $fromName);
-
 		$transport = Hash::get($this->siteSetting['Mail.transport'], '0.value');
 
 		// SMTP, SMTPAuth
@@ -210,9 +194,6 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	private function __setTags($languageId, $pluginName = null) {
-		//private function __initTags($siteSetting, $data) {
-		//private function __setTags($data, $languageId) {
-		//public function setTags($data, $languageId) {
 		if ($pluginName === null) {
 			$pluginName = Current::read('Plugin.name');
 		}
@@ -252,14 +233,6 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	public function setMailFixedPhrasePlugin($mailSetting) {
-		//private function __setMailSettingPlugin($languageId, $typeKey) {
-		//public function setMailFixedPhrasePlugin($languageId, $typeKey = 'contents') {
-		//$mailSetting = $this->MailSetting->getMailSettingPlugin($languageId, $typeKey);
-		//$this->__setMailSetting($mailSetting);
-
-		//		// メール通知フラグをセット
-		//		//$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
-
 		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
 		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
 		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
@@ -299,17 +272,17 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-/**
- * メール送信する定型文をセット(システム管理系)
- *
- * @param string $typeKey メールの種類
- * @return void
- */
-	private function __setMailSettingSystem($typeKey) {
-		// TODOO ここ見直し？。sitesettingから取得するfunction必要
-		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
-		//$this->__setMailSetting($mailSetting);
-	}
+	///**
+	// * メール送信する定型文をセット(システム管理系)
+	// *
+	// * @param string $typeKey メールの種類
+	// * @return void
+	// */
+	//	private function __setMailSettingSystem($typeKey) {
+	//		// TODOO ここ見直し？。sitesettingから取得するfunction必要
+	//		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
+	//		//$this->__setMailSetting($mailSetting);
+	//	}
 
 	///**
 	// * メール送信する定型文をセット
@@ -508,27 +481,27 @@ class NetCommonsMail extends CakeEmail {
 		$lines = explode('\n', $body);
 		//$pos = 0;
 		//$max_line_length = 300;
-		$lines_out = array();
+		$linesOut = array();
 
-		while(list(,$line) = @each($lines)) {
+		while (list(, $line) = @each($lines)) {
 			// 1行が300文字以下になったら抜ける
-			while(mb_strlen($line) > $this::MAX_LINE_LENGTH) {
+			while (mb_strlen($line) > $this::MAX_LINE_LENGTH) {
 				// 1行300文字で改行。なので配列にセット。
 				// 1行300文字まで取得、< があるか
 				$pos = strrpos(mb_substr($line, 0, $this::MAX_LINE_LENGTH), '<');
 				// 1行300文字の中に '<' ありなら、途中で改行
 				if ($pos > 0) {
-					$lines_out[] = substr($line, 0, $pos);
+					$linesOut[] = substr($line, 0, $pos);
 					$line = substr($line, $pos);
 				} else {
-					$lines_out[] = mb_substr($line, 0, $this::MAX_LINE_LENGTH);
-					$line = mb_substr($line,  $this::MAX_LINE_LENGTH);
+					$linesOut[] = mb_substr($line, 0, $this::MAX_LINE_LENGTH);
+					$line = mb_substr($line, $this::MAX_LINE_LENGTH);
 				}
 			}
-			$lines_out[] = $line;
+			$linesOut[] = $line;
 		}
-		//return implode($this->_LE, $lines_out);
-		return implode('\n', $lines_out);
+		//return implode($this->_LE, $linesOut);
+		return implode('\n', $linesOut);
 	}
 
 /**
@@ -538,8 +511,7 @@ class NetCommonsMail extends CakeEmail {
  * @param int $mailQueueLanguageId キューの言語ID
  * @return bool true:正常,false:エラー
  */
-	function sendQueueMail($mailQueueUser, $mailQueueLanguageId) {
-		//function sendQueueMail($mailQueue, $mailQueueUser) {
+	public function sendQueueMail($mailQueueUser, $mailQueueLanguageId) {
 		if (empty($this->siteSetting)) {
 			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
@@ -750,69 +722,31 @@ class NetCommonsMail extends CakeEmail {
 		//		}
 	}
 
-/**
- * メールを直送信
- * 仮
- *
- * @return bool 成功 or 失敗
- */
-	function sendMailDirect() {
-		if (empty($this->siteSetting)) {
-			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-		if ($this->body == '') {
-			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-
-		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-		$this->assignTagReplace();
-
-		// 改行対応
-		$this->brReplace();
-
-		parent::subject($this->subject);
-		$messages = parent::send($this->body);
-		//CakeLog::debug(print_r($messages, true));
-		return $messages;
-	}
-
-/**
- * メールを送信する3 debug用
- *
- * @param string $blockKey ブロックキー
- * @param string $typeKey コンテンツキー
- * @return void
- */
-	public function send3($blockKey, $typeKey = 'contents') {
-		$this->setSendMailSetting($blockKey);
-
-		// 通知しない
-		if (! $this->isMailSend) {
-			return;
-		}
-
-		if ($this->assignTag('X-USER') == null) {
-			$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
-		}
-
-		$this->assignTag('X-PLUGIN_NAME', '動画');
-		$this->assignTag('X-ROOM', 'グループルーム');
-		$this->assignTag('X-BLOCK_NAME', '運動会');
-		$this->assignTag('X-SUBJECT', 'タイトル');
-		$this->assignTag('X-TO_DATE', '2099/01/01');
-		$this->assignTag('X-BODY', '本文１\n本文２\n本文３');
-		$this->assignTag('X-APPROVAL_COMMENT', '承認コメント１\n承認コメント２\n承認コメント３');
-		$this->assignTag('X-URL', 'http://localhost');
-
-		// タグ変換
-		$this->assignTagReplace();
-
-		parent::to('mutaguchi@opensource-workshop.jp');			// 送信先
-		parent::subject($this->subject);						// メールタイトル
-
-		$messages = parent::send($this->body);
-		return $messages;
-	}
+	///**
+	// * メールを直送信
+	// * 仮
+	// *
+	// * @return bool 成功 or 失敗
+	// */
+	//	function sendMailDirect() {
+	//		if (empty($this->siteSetting)) {
+	//			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+	//			return false;
+	//		}
+	//		if ($this->body == '') {
+	//			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+	//			return false;
+	//		}
+	//
+	//		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
+	//		$this->assignTagReplace();
+	//
+	//		// 改行対応
+	//		$this->brReplace();
+	//
+	//		parent::subject($this->subject);
+	//		$messages = parent::send($this->body);
+	//		//CakeLog::debug(print_r($messages, true));
+	//		return $messages;
+	//	}
 }

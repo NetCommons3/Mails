@@ -335,8 +335,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isMailSend(Model $model) {
-		//public function isMailSend(Model $model, $useReminder, $sendTimeReminders = null) {
-		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $model->MailSetting->getMailSettingPlugin();
 		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
@@ -443,12 +441,10 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	private function __isMailSendTime(Model $model, $sendTime) {
-		//private function __isMailSendTime(Model $model, $useReminder, $sendTime) {
 		if ($sendTime === null) {
 			return true;
 		}
 
-		//$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		// SiteSettingからメール設定を取得する
 		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
 			'SiteSetting.key' => array(
@@ -485,15 +481,12 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	private function __saveQueueReminder(Model $model) {
-		//public function saveQueueReminder(Model $model, $sendTimes) {
-		//public function saveQueueReminder(Model $model) {
 		// メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
 		}
 
 		// リマインダーは delete->insert
-		//$contentKey = $model->data[$model->alias]['key'];
 		$contentKey = $this->__getContentKey($model);
 		$this->__deleteQueue($model, $contentKey);
 
@@ -599,10 +592,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null) {
-		//private function __saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null, $contentKey = null, $pluginKey = null) {
-		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		//$MailQueueUser = ClassRegistry::init('Mails.MailQueueUser');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
@@ -737,24 +726,12 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueuePostMailByToAddress(Model $model) {
-		//public function saveQueuePostMailByToAddress(Model $model, $toAddresses, $languageId = null, $sendTimeFuture = null) {
-		//private function __saveQueuePostMailByToAddress(Model $model, $toAddresses) {
-		//		// --- メールを送るかどうか
-		//		if (! $this->isMailSend($model)) {
-		//			return true;
-		//		}
-
 		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
-
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
-		//$contentKey = $model->data[$model->alias]['key'];
 		$languageId = Current::read('Language.id');
 
 		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
 		$mailQueueId = $this->__saveQueuePostMail($model, $languageId, null, null, $toAddresses);
 
-		//$contentKey = $model->data[$model->alias]['key'];
-		//$pluginKey = Current::read('Plugin.key');
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
 		$blockKey = Current::read('Block.key');
@@ -797,9 +774,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId) {
-		//private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId, $contentKey = null, $pluginKey = null) {
-		//$MailSetting = ClassRegistry::init('Mails.MailSetting');
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
@@ -870,9 +844,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission) {
-		//private function __saveQueueApprovalMail(Model $model, $languageId, $sendTime, $createdUserId, $publishablePermission) {
-		//private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission, $contentKey = null, $pluginKey = null) {
-		//$MailQueue = ClassRegistry::init('Mails.MailQueue');
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
 		$blockKey = Current::read('Block.key');
@@ -917,6 +888,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// 暫定対応：DefaultRolePermission見てないけど、これで大丈夫？  https://github.com/NetCommons3/Mails/issues/45
 		// 暫定対応：RolesRoomsUserモデルに、このfunction持っていきたいな。
 		//$RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
+		// →これ、近いうちに使わなくする
 
 		$conditions = array(
 			'RolesRoomsUser.room_id' => Current::read('Room.id'),
@@ -951,16 +923,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @return NetCommonsMail
  */
 	private function __convertPlainText(Model $model, NetCommonsMail $mail) {
-		//private function __getNetCommonsMail(Model $model, $languageId, $typeKey = 'contents') {
-		// --- 定型文をNetCommonsMailにセット
-		//$mail = new NetCommonsMail();
-		//$languageId = Current::read('Language.id');
-		//$mail->initPlugin($languageId, $typeKey);
-		//$mail->setMailSettingPlugin($languageId);
-		//$mail->assignTags($this->tags);
-
-		//$contentKey = $model->data[$model->alias]['key'];
-		//$contentKey = Hash::get($model->data, $model->alias . '.key');
 		$contentKey = $this->__getContentKey($model);
 
 		// fullpassのURL

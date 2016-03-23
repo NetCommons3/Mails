@@ -17,7 +17,6 @@
  * @package NetCommons\Mails\Utility
  */
 class ConvertHtml {
-	//var $_className = "Convert_Html";
 
 /**
  * HtmlからText変換処理
@@ -104,59 +103,59 @@ class ConvertHtml {
 		$replacements[] = "&";
 
 		$str = preg_replace($patterns, $replacements, $str);
-		$quote_arr = explode("<blockquote class=\"quote\">", $str);
-		$quote_cnt = count($quote_arr);
-		if($quote_cnt > 1) {
-			$result_str = "";
-			$indent_cnt = 0;
+		$quoteArr = explode("<blockquote class=\"quote\">", $str);
+		$quoteCnt = count($quoteArr);
+		if ($quoteCnt > 1) {
+			$resultStr = "";
+			$indentCnt = 0;
 			$count = 0;
-			foreach($quote_arr as $quote_str) {
-				if($count == 0 || $quote_cnt == $count) {
-					$result_str .= $quote_str;
+			foreach ($quoteArr as $quoteStr) {
+				if ($count == 0 || $quoteCnt == $count) {
+					$resultStr .= $quoteStr;
 					$count++;
 					continue;
 				}
-				$indent_cnt++;
-				$quote_close_arr = explode("</blockquote>", $quote_str);
-				$quote_close_cnt = count($quote_close_arr);
-				if($quote_close_cnt > 1) {
-					$close_count = 0;
-					foreach($quote_close_arr as $quote_close_str) {
-						//if($close_count == 0 || $quote_close_cnt == $close_count) {
-//						if($quote_close_cnt == $close_count+1) {
-//							$result_str .= $quote_close_str;
-//							$close_count++;
-//							continue;
-//						}
-						$indent_str = $this->_getIndentStr($indent_cnt);
-						if($indent_str != "") {
-							$quote_pattern = "/\n/u";
-							$quote_replacement = "\n".$indent_str;
-							$result_str = preg_replace("/(> )+$/u", "", $result_str);
-							if($quote_close_cnt != $close_count+1) {
-								if(!preg_match("/\n$/u", $result_str)) {
-									$result_str .= "\n";
+				$indentCnt++;
+				$quoteCloseArr = explode("</blockquote>", $quoteStr);
+				$quoteCloseCnt = count($quoteCloseArr);
+				if ($quoteCloseCnt > 1) {
+					$closeCount = 0;
+					foreach ($quoteCloseArr as $quoteCloseStr) {
+						//if($closeCount == 0 || $quoteCloseCnt == $closeCount) {
+						//						if($quoteCloseCnt == $closeCount+1) {
+						//							$resultStr .= $quoteCloseStr;
+						//							$closeCount++;
+						//							continue;
+						//						}
+						$indentStr = $this->getIndentStr($indentCnt);
+						if ($indentStr != "") {
+							$quotePattern = "/\n/u";
+							$quoteReplacement = "\n" . $indentStr;
+							$resultStr = preg_replace("/(> )+$/u", "", $resultStr);
+							if ($quoteCloseCnt != $closeCount + 1) {
+								if (!preg_match("/\n$/u", $resultStr)) {
+									$resultStr .= "\n";
 								}
-								$result_str .= preg_replace("/^(> )+\n/u", "", $indent_str.preg_replace($quote_pattern, $quote_replacement, $quote_close_str));
-								$indent_cnt--;
+								$resultStr .= preg_replace("/^(> )+\n/u", "", $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr));
+								$indentCnt--;
 							} else {
-								$result_str .= preg_replace($quote_pattern, $quote_replacement, $quote_close_str);
+								$resultStr .= preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr);
 							}
 						} else {
-							$result_str .= $quote_close_str;
+							$resultStr .= $quoteCloseStr;
 						}
-						$close_count++;
+						$closeCount++;
 					}
 
 				} else {
-					$indent_str = $this->_getIndentStr($indent_cnt);
-					$quote_pattern = "/\n/u";
-					$quote_replacement = "\n".$indent_str;
-					$result_str .= $indent_str.preg_replace($quote_pattern, $quote_replacement, $quote_str);
+					$indentStr = $this->getIndentStr($indentCnt);
+					$quotePattern = "/\n/u";
+					$quoteReplacement = "\n" . $indentStr;
+					$resultStr .= $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteStr);
 				}
 				$count++;
 			}
-			$str = $result_str;
+			$str = $resultStr;
 		}
 		$str = strip_tags($str);
 
@@ -176,70 +175,80 @@ class ConvertHtml {
 	}
 
 /**
- * _getIndentStr
+ * getIndentStr
  *
- * @param int $indent_cnt
+ * @param int $indentCnt インデント
  * @return string
  */
-	public function _getIndentStr($indent_cnt = 0) {
-		$indent_str = "";
-		$tab_str = "";
-		for($i = 0; $i < $indent_cnt; $i++) {
-			$indent_str .= "> ";
-			$tab_str .= "";
+	public function getIndentStr($indentCnt = 0) {
+		$indentStr = "";
+		$tabStr = "";
+		for ($i = 0; $i < $indentCnt; $i++) {
+			$indentStr .= "> ";
+			$tabStr .= "";
 		}
-		return $tab_str.$indent_str;
+		return $tabStr . $indentStr;
 	}
 
-/**
- * HtmlからText変換処理
- *
- * @param string $str Html文字列
- * @param bool $convert
- * @return string	Plain Text文字列
- */
-	public function convertMobileHtml($str, $convert=false) {
-		$container =& DIContainerFactory::getContainer();
-		$session =& $container->getComponent("Session");
-		$mobile_flag = $session->getParameter("_mobile_flag");
-		if (!isset($mobile_flag)) {
-			$mobileCheck =& MobileCheck::getInstance();
-			$mobile_flag = $mobileCheck->isMobile();
-			$session->setParameter("_mobile_flag", $mobile_flag);
-		}
-		if ($mobile_flag == _ON) {
-			$patterns = array();
-			$replacements = array();
+	///**
+	// * HtmlからText変換処理
+	// *
+	// * @param string $str Html文字列
+	// * @param bool $convert 変換フラグ
+	// * @return string	Plain Text文字列
+	// */
+	//	public function convertMobileHtml($str, $convert = false) {
+	//		$container =& DIContainerFactory::getContainer();
+	//		$session =& $container->getComponent("Session");
+	//		$mobile_flag = $session->getParameter("_mobile_flag");
+	//		if (!isset($mobile_flag)) {
+	//			$mobileCheck =& MobileCheck::getInstance();
+	//			$mobile_flag = $mobileCheck->isMobile();
+	//			$session->setParameter("_mobile_flag", $mobile_flag);
+	//		}
+	//		if ($mobile_flag == _ON) {
+	//			$patterns = array();
+	//			$replacements = array();
+	//
+	//			if ($session->getParameter("_reader_flag") == _OFF) {
+	//				// 画像にsession_idを付与
+	//				$matches = array();
+	//
+	//				$pattern = "/(href=|src=)([\"'])?(\\.?\\/?)(\\?)/";
+	//				$str = preg_replace_callback($pattern, array($this, "_replaceRelative2Absolute"), $str);
+	//
+	//				$pattern_url = preg_replace("/\//", "\\\/", preg_quote(BASE_URL));
+	//				$pattern = "/(href=|src=)([\"'])?(".$pattern_url.")([^\\/]*?)?([^ \"'>]*)?([ \"'>])?/";
+	//				$str = preg_replace_callback($pattern, array($this, "_replaceSesion"), $str);
+	//			}
+	//
+	//			//「 />」「/>」を「>」
+	//			$patterns[] = "/( )?\/>/ui";
+	//			$replacements[] = ">";
+	//
+	//			$str = preg_replace($patterns, $replacements, $str);
+	//			if ($convert) {
+	//				//mb_stringがロードされているかどうか
+	//		    	if (!extension_loaded('mbstring') && !function_exists("mb_convert_encoding")) {
+	//	    			include_once MAPLE_DIR  . '/includes/mbstring.php';
+	//		    	} else if(function_exists("mb_detect_order")){
+	//		    		mb_detect_order(_MB_DETECT_ORDER_VALUE);
+	//		    	}
+	//		    	$str = mb_convert_encoding($str, "shift_jis", _CHARSET);
+	//			}
+	//		}
+	//		return $str;
+	//	}
 
-			if ($session->getParameter("_reader_flag") == _OFF) {
-				// 画像にsession_idを付与
-				$matches = array();
-
-				$pattern = "/(href=|src=)([\"'])?(\\.?\\/?)(\\?)/";
-				$str = preg_replace_callback($pattern, array($this, "_replaceRelative2Absolute"), $str);
-
-				$pattern_url = preg_replace("/\//", "\\\/", preg_quote(BASE_URL));
-				$pattern = "/(href=|src=)([\"'])?(".$pattern_url.")([^\\/]*?)?([^ \"'>]*)?([ \"'>])?/";
-				$str = preg_replace_callback($pattern, array($this, "_replaceSesion"), $str);
-			}
-
-			//「 />」「/>」を「>」
-			$patterns[] = "/( )?\/>/ui";
-			$replacements[] = ">";
-
-			$str = preg_replace($patterns, $replacements, $str);
-			if ($convert) {
-				//mb_stringがロードされているかどうか
-		    	if (!extension_loaded('mbstring') && !function_exists("mb_convert_encoding")) {
-	    			include_once MAPLE_DIR  . '/includes/mbstring.php';
-		    	} else if(function_exists("mb_detect_order")){
-		    		mb_detect_order(_MB_DETECT_ORDER_VALUE);
-		    	}
-		    	$str = mb_convert_encoding($str, "shift_jis", _CHARSET);
-			}
-		}
-		return $str;
-	}
+	///**
+	// * HtmlからText変換処理
+	// *
+	// * @param string $matches Html文字列
+	// * @return string	Plain Text文字列
+	// **/
+	//	public function replaceRelative2Absolute($matches) {
+	//		return $matches[1] . $matches[2] . BASE_URL . INDEX_FILE_NAME . $matches[4];
+	//	}
 
 /**
  * HtmlからText変換処理
@@ -247,19 +256,9 @@ class ConvertHtml {
  * @param string $matches Html文字列
  * @return string	Plain Text文字列
  **/
-	public function _replaceRelative2Absolute($matches) {
-		return $matches[1].$matches[2].BASE_URL.INDEX_FILE_NAME.$matches[4];
-	}
-
-/**
- * HtmlからText変換処理
- *
- * @param string $matches Html文字列
- * @return string	Plain Text文字列
- **/
-	public function _replaceSesion($matches) {
-		$session_value = session_name()."=".session_id();
-		if (preg_match("/".$session_value."/", $matches[5])) {
+	public function replaceSesion($matches) {
+		$sessionValue = session_name() . "=" . session_id();
+		if (preg_match("/" . $sessionValue . "/", $matches[5])) {
 			return $matches[0];
 		}
 
@@ -267,8 +266,8 @@ class ConvertHtml {
 		$pause = $pos !== false ? "&" : "?";
 
 		$pos = strpos($matches[5], "#");
-		$matches[5] = $pos !== false ? substr($matches[5],0,$pos). $pause .$session_value.substr($matches[5],$pos) : $matches[5]. $pause .$session_value;
+		$matches[5] = $pos !== false ? substr($matches[5], 0, $pos) . $pause . $sessionValue . substr($matches[5], $pos) : $matches[5] . $pause . $sessionValue;
 
-		return $matches[1].$matches[2].$matches[3].$matches[4].$matches[5].$matches[6];
+		return $matches[1] . $matches[2] . $matches[3] . $matches[4] . $matches[5] . $matches[6];
 	}
 }

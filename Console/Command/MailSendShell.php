@@ -27,8 +27,8 @@ class MailSendShell extends AppShell {
 /**
  * @var bool デバッグON
  */
-	//const IS_DEBUG = false;
-	const IS_DEBUG = true;
+	const IS_DEBUG = false;
+	//const IS_DEBUG = true;
 
 /**
  * use model
@@ -120,21 +120,5 @@ class MailSendShell extends AppShell {
 				$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
 			}
 		}
-	}
-
-/**
- * メール送信 デバッグ用
- *
- * @return void
- */
-	public function debug1() {
-		// debug
-		$mail = new NetCommonsMail('sakura');
-		$mail->to('mutaguchi@opensource-workshop.jp');			// 送信先
-		$mail->subject('メールタイトル');						// メールタイトル
-
-		//$mail->send('メール本文');								// メール送信
-		$mail->send('');								// メール送信
-		$this->out('メール送信済み');
 	}
 }
