@@ -83,7 +83,6 @@ class NetCommonsMail extends CakeEmail {
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$this->User = ClassRegistry::init('Users.user');
-		//$this->Workflow = ClassRegistry::init('Workflow.Workflow');
 	}
 
 /**
@@ -722,31 +721,29 @@ class NetCommonsMail extends CakeEmail {
 		//		}
 	}
 
-	///**
-	// * メールを直送信
-	// * 仮
-	// *
-	// * @return bool 成功 or 失敗
-	// */
-	//	function sendMailDirect() {
-	//		if (empty($this->siteSetting)) {
-	//			LogError('SiteSettingデータがありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-	//			return false;
-	//		}
-	//		if ($this->body == '') {
-	//			LogError('メール本文がありません [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-	//			return false;
-	//		}
-	//
-	//		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-	//		$this->assignTagReplace();
-	//
-	//		// 改行対応
-	//		$this->brReplace();
-	//
-	//		parent::subject($this->subject);
-	//		$messages = parent::send($this->body);
-	//		//CakeLog::debug(print_r($messages, true));
-	//		return $messages;
-	//	}
+/**
+ * メールを直送信
+ *
+ * @return bool 成功 or 失敗
+ */
+	public function sendMailDirect() {
+		if (empty($this->siteSetting)) {
+			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+		if ($this->body == '') {
+			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
+		$this->assignTagReplace();
+
+		// 改行対応
+		$this->brReplace();
+
+		parent::subject($this->subject);
+		$messages = parent::send($this->body);
+		return $messages;
+	}
 }
