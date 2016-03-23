@@ -27,8 +27,8 @@ class MailSendShell extends AppShell {
 /**
  * @var bool デバッグON
  */
-	const IS_DEBUG = false;
 	//const IS_DEBUG = true;
+	const IS_DEBUG = false;
 
 /**
  * use model
@@ -73,7 +73,7 @@ class MailSendShell extends AppShell {
 		));
 		if (empty($mailQueues)) {
 			if (self::IS_DEBUG) {
-				CakeLog::debug('MailQueue is empty.');
+				CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			}
 			return;
 		}
