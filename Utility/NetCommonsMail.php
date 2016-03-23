@@ -558,16 +558,12 @@ class NetCommonsMail extends CakeEmail {
 			));
 
 			foreach ($users as $user) {
-				// 暫定対応：userテーブルにlanguage_id追加になったら、ここ改修
-				//$languageId = Hash::get($user, 'user.language_id');
-				$languageId = 2;
-
 				$userEmail = Hash::get($user, 'user.email');
 				if (empty($userEmail)) {
 					CakeLog::debug("Email is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 					continue;
 				}
-				$this->setFrom($languageId);
+				$this->setFrom($mailQueueLanguageId);
 				parent::to($userEmail);
 				parent::subject($this->subject);
 				$messages[] = parent::send($this->body);
@@ -580,9 +576,6 @@ class NetCommonsMail extends CakeEmail {
 				'conditions' => array('id' => $userId),
 				'callbacks' => false,
 			));
-			// 暫定対応：userテーブルにlanguage_id追加になったら、ここ改修
-			//$languageId = Hash::get($user, 'user.language_id');
-			$languageId = 2;
 
 			$userEmail = Hash::get($user, 'user.email');
 			if (empty($userEmail)) {
@@ -590,7 +583,7 @@ class NetCommonsMail extends CakeEmail {
 				//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 				return false;
 			}
-			$this->setFrom($languageId);
+			$this->setFrom($mailQueueLanguageId);
 			parent::to($userEmail);
 			parent::subject($this->subject);
 			$messages = parent::send($this->body);

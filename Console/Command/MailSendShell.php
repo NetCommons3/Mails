@@ -97,7 +97,6 @@ class MailSendShell extends AppShell {
 
 			foreach ($mailQueue['MailQueueUser'] as $mailQueueUser) {
 				$mail = new NetCommonsMail();
-				//$mail->initShell($siteSetting, $mailQueue, $languageId);
 				$mail->initShell($siteSetting, $mailQueue);
 
 				if (self::IS_DEBUG) {
