@@ -542,20 +542,18 @@ class MailQueueBehavior extends ModelBehavior {
 				// 投稿メール - ルーム配信 - メールキューSave
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
-				// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
 				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				//$this->__saveQueueApprovalMail($model, $languageId, $sendTime, $createdUserId, 'content_publishable');
 				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_publishable');
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
 				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -565,15 +563,8 @@ class MailQueueBehavior extends ModelBehavior {
 				// 投稿メール - ルーム配信(即時) - メールキューSave
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
-				// コメント承認しないなら、承認完了通知メール送らない
-				$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.useCommentApproval');
-				$useCommentApproval = Hash::get($model->data, $useCommentApprovalKey);
-				if (! $useCommentApproval) {
-					return true;
-				}
-
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
@@ -783,12 +774,45 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param string $fixedPhraseType 定型文の種類
  * @param int $createdUserId 登録ユーザID
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId, $fixedPhraseType, $createdUserId) {
+	private function __saveQueueNoticeMail(Model $model, $languageId, $createdUserId) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// --- ワークフロー
+			// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+			// 承認しないなら、承認完了通知メール送らない
+			//			$useWorkflowKey = Hash::get($this->settings, $model->alias . '.useWorkflow');
+			//			$useWorkflow = Hash::get($model->data, $useWorkflowKey);
+			//			if (! $useWorkflow) {
+			//				return;
+			//			}
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// --- コンテンツコメント
+			// コメント承認しないなら、承認完了通知メール送らない
+			$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.useCommentApproval');
+			$useCommentApproval = Hash::get($model->data, $useCommentApprovalKey);
+			if (! $useCommentApproval) {
+				return;
+			}
+		}
+
+		$fixedPhraseType = null;
+		$status = Hash::get($model->data, $model->alias . '.status');
+		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+			// --- 公開
+			// 承認完了通知メール
+			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
+
+		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
+			// --- 差戻し
+			// 差戻し通知メール
+			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
+		}
+
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
 
