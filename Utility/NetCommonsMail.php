@@ -540,7 +540,6 @@ class NetCommonsMail extends CakeEmail {
 
 		if (isset($roomId)) {
 			// --- ルーム単位でメール配信
-			// 途中
 			$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
 			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'));
 
@@ -550,9 +549,29 @@ class NetCommonsMail extends CakeEmail {
 				'RolesRoom.role_key' => $roleKeys,
 			);
 			$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
-			//var_dump($rolesRoomsUsers);
+			$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.roles_room_id');
 
-			return false;
+			$users = $this->User->find('all', array(
+				'recursive' => -1,
+				'conditions' => array('id' => $rolesRoomsUserIds),
+				'callbacks' => false,
+			));
+
+			foreach ($users as $user) {
+				// 暫定対応：userテーブルにlanguage_id追加になったら、ここ改修
+				//$languageId = Hash::get($user, 'user.language_id');
+				$languageId = 2;
+
+				$userEmail = Hash::get($user, 'user.email');
+				if (empty($userEmail)) {
+					CakeLog::debug("Email is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+					continue;
+				}
+				$this->setFrom($languageId);
+				parent::to($userEmail);
+				parent::subject($this->subject);
+				$messages[] = parent::send($this->body);
+			}
 
 		} elseif (isset($userId)) {
 			// --- user単位でメール配信
