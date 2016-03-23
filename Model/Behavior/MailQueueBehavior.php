@@ -41,6 +41,19 @@ class MailQueueBehavior extends ModelBehavior {
 /**
  * setup
  *
+ * #### サンプルコード
+ * ##### Model
+ * ```
+ * public $actsAs = array(
+ *	'Mails.MailQueue' => array(
+ *		'embedTags' => array(
+ *			'X-SUBJECT' => 'Video.title',
+ *			'X-BODY' => 'Video.description',
+ *		),
+ *	),
+ * ```
+ * 注意事項：ワークフロー利用時はWorkflow.Workflowより下に記述
+ *
  * @param Model $model モデル
  * @param array $settings 設定値
  * @return void
