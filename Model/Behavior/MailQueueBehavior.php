@@ -784,8 +784,8 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフロー
 			// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 			// 承認しないなら、承認完了通知メール送らない
-			//			$useWorkflowKey = Hash::get($this->settings, $model->alias . '.useWorkflow');
-			//			$useWorkflow = Hash::get($model->data, $useWorkflowKey);
+			//			$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
+			//			$useWorkflow = Hash::get($model->data, $key);
 			//			if (! $useWorkflow) {
 			//				return;
 			//			}
@@ -793,8 +793,8 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメント
 			// コメント承認しないなら、承認完了通知メール送らない
-			$useCommentApprovalKey = Hash::get($this->settings, $model->alias . '.useCommentApproval');
-			$useCommentApproval = Hash::get($model->data, $useCommentApprovalKey);
+			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
+			$useCommentApproval = Hash::get($model->data, $key);
 			if (! $useCommentApproval) {
 				return;
 			}

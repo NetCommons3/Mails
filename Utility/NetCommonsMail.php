@@ -521,7 +521,7 @@ class NetCommonsMail extends CakeEmail {
 		}
 		if ($this->body == '') {
 			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
+			//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
 
@@ -534,7 +534,7 @@ class NetCommonsMail extends CakeEmail {
 		$toAddress = Hash::get($mailQueueUser, 'to_address');
 		if ($roomId === null && $userId === null && $toAddress === null) {
 			LogError('Mail delivery destination is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
+			//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
 

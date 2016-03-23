@@ -18,161 +18,161 @@
  */
 class ConvertHtml {
 
-/**
- * HtmlからText変換処理
- *
- * @param string $str Html文字列
- * @return string Plain Text文字列
- **/
-	public function convertHtmlToText($str) {
-		$patterns = array();
-		$replacements = array();
-		//\nを削除
-		$patterns[] = "/\\n/su";
-		$replacements[] = "";
-
-		//brを\n
-		$patterns[] = "/<br(.|\s)*?>/u";
-		$replacements[] = "\n";
-
-		//divを\n
-		$patterns[] = "/<\/div>/u";
-		$replacements[] = "</div>\n";
-
-		//pを\n
-		$patterns[] = "/<\/p>/u";
-		$replacements[] = "</p>\n";
-
-		//blockquoteを\n
-		$patterns[] = "/<\/blockquote>/u";
-		$replacements[] = "</blockquote>\n";
-
-		//liを\n
-		$patterns[] = "/[ ]*<li>/u";
-		$replacements[] = "    <li>";
-
-		$patterns[] = "/<\/li>/u";
-		$replacements[] = "</li>\n";
-
-		//&npspを空白
-		$patterns[] = "/\&nbsp;/u";
-		$replacements[] = " ";
-
-		//&quot;を"
-		$patterns[] = "/\&quot;/u";
-		$replacements[] = "\"";
-
-		//&acute;を´
-		$patterns[] = "/\&acute;/u";
-		$replacements[] = "´";
-
-		//&cedil;を¸
-		$patterns[] = "/\&cedil;/u";
-		$replacements[] = "¸";
-
-		//&circ;を?
-		$patterns[] = "/\&circ;/u";
-		$replacements[] = "?";
-
-		//&lsquo;を‘
-		$patterns[] = "/\&lsquo;/u";
-		$replacements[] = "‘";
-
-		//&rsquo;を’
-		$patterns[] = "/\&rsquo;/u";
-		$replacements[] = "’";
-
-		//&ldquo;を“
-		$patterns[] = "/\&ldquo;/u";
-		$replacements[] = "“";
-
-		//&rdquo;を”
-		$patterns[] = "/\&rdquo;/u";
-		$replacements[] = "”";
-
-		//&apos;を'
-		$patterns[] = "/\&apos;/u";
-		$replacements[] = "'";
-
-		//&#039;を'
-		$patterns[] = "/\&#039;/u";
-		$replacements[] = "'";
-
-		//&amp;を&
-		$patterns[] = "/\&amp;/u";
-		$replacements[] = "&";
-
-		$str = preg_replace($patterns, $replacements, $str);
-		$quoteArr = explode("<blockquote class=\"quote\">", $str);
-		$quoteCnt = count($quoteArr);
-		if ($quoteCnt > 1) {
-			$resultStr = "";
-			$indentCnt = 0;
-			$count = 0;
-			foreach ($quoteArr as $quoteStr) {
-				if ($count == 0 || $quoteCnt == $count) {
-					$resultStr .= $quoteStr;
-					$count++;
-					continue;
-				}
-				$indentCnt++;
-				$quoteCloseArr = explode("</blockquote>", $quoteStr);
-				$quoteCloseCnt = count($quoteCloseArr);
-				if ($quoteCloseCnt > 1) {
-					$closeCount = 0;
-					foreach ($quoteCloseArr as $quoteCloseStr) {
-						//if($closeCount == 0 || $quoteCloseCnt == $closeCount) {
-						//						if($quoteCloseCnt == $closeCount+1) {
-						//							$resultStr .= $quoteCloseStr;
-						//							$closeCount++;
-						//							continue;
-						//						}
-						$indentStr = $this->getIndentStr($indentCnt);
-						if ($indentStr != "") {
-							$quotePattern = "/\n/u";
-							$quoteReplacement = "\n" . $indentStr;
-							$resultStr = preg_replace("/(> )+$/u", "", $resultStr);
-							if ($quoteCloseCnt != $closeCount + 1) {
-								if (!preg_match("/\n$/u", $resultStr)) {
-									$resultStr .= "\n";
-								}
-								$resultStr .= preg_replace("/^(> )+\n/u", "", $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr));
-								$indentCnt--;
-							} else {
-								$resultStr .= preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr);
-							}
-						} else {
-							$resultStr .= $quoteCloseStr;
-						}
-						$closeCount++;
-					}
-
-				} else {
-					$indentStr = $this->getIndentStr($indentCnt);
-					$quotePattern = "/\n/u";
-					$quoteReplacement = "\n" . $indentStr;
-					$resultStr .= $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteStr);
-				}
-				$count++;
-			}
-			$str = $resultStr;
-		}
-		$str = strip_tags($str);
-
-		// strip_tagsで「<」、「>」があるとそれ以降の文字が消えるため、strip_tags後に変換
-		$patterns = array();
-		$replacements = array();
-
-		//&lt;を<
-		$patterns[] = "/\&lt;/u";
-		$replacements[] = "<";
-
-		//&gt;を>
-		$patterns[] = "/\&gt;/u";
-		$replacements[] = ">";
-
-		return preg_replace($patterns, $replacements, $str);
-	}
+	///**
+	// * HtmlからText変換処理
+	// *
+	// * @param string $str Html文字列
+	// * @return string Plain Text文字列
+	// **/
+	//	public function convertHtmlToText($str) {
+	//		$patterns = array();
+	//		$replacements = array();
+	//		//\nを削除
+	//		$patterns[] = "/\\n/su";
+	//		$replacements[] = "";
+	//
+	//		//brを\n
+	//		$patterns[] = "/<br(.|\s)*?>/u";
+	//		$replacements[] = "\n";
+	//
+	//		//divを\n
+	//		$patterns[] = "/<\/div>/u";
+	//		$replacements[] = "</div>\n";
+	//
+	//		//pを\n
+	//		$patterns[] = "/<\/p>/u";
+	//		$replacements[] = "</p>\n";
+	//
+	//		//blockquoteを\n
+	//		$patterns[] = "/<\/blockquote>/u";
+	//		$replacements[] = "</blockquote>\n";
+	//
+	//		//liを\n
+	//		$patterns[] = "/[ ]*<li>/u";
+	//		$replacements[] = "    <li>";
+	//
+	//		$patterns[] = "/<\/li>/u";
+	//		$replacements[] = "</li>\n";
+	//
+	//		//&npspを空白
+	//		$patterns[] = "/\&nbsp;/u";
+	//		$replacements[] = " ";
+	//
+	//		//&quot;を"
+	//		$patterns[] = "/\&quot;/u";
+	//		$replacements[] = "\"";
+	//
+	//		//&acute;を´
+	//		$patterns[] = "/\&acute;/u";
+	//		$replacements[] = "´";
+	//
+	//		//&cedil;を¸
+	//		$patterns[] = "/\&cedil;/u";
+	//		$replacements[] = "¸";
+	//
+	//		//&circ;を?
+	//		$patterns[] = "/\&circ;/u";
+	//		$replacements[] = "?";
+	//
+	//		//&lsquo;を‘
+	//		$patterns[] = "/\&lsquo;/u";
+	//		$replacements[] = "‘";
+	//
+	//		//&rsquo;を’
+	//		$patterns[] = "/\&rsquo;/u";
+	//		$replacements[] = "’";
+	//
+	//		//&ldquo;を“
+	//		$patterns[] = "/\&ldquo;/u";
+	//		$replacements[] = "“";
+	//
+	//		//&rdquo;を”
+	//		$patterns[] = "/\&rdquo;/u";
+	//		$replacements[] = "”";
+	//
+	//		//&apos;を'
+	//		$patterns[] = "/\&apos;/u";
+	//		$replacements[] = "'";
+	//
+	//		//&#039;を'
+	//		$patterns[] = "/\&#039;/u";
+	//		$replacements[] = "'";
+	//
+	//		//&amp;を&
+	//		$patterns[] = "/\&amp;/u";
+	//		$replacements[] = "&";
+	//
+	//		$str = preg_replace($patterns, $replacements, $str);
+	//		$quoteArr = explode("<blockquote class=\"quote\">", $str);
+	//		$quoteCnt = count($quoteArr);
+	//		if ($quoteCnt > 1) {
+	//			$resultStr = "";
+	//			$indentCnt = 0;
+	//			$count = 0;
+	//			foreach ($quoteArr as $quoteStr) {
+	//				if ($count == 0 || $quoteCnt == $count) {
+	//					$resultStr .= $quoteStr;
+	//					$count++;
+	//					continue;
+	//				}
+	//				$indentCnt++;
+	//				$quoteCloseArr = explode("</blockquote>", $quoteStr);
+	//				$quoteCloseCnt = count($quoteCloseArr);
+	//				if ($quoteCloseCnt > 1) {
+	//					$closeCount = 0;
+	//					foreach ($quoteCloseArr as $quoteCloseStr) {
+	//						//if($closeCount == 0 || $quoteCloseCnt == $closeCount) {
+	//						//						if($quoteCloseCnt == $closeCount+1) {
+	//						//							$resultStr .= $quoteCloseStr;
+	//						//							$closeCount++;
+	//						//							continue;
+	//						//						}
+	//						$indentStr = $this->getIndentStr($indentCnt);
+	//						if ($indentStr != "") {
+	//							$quotePattern = "/\n/u";
+	//							$quoteReplacement = "\n" . $indentStr;
+	//							$resultStr = preg_replace("/(> )+$/u", "", $resultStr);
+	//							if ($quoteCloseCnt != $closeCount + 1) {
+	//								if (!preg_match("/\n$/u", $resultStr)) {
+	//									$resultStr .= "\n";
+	//								}
+	//								$resultStr .= preg_replace("/^(> )+\n/u", "", $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr));
+	//								$indentCnt--;
+	//							} else {
+	//								$resultStr .= preg_replace($quotePattern, $quoteReplacement, $quoteCloseStr);
+	//							}
+	//						} else {
+	//							$resultStr .= $quoteCloseStr;
+	//						}
+	//						$closeCount++;
+	//					}
+	//
+	//				} else {
+	//					$indentStr = $this->getIndentStr($indentCnt);
+	//					$quotePattern = "/\n/u";
+	//					$quoteReplacement = "\n" . $indentStr;
+	//					$resultStr .= $indentStr . preg_replace($quotePattern, $quoteReplacement, $quoteStr);
+	//				}
+	//				$count++;
+	//			}
+	//			$str = $resultStr;
+	//		}
+	//		$str = strip_tags($str);
+	//
+	//		// strip_tagsで「<」、「>」があるとそれ以降の文字が消えるため、strip_tags後に変換
+	//		$patterns = array();
+	//		$replacements = array();
+	//
+	//		//&lt;を<
+	//		$patterns[] = "/\&lt;/u";
+	//		$replacements[] = "<";
+	//
+	//		//&gt;を>
+	//		$patterns[] = "/\&gt;/u";
+	//		$replacements[] = ">";
+	//
+	//		return preg_replace($patterns, $replacements, $str);
+	//	}
 
 /**
  * getIndentStr
