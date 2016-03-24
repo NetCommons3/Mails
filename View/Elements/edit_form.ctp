@@ -41,10 +41,13 @@ if (! isset($mailTypeKey)) {
 	<div class="panel panel-default">
 		<div class="panel-body">
 			<div class="col-xs-12">
-				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
-					'type' => 'checkbox',
-					'label' => __d('mails', 'Use the mail notification function')
-				)); ?>
+				<div class="form-inline">
+					<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
+						'type' => 'checkbox',
+						'label' => __d('mails', 'Use the mail notification function'),
+					)); ?>
+					<p class="help-block"><?php echo __d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'); ?></p>
+				</div>
 			</div>
 
 			<div class="col-xs-11 col-xs-offset-1">
