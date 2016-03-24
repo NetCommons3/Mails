@@ -62,7 +62,7 @@ class MailQueueDeleteBehavior extends ModelBehavior {
 		));
 		$contentKey = $content[$model->alias]['key'];
 
-		$this->__deleteQueue($model, $contentKey);
+		$this->deleteQueue($model, $contentKey);
 
 		$this->__isDeleted = true;
 		return true;
