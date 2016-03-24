@@ -43,6 +43,7 @@ class MailSetting extends MailsAppModel {
 	public $actsAs = array(
 		'NetCommons.OriginalKey',
 		'Blocks.BlockRolePermission',
+		'Mails.MailQueueDelete',
 	);
 
 /**
@@ -223,7 +224,13 @@ class MailSetting extends MailsAppModel {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
-			// ここに、メール設定変更時「通知しない」なら、メールキュー削除 処理を記述
+			// メール設定変更時「通知しない」なら、メールキュー削除
+			// idあり(=編集) & 通知しない
+			if (isset($data[$this->alias]['id']) && !$data[$this->alias]['is_mail_send']) {
+				$blockKey = Current::read('Block.key');
+				/** @see MailQueueDeleteBehavior::deleteQueue() */
+				$this->deleteQueue($blockKey, 'block_key');
+			}
 
 			//トランザクションCommit
 			$this->commit();
