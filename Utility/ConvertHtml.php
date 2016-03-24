@@ -18,13 +18,12 @@
  */
 class ConvertHtml {
 
-	///**
-	// * HtmlからText変換処理
-	// *
-	// * @param string $str Html文字列
-	// * @return string Plain Text文字列
-	// **/
-	/*
+/**
+ * HtmlからText変換処理
+ *
+ * @param string $str Html文字列
+ * @return string Plain Text文字列
+ **/
 	public function convertHtmlToText($str) {
 		$patterns = array();
 		$replacements = array();
@@ -174,23 +173,22 @@ class ConvertHtml {
 
 		return preg_replace($patterns, $replacements, $str);
 	}
-	*/
 
-/**
- * getIndentStr
- *
- * @param int $indentCnt インデント
- * @return string
- */
-	public function getIndentStr($indentCnt = 0) {
-		$indentStr = "";
-		$tabStr = "";
-		for ($i = 0; $i < $indentCnt; $i++) {
-			$indentStr .= "> ";
-			$tabStr .= "";
-		}
-		return $tabStr . $indentStr;
-	}
+	///**
+	// * getIndentStr
+	// *
+	// * @param int $indentCnt インデント
+	// * @return string
+	// */
+	//	public function getIndentStr($indentCnt = 0) {
+	//		$indentStr = "";
+	//		$tabStr = "";
+	//		for ($i = 0; $i < $indentCnt; $i++) {
+	//			$indentStr .= "> ";
+	//			$tabStr .= "";
+	//		}
+	//		return $tabStr . $indentStr;
+	//	}
 
 	///**
 	// * HtmlからText変換処理
@@ -252,24 +250,24 @@ class ConvertHtml {
 	//		return $matches[1] . $matches[2] . BASE_URL . INDEX_FILE_NAME . $matches[4];
 	//	}
 
-/**
- * HtmlからText変換処理
- *
- * @param string $matches Html文字列
- * @return string	Plain Text文字列
- **/
-	public function replaceSesion($matches) {
-		$sessionValue = session_name() . "=" . session_id();
-		if (preg_match("/" . $sessionValue . "/", $matches[5])) {
-			return $matches[0];
-		}
-
-		$pos = strpos($matches[5], "?");
-		$pause = $pos !== false ? "&" : "?";
-
-		$pos = strpos($matches[5], "#");
-		$matches[5] = $pos !== false ? substr($matches[5], 0, $pos) . $pause . $sessionValue . substr($matches[5], $pos) : $matches[5] . $pause . $sessionValue;
-
-		return $matches[1] . $matches[2] . $matches[3] . $matches[4] . $matches[5] . $matches[6];
-	}
+	///**
+	// * HtmlからText変換処理
+	// *
+	// * @param string $matches Html文字列
+	// * @return string	Plain Text文字列
+	// **/
+	//	public function replaceSesion($matches) {
+	//		$sessionValue = session_name() . "=" . session_id();
+	//		if (preg_match("/" . $sessionValue . "/", $matches[5])) {
+	//			return $matches[0];
+	//		}
+	//
+	//		$pos = strpos($matches[5], "?");
+	//		$pause = $pos !== false ? "&" : "?";
+	//
+	//		$pos = strpos($matches[5], "#");
+	//		$matches[5] = $pos !== false ? substr($matches[5], 0, $pos) . $pause . $sessionValue . substr($matches[5], $pos) : $matches[5] . $pause . $sessionValue;
+	//
+	//		return $matches[1] . $matches[2] . $matches[3] . $matches[4] . $matches[5] . $matches[6];
+	//	}
 }
