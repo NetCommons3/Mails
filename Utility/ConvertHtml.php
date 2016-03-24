@@ -18,12 +18,13 @@
  */
 class ConvertHtml {
 
-/**
- * HtmlからText変換処理
- *
- * @param string $str Html文字列
- * @return string Plain Text文字列
- **/
+	///**
+	// * HtmlからText変換処理
+	// *
+	// * @param string $str Html文字列
+	// * @return string Plain Text文字列
+	// **/
+	/*
 	public function convertHtmlToText($str) {
 		$patterns = array();
 		$replacements = array();
@@ -173,6 +174,7 @@ class ConvertHtml {
 
 		return preg_replace($patterns, $replacements, $str);
 	}
+	*/
 
 /**
  * getIndentStr
