@@ -27,9 +27,10 @@ App::uses('AppController', 'Controller');
  * ```
  * Links/View/LinkMailSettings/edit.ctpファイルを作成する
  * ```
- * 
+ *
  * @author Shohei Nakajima <nakajimashouhei@gmail.com>
  * @package NetCommons\Mails\Controller
+ * @property MailSetting $MailSetting
  */
 class MailSettingsController extends AppController {
 
