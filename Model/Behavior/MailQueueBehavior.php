@@ -308,8 +308,15 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isMailSend(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$pluginKey = Current::read('Plugin.key');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// コンテンツコメントは使ってくれているプラグインのキーでメール設定取得
+			$pluginKey = $model->data[$model->alias]['plugin_key'];
+		}
+
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSetting = $model->MailSetting->getMailSettingPlugin(null, $typeKey);
+		$mailSetting = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $pluginKey);
 		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
 
 		// プラグイン設定でメール通知を使わないなら、メール送らない
@@ -320,7 +327,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- 編集フラグセット
 		$isEdit = $this->settings[$model->alias]['isEdit'];
 		if ($isEdit === null) {
-			$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+			//$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 			if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 				// コンテンツコメント
 				$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
