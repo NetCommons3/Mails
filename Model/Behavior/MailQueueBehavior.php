@@ -902,7 +902,7 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __saveQueueApprovalMail(Model $model, $languageId, $publishablePermission) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
-		$createdUserId = $this->__saveQueueNoticeMail($model);
+		$createdUserId = $this->__getCreatedUserId($model);
 		$blockKey = Current::read('Block.key');
 
 		// --- 承認依頼
