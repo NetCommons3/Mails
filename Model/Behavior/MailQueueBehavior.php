@@ -880,12 +880,14 @@ class MailQueueBehavior extends ModelBehavior {
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
+		$mailQueueId = $mailQueueResult['MailQueue']['id'];
 
 		// MailQueueUserは新規登録
 		$mailQueueUser['MailQueueUser'] = array(
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
 			'content_key' => $contentKey,
+			'mail_queue_id' => $mailQueueId,
 			'user_id' => null,
 			'room_id' => null,
 			'to_address' => null,
@@ -894,17 +896,12 @@ class MailQueueBehavior extends ModelBehavior {
 		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
 		if (!empty($createdUserId)) {
 			// 投稿メール - 登録者に配信(即時)
-			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 			$mailQueueUser['MailQueueUser']['user_id'] = $createdUserId;
 			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 			/** @see MailQueueUser::saveMailQueueUser() */
 			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
-
-			// $mailQueueUser使いまわすため、不要な情報をunset
-			unset($mailQueueUser['MailQueueUser']['mail_queue_id']);
-			unset($mailQueueUser['MailQueueUser']['user_id']);
 		}
 
 		// ルーム内の承認者達に配信(即時)
@@ -913,7 +910,6 @@ class MailQueueBehavior extends ModelBehavior {
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-
 			/** @see MailQueueUser::saveMailQueueUser() */
 			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
