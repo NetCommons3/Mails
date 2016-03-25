@@ -211,7 +211,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag('X-TO_DATE', date('Y/m/d H:i:s'));
-		//$this->assignTag('X-APPROVAL_COMMENT', $workflowComment);
+		//$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 
 		// X-ROOMタグ
 		$roomId = Current::read('Room.id');

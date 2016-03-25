@@ -969,7 +969,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mail->assignTag('X-URL', $url);
 
 		$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-		$mail->assignTag('X-APPROVAL_COMMENT', $workflowComment);
+		$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 
 		// --- 定型文の埋め込みタグをセット
 		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
