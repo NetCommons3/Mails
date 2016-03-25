@@ -534,17 +534,18 @@ class MailQueueBehavior extends ModelBehavior {
 
 /**
  * 投稿メール - メールキューSave
+ * 公開時を想定
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
  * @param array $sendTimes メール送信日時 配列
- * @param int $userId 送信ユーザID
+ * @param array $userIds 送信ユーザID 配列
  * @param string $toAddresses 送信先メールアドレス
  * @param string $typeKey メールの種類
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userId = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = array(null), $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 
@@ -589,62 +590,45 @@ class MailQueueBehavior extends ModelBehavior {
 			'to_address' => null,
 		);
 
-		if (isset($userId)) {
-			// 登録者に配信
-			// ここを実行する時は、承認依頼時を想定
+		// 以下、実行する時は、公開時を想定
 
-			//			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
-			//			$mailQueue = $model->MailQueue->create($mailQueue);
-			//			/** @see MailQueue::saveMailQueue() */
-			//			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-			//				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			//			}
-			//
-			//			$mailQueueUser['MailQueueUser']['user_id'] = $userId;
-			//			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
-			//			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-			//			/** @see MailQueueUser::saveMailQueueUser() */
-			//			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-			//				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			//			}
+		foreach ($sendTimes as $sendTime) {
 
-		} elseif (isset($toAddresses)) {
-			// メールアドレスに配信
-			// ここを実行する時は、公開時を想定
-
-			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			// メール内容save
+			$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime($sendTime);
 			$mailQueue = $model->MailQueue->create($mailQueue);
 			/** @see MailQueue::saveMailQueue() */
 			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
-
 			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
-			foreach ($toAddresses as $toAddress) {
-				$mailQueueUser['MailQueueUser']['to_address'] = $toAddress;
-				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-				/** @see MailQueueUser::saveMailQueueUser() */
-				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-				}
-			}
-
-		} else {
-			foreach ($sendTimes as $sendTime) {
-				// ルーム配信
-				// ここを実行する時は、公開時を想定
-
-				$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime($sendTime);
-				$mailQueue = $model->MailQueue->create($mailQueue);
-				/** @see MailQueue::saveMailQueue() */
-				if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			if (isset($userIds)) {
+				// --- 登録者に配信
+				foreach ($userIds as $userId) {
+					$mailQueueUser['MailQueueUser']['user_id'] = $userId;
+					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+					/** @see MailQueueUser::saveMailQueueUser() */
+					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+					}
 				}
 
+			} elseif (isset($toAddresses)) {
+				// --- メールアドレスに配信
+				foreach ($toAddresses as $toAddress) {
+					$mailQueueUser['MailQueueUser']['to_address'] = $toAddress;
+					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+					/** @see MailQueueUser::saveMailQueueUser() */
+					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+					}
+				}
+
+			} else {
+				// --- ルーム配信
 				$roomId = Current::read('Room.id');
 				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
-				$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 				/** @see MailQueueUser::saveMailQueueUser() */
 				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
