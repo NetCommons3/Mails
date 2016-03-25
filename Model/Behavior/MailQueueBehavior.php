@@ -369,11 +369,12 @@ class MailQueueBehavior extends ModelBehavior {
  * メールを送るかどうか
  *
  * @param Model $model モデル
+ * @param string $typeKey メールの種類
  * @return bool
  */
-	public function isMailSend(Model $model) {
+	public function isMailSend(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSetting = $model->MailSetting->getMailSettingPlugin();
+		$mailSetting = $model->MailSetting->getMailSettingPlugin(null, $typeKey);
 		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
 
 		// プラグイン設定でメール通知を使わないなら、メール送らない
@@ -542,9 +543,10 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param array $sendTimes メール送信日時 配列
+ * @param string $typeKey メールの種類
  * @return bool
  */
-	public function saveQueue(Model $model, $sendTimes) {
+	public function saveQueue(Model $model, $sendTimes, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -556,10 +558,10 @@ class MailQueueBehavior extends ModelBehavior {
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
 				// 投稿メール - ルーム配信 - メールキューSave
-				$this->saveQueuePostMail($model, $languageId, $sendTimes);
+				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
 
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId);
+				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
@@ -569,7 +571,7 @@ class MailQueueBehavior extends ModelBehavior {
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
 				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId);
+				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -580,7 +582,7 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId);
+				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
@@ -592,11 +594,11 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフローの機能自体、使ってないプラグインの処理
 			// --- 公開
 			// 投稿メール - ルーム配信 - メールキューSave
-			$this->saveQueuePostMail($model, $languageId, $sendTimes);
+			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 登録フォーム
-			$this->__saveQueuePostMailByToAddress($model);
+			$this->__saveQueuePostMailByToAddress($model, $typeKey);
 		}
 
 		return true;
@@ -745,15 +747,16 @@ class MailQueueBehavior extends ModelBehavior {
  * 登録フォームの投稿を想定
  *
  * @param Model $model モデル
+ * @param string $typeKey メールの種類
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueuePostMailByToAddress(Model $model) {
+	private function __saveQueuePostMailByToAddress(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
 		$languageId = Current::read('Language.id');
 
 		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
-		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses);
+		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
@@ -791,10 +794,11 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
+ * @param string $typeKey メールの種類
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId) {
+	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
@@ -831,7 +835,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
+		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
 		if (empty($replyTo)) {
