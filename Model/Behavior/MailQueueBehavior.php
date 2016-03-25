@@ -36,11 +36,6 @@ class MailQueueBehavior extends ModelBehavior {
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment',
 		MAIL_QUEUE_WORKFLOW_TYPE_ANSWER = 'answer';
 
-	///**
-	// * @var bool 削除済み
-	// */
-	//	private $__isDeleted = null;
-
 /**
  * setup
  *
@@ -88,8 +83,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		$this->settings[$model->alias]['registration']['toAddresses'] = null;
-
-		//$this->__isDeleted = false;
 
 		$model->loadModels([
 			'MailSetting' => 'Mails.MailSetting',
@@ -306,64 +299,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 		return true;
 	}
-
-	///**
-	// * beforeDelete
-	// * コンテンツが削除されたら、キューに残っているメールも削除
-	// *
-	// * @param Model $model モデル
-	// * @param bool $cascade If true records that depend on this record will also be deleted
-	// * @return mixed False if the operation should abort. Any other result will continue.
-	// * @throws InternalErrorException
-	// * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::beforedelete
-	// * @link http://book.cakephp.org/2.0/ja/models/callback-methods.html#beforedelete
-	// * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
-	// */
-	//	public function beforeDelete(Model $model, $cascade = true) {
-	//		// 多言語のコンテンツを key を使って、Model::deleteAll() で削除した場合を想定
-	//		// 削除済みなら、もう処理をしない
-	//		if ($this->__isDeleted) {
-	//			return;
-	//		}
-	//
-	//		// コンテンツ取得
-	//		$content = $model->find('first', array(
-	//			'recursive' => -1,
-	//			'conditions' => array($model->alias . '.id' => $model->id),
-	//			'callbacks' => false,
-	//		));
-	//
-	//		$contentKey = $content[$model->alias]['key'];
-	//		$this->__deleteQueue($model, $contentKey);
-	//
-	//		$this->__isDeleted = true;
-	//		return true;
-	//	}
-
-	///**
-	// * キュー削除
-	// *
-	// * @param Model $model モデル
-	// * @param string $contentKey コンテンツキー
-	// * @return void
-	// * @throws InternalErrorException
-	// */
-	//	private function __deleteQueue(Model $model, $contentKey) {
-	//		$model->loadModels([
-	//			'MailQueue' => 'Mails.MailQueue',
-	//			'MailQueueUser' => 'Mails.MailQueueUser',
-	//		]);
-	//
-	//		// キューの配信先 削除
-	//		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.content_key' => $contentKey), false)) {
-	//			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-	//		}
-	//
-	//		// キュー 削除
-	//		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.content_key' => $contentKey), false)) {
-	//			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-	//		}
-	//	}
 
 /**
  * メールを送るかどうか
