@@ -792,9 +792,10 @@ class MailQueueBehavior extends ModelBehavior {
 			// 承認しないなら、承認完了通知メール送らない
 			//			$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
 			//			$useWorkflow = Hash::get($model->data, $key);
-			//			if (! $useWorkflow) {
-			//				return;
-			//			}
+			$useWorkflow = 1;
+			if (! $useWorkflow) {
+				return;
+			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメント
@@ -968,8 +969,17 @@ class MailQueueBehavior extends ModelBehavior {
 		$url = NetCommonsUrl::url($url, true);
 		$mail->assignTag('X-URL', $url);
 
-		$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-		$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+		// 承認つかう時、担当者へのコメントをメールに含める
+		//			$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
+		//			$useWorkflow = Hash::get($model->data, $key);
+		$useWorkflow = 1;
+		if ($useWorkflow) {
+			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
+			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
+			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
+			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+		}
 
 		// --- 定型文の埋め込みタグをセット
 		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
