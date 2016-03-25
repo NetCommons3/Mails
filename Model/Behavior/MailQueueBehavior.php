@@ -566,7 +566,7 @@ class MailQueueBehavior extends ModelBehavior {
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
 				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				$this->__saveQueueApprovalMail($model, $languageId, 'content_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, 'content_publishable', $typeKey);
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
@@ -582,7 +582,7 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
+				$this->__saveQueueNoticeMail($model, $languageId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
@@ -665,20 +665,20 @@ class MailQueueBehavior extends ModelBehavior {
 			// 登録者に配信
 			// ここを実行する時は、承認依頼時を想定
 
-			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
-			$mailQueue = $model->MailQueue->create($mailQueue);
-			/** @see MailQueue::saveMailQueue() */
-			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-
-			$mailQueueUser['MailQueueUser']['user_id'] = $userId;
-			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
-			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
+			//			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			//			$mailQueue = $model->MailQueue->create($mailQueue);
+			//			/** @see MailQueue::saveMailQueue() */
+			//			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
+			//				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			//			}
+			//
+			//			$mailQueueUser['MailQueueUser']['user_id'] = $userId;
+			//			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
+			//			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+			//			/** @see MailQueueUser::saveMailQueueUser() */
+			//			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+			//				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			//			}
 
 		} elseif (isset($toAddresses)) {
 			// メールアドレスに配信
@@ -900,18 +900,77 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param int $languageId 言語ID
  * @param string $publishablePermission 公開パーミッション content_publishable or content_comment_publishable
+ * @param string $typeKey メールの種類
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueApprovalMail(Model $model, $languageId, $publishablePermission) {
+	private function __saveQueueApprovalMail(Model $model, $languageId, $publishablePermission, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
+		$pluginName = $this->__getPluginName($model);
 		$createdUserId = $this->__getCreatedUserId($model);
 		$blockKey = Current::read('Block.key');
 
-		// --- 承認依頼
-		// 投稿メール - 登録者に配信(即時) - メールキューSave
-		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $createdUserId);
+		/** @see MailSetting::getMailSettingPlugin() */
+		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+
+		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
+		if (empty($replyTo)) {
+			$replyTo = null;
+		}
+
+		// 投稿メール - メールキューSave
+		$postMail = new NetCommonsMail();
+		$postMail->initPlugin($languageId, $pluginName);
+		$postMail->setMailFixedPhrasePlugin($mailSettings);
+		$postMail->setReplyTo($replyTo);
+		$postMail = $this->__convertPlainText($model, $postMail);
+
+		//$replyTo = key($postMail->replyTo());
+		// MailQueueは新規登録
+		$mailQueue['MailQueue'] = array(
+			'language_id' => $languageId,
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'replay_to' => $replyTo,
+			'mail_subject' => $postMail->subject,
+			'mail_body' => $postMail->body,
+			'send_time' => null,
+		);
+
+		$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+		$mailQueue = $model->MailQueue->create($mailQueue);
+		/** @see MailQueue::saveMailQueue() */
+		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+		$mailQueueId = $mailQueueResult['MailQueue']['id'];
+
+		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
+		if (!empty($createdUserId)) {
+			// --- 承認依頼
+			// 投稿メール - 登録者に配信(即時) - メールキューSave
+			//$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $createdUserId, null, $typeKey);
+
+			// MailQueueUserは新規登録
+			$mailQueueUser['MailQueueUser'] = array(
+				'plugin_key' => $pluginKey,
+				'block_key' => $blockKey,
+				'content_key' => $contentKey,
+				'user_id' => $createdUserId,
+				'room_id' => null,
+				'to_address' => null,
+			);
+
+			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
+			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+			/** @see MailQueueUser::saveMailQueueUser() */
+			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+			$mailQueueUser = null;
+		}
 
 		// MailQueueUserは新規登録
 		$mailQueueUser['MailQueueUser'] = array(
