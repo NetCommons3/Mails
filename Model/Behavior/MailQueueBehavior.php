@@ -10,6 +10,7 @@
  */
 
 App::uses('NetCommonsMail', 'Mails.Utility');
+App::uses('MailSetting', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
 
@@ -25,15 +26,15 @@ class MailQueueBehavior extends ModelBehavior {
  * 承認機能の種類
  *
  * @var string 承認機能なし
- * @var string 承認機能なし-登録フォーム
  * @var string ワークフロー
  * @var string コンテンツコメント
+ * @var string 回答（アンケート、登録フォームなど）
  */
 	const
 		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
-		MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION = 'registration',
 		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
-		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment';
+		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment',
+		MAIL_QUEUE_WORKFLOW_TYPE_ANSWER = 'answer';
 
 	///**
 	// * @var bool 削除済み
@@ -158,7 +159,7 @@ class MailQueueBehavior extends ModelBehavior {
 	public function setRegistrationToAddresses(Model $model, $toAddresses) {
 		$this->settings[$model->alias]['registration']['toAddresses'] = $toAddresses;
 		// 承認機能の種類 セット
-		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION;
+		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER;
 	}
 
 /**
@@ -254,6 +255,27 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		// 通常
 		return Current::read('Plugin.Name');
+	}
+
+/**
+ * 登録ユーザID ゲット
+ *
+ * @param Model $model モデル
+ * @return string 登録ユーザID
+ */
+	private function __getCreatedUserId(Model $model) {
+		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		if ($createdUserId === null) {
+			// コンテンツコメント承認時に利用
+			$data = $model->find('first', array(
+				'recursive' => -1,
+				'conditions' => array('id' => $model->data[$model->alias]['id']),
+				'callbacks' => false,
+			));
+			$createdUserId = $data[$model->alias]['created_user'];
+		}
+		return $createdUserId;
 	}
 
 /**
@@ -527,18 +549,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
 
-		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
-		if ($createdUserId === null) {
-			// コンテンツコメント承認時に利用
-			$data = $model->find('first', array(
-				'recursive' => -1,
-				'conditions' => array('id' => $model->data[$model->alias]['id']),
-				'callbacks' => false,
-			));
-			$createdUserId = $data[$model->alias]['created_user'];
-		}
-
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフローのstatusによって送信内容を変える
 			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
@@ -549,17 +559,17 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 承認完了通知メール - 登録者に配信 - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
 				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, 'content_publishable');
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
 				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -570,12 +580,12 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
 				// 承認完了通知メール - 登録者に配信(即時) - メールキューSave
-				$this->__saveQueueNoticeMail($model, $languageId, $createdUserId);
+				$this->__saveQueueNoticeMail($model, $languageId);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
 				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
-				$this->__saveQueueApprovalMail($model, $languageId, $createdUserId, 'content_comment_publishable');
+				$this->__saveQueueApprovalMail($model, $languageId, 'content_comment_publishable');
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
@@ -584,7 +594,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// 投稿メール - ルーム配信 - メールキューSave
 			$this->saveQueuePostMail($model, $languageId, $sendTimes);
 
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE_REGISTRATION) {
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 登録フォーム
 			$this->__saveQueuePostMailByToAddress($model);
 		}
@@ -598,14 +608,15 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param int $languageId 言語ID
  * @param array $sendTimes メール送信日時 配列
- * @param int $createdUserId 登録ユーザID
+ * @param int $userId 送信ユーザID
  * @param string $toAddresses 送信先メールアドレス
+ * @param string $typeKey メールの種類
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $createdUserId = null, $toAddresses = null) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userId = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId);
+		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
 
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
 		if (empty($replyTo)) {
@@ -648,7 +659,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'to_address' => null,
 		);
 
-		if (isset($createdUserId)) {
+		if (isset($userId)) {
 			// 登録者に配信
 			// ここを実行する時は、承認依頼時を想定
 
@@ -659,7 +670,7 @@ class MailQueueBehavior extends ModelBehavior {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
-			$mailQueueUser['MailQueueUser']['user_id'] = $createdUserId;
+			$mailQueueUser['MailQueueUser']['user_id'] = $userId;
 			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 			/** @see MailQueueUser::saveMailQueueUser() */
@@ -780,11 +791,10 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param int $createdUserId 登録ユーザID
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId, $createdUserId) {
+	private function __saveQueueNoticeMail(Model $model, $languageId) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
@@ -830,6 +840,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
 		$pluginName = $this->__getPluginName($model);
+		$createdUserId = $this->__getCreatedUserId($model);
 
 		// 通知メール - （承認完了、差戻し）(即時) - メールキューSave
 		$noticeMail = new NetCommonsMail();
@@ -884,14 +895,14 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param int $createdUserId 登録ユーザID
  * @param string $publishablePermission 公開パーミッション content_publishable or content_comment_publishable
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueApprovalMail(Model $model, $languageId, $createdUserId, $publishablePermission) {
+	private function __saveQueueApprovalMail(Model $model, $languageId, $publishablePermission) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
+		$createdUserId = $this->__saveQueueNoticeMail($model);
 		$blockKey = Current::read('Block.key');
 
 		// --- 承認依頼
