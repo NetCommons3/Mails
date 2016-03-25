@@ -324,38 +324,13 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		// --- 編集フラグセット
-		$isEdit = $this->settings[$model->alias]['isEdit'];
-		if ($isEdit === null) {
-			//$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-			if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-				// コンテンツコメント
-				$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
-			} else {
-				// 通常
-				$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
-			}
-			$data = $model->find('all', array(
-				'recursive' => -1,
-				'conditions' => $conditions,
-				'order' => array($model->alias . '.modified DESC'),
-				'callbacks' => false,
-			));
-
-			// keyに対して2件以上記事がある = 編集
-			if (count($data) >= 2) {
-				$this->settings[$model->alias]['isEdit'] = 1;
-				$isEdit = 1;
-				// 1つ前のコンテンツのステータス
-				$this->settings[$model->alias]['beforeStatus'] = $data[1][$model->alias]['status'];
-			} else {
-				$this->settings[$model->alias]['isEdit'] = 0;
-				$isEdit = 0;
-			}
-		}
-
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		$status = Hash::get($model->data, $model->alias . '.status');
+
+		// 一時保存はメール送らない
+		if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
+			return false;
+		}
 
 		if ($useReminder) {
 			// --- リマインダー
@@ -368,6 +343,11 @@ class MailQueueBehavior extends ModelBehavior {
 				}
 			}
 			if (! $isMailSendReminder) {
+				return false;
+			}
+
+			// リマインダーの公開以外はメール送らない
+			if ($status != WorkflowComponent::STATUS_PUBLISHED) {
 				return false;
 			}
 
@@ -385,6 +365,36 @@ class MailQueueBehavior extends ModelBehavior {
 				return false;
 			}
 
+			// --- 編集フラグ, 1つ前のコンテンツのステータス
+			$isEdit = $this->settings[$model->alias]['isEdit'];
+			if ($isEdit === null) {
+				//$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+				if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+					// コンテンツコメント
+					$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
+				} else {
+					// 通常
+					$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
+				}
+				$data = $model->find('all', array(
+					'recursive' => -1,
+					'conditions' => $conditions,
+					'order' => array($model->alias . '.modified DESC'),
+					'callbacks' => false,
+				));
+
+				// keyに対して2件以上記事がある = 編集
+				if (count($data) >= 2) {
+					$this->settings[$model->alias]['isEdit'] = 1;
+					$isEdit = 1;
+					// 1つ前のコンテンツのステータス
+					$this->settings[$model->alias]['beforeStatus'] = $data[1][$model->alias]['status'];
+				} else {
+					$this->settings[$model->alias]['isEdit'] = 0;
+					$isEdit = 0;
+				}
+			}
+
 			// 投稿メールフラグが未設定の場合のみ処理（カレンダー、回覧板のメール通知を想定）
 			if ($isEdit && $isMailSendPost === null) {
 				// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、メール送らない
@@ -398,16 +408,6 @@ class MailQueueBehavior extends ModelBehavior {
 					return false;
 				}
 			}
-		}
-
-		// 一時保存はメール送らない
-		if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
-			return false;
-		}
-
-		// リマインダーの公開以外はメール送らない
-		if ($useReminder && $status != WorkflowComponent::STATUS_PUBLISHED) {
-			return false;
 		}
 
 		return true;
