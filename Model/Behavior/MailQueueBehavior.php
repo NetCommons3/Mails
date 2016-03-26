@@ -731,6 +731,14 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 		}
 
+		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
+		$createdUserId = $this->__getCreatedUserId($model);
+		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+			return;
+		}
+
 		$fixedPhraseType = null;
 		$status = Hash::get($model->data, $model->alias . '.status');
 		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
