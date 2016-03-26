@@ -25,12 +25,6 @@ App::uses('NetCommonsTime', 'NetCommons.Utility');
 class MailSendShell extends AppShell {
 
 /**
- * @var bool デバッグON
- */
-	//const IS_DEBUG = true;
-	const IS_DEBUG = false;
-
-/**
  * use model
  *
  * @var array
@@ -83,9 +77,7 @@ class MailSendShell extends AppShell {
 			)
 		));
 		if (empty($mailQueues)) {
-			if (self::IS_DEBUG) {
-				CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			}
+			CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
 		}
 
@@ -103,6 +95,13 @@ class MailSendShell extends AppShell {
 				'App.site_name',
 			)
 		));
+		$from = Hash::get($siteSetting['Mail.from'], '0.value');
+
+		// Fromが空ならメール未設定のため、メール送らない
+		if (empty($from)) {
+			LogError('From Address is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return;
+		}
 
 		foreach ($mailQueues as $mailQueue) {
 
@@ -110,25 +109,18 @@ class MailSendShell extends AppShell {
 				$mail = new NetCommonsMail();
 				$mail->initShell($siteSetting, $mailQueue);
 
-				if (self::IS_DEBUG) {
-					//送信しない（デバッグ用）
-					$config = $mail->config();
-					$config['transport'] = 'Debug';
-					$mail->config($config);
-				}
-
-				//$messages = $mail->sendQueueMail($mailQueueUser, $mailQueue['language_id']);
-				//CakeLog::debug(print_r($messages, true));
-				$mail->sendQueueMail($mailQueueUser, $mailQueue['language_id']);
+				//送信しない（デバッグ用）
+				//				$config = $mail->config();
+				//				$config['transport'] = 'Debug';
+				//				$mail->config($config);
+				//				$messages = $mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
+				//				CakeLog::debug(print_r($messages, true));
+				$mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
 
 				// 送信後にキュー削除
-				if (! self::IS_DEBUG) {
-					$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
-				}
+				$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
 			}
-			if (! self::IS_DEBUG) {
-				$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
-			}
+			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
 		}
 	}
 }

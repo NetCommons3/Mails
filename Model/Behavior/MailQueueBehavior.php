@@ -318,6 +318,18 @@ class MailQueueBehavior extends ModelBehavior {
 			$pluginKey = $model->data[$model->alias]['plugin_key'];
 		}
 
+		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
+			'SiteSetting.key' => array(
+				'Mail.from',
+			)
+		));
+		$from = Hash::get($siteSetting['Mail.from'], '0.value');
+
+		// Fromが空ならメール未設定のため、メール送らない
+		if (empty($from)) {
+			return false;
+		}
+
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSetting = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $pluginKey);
 		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
