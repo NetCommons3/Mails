@@ -440,7 +440,7 @@ class NetCommonsMail extends CakeEmail {
 		$convertHtml = new ConvertHtml();
 
 		// メール本文の共通ヘッダー文、署名追加
-		$this->body = "{X-BODY_HEADER}\r\n" . $this->body . "\r\n{X-SIGNATURE}";
+		$this->body = $this->assignTags['X-BODY_HEADER'] . "\r\n" . $this->body . "\r\n{X-SIGNATURE}" . $this->assignTags['X-SIGNATURE'];
 
 		foreach ($this->assignTags as $key => $value) {
 			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {
