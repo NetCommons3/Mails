@@ -185,6 +185,11 @@ class NetCommonsMail extends CakeEmail {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		parent::from($from, $fromName);
+
+		// Return-Path
+		$config = $this->config();
+		$config['additionalParameters'] = '-f ' . $from;
+		$this->config($config);
 	}
 
 /**
