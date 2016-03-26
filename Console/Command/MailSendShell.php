@@ -50,9 +50,20 @@ class MailSendShell extends AppShell {
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#id2
  */
 	public function main() {
-		// ここに、初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応 記述
+		// 初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応
+		$siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
+			'SiteSetting.key' => array(
+				'Mail.use_cron',
+			)
+		));
+		$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
+		if (! $useCron) {
+			$this->SiteSetting->id = $siteSetting['Mail.use_cron'][0]['id'];
+			$this->SiteSetting->saveField('value', 1);
+		}
 
-		$this->main();
+		// メール送信
+		$this->send();
 	}
 
 /**
