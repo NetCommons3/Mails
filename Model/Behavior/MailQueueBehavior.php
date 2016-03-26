@@ -76,13 +76,13 @@ class MailQueueBehavior extends ModelBehavior {
 
 		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
-		$this->settings[$model->alias]['addUserIds'] = null;
+		$this->settings[$model->alias]['userIds'] = null;
+		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
 		$this->settings[$model->alias]['beforeStatus'] = null;
 		$this->settings[$model->alias]['isEdit'] = null;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
-		$this->settings[$model->alias]['registration']['toAddresses'] = null;
 
 		$model->loadModels([
 			'MailSetting' => 'Mails.MailSetting',
@@ -108,15 +108,15 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 追加で送信するユーザID セット
- * グループ送信（回覧板、カレンダー等）を想定
+ * 任意で送信するユーザID セット
+ * グループ送信（回覧板、カレンダー等）、アンケートを想定
  *
  * @param Model $model モデル
  * @param array $userIds ユーザID配列
  * @return void
  */
-	public function setAddUserIds(Model $model, $userIds) {
-		$this->settings[$model->alias]['addUserIds'] = $userIds;
+	public function setUserIds(Model $model, $userIds) {
+		$this->settings[$model->alias]['userIds'] = $userIds;
 	}
 
 /**
@@ -131,28 +131,15 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['isMailSendPost'] = $isMailSendPost;
 	}
 
-	///**
-	// * 追加で送信するメールアドレス セット
-	// *
-	// * @param Model $model モデル
-	// * @param array $toAddresses メールアドレス 配列
-	// * @return void
-	// */
-	//	public function setAddToAddresses(Model $model, $toAddresses) {
-	//		$this->settings[$model->alias]['addToAddresses'] = $toAddresses;
-	//	}
-
 /**
- * 登録フォームで送信するメールアドレス セット
+ * 任意で送信するメールアドレス セット
  *
  * @param Model $model モデル
  * @param array $toAddresses メールアドレス 配列
  * @return void
  */
-	public function setRegistrationToAddresses(Model $model, $toAddresses) {
-		$this->settings[$model->alias]['registration']['toAddresses'] = $toAddresses;
-		// 承認機能の種類 セット
-		$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER;
+	public function setToAddresses(Model $model, $toAddresses) {
+		$this->settings[$model->alias]['toAddresses'] = $toAddresses;
 	}
 
 /**
@@ -525,8 +512,9 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
-			// --- 登録フォーム
-			$this->__saveQueuePostMailByToAddress($model, $typeKey);
+			// --- 回答
+			// 回答メール配信(即時) - メールキューSave
+			$this->__saveQueuePostMailAnswer($model, $typeKey);
 		}
 
 		return true;
@@ -546,38 +534,11 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = array(null), $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
-		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
 
-		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
-		if (empty($replyTo)) {
-			$replyTo = null;
-		}
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
-		$pluginName = $this->__getPluginName($model);
 		$blockKey = Current::read('Block.key');
-
-		// 投稿メール - メールキューSave
-		$postMail = new NetCommonsMail();
-		$postMail->initPlugin($languageId, $pluginName);
-		$postMail->setMailFixedPhrasePlugin($mailSettings);
-		$postMail->setReplyTo($replyTo);
-		$postMail = $this->__convertPlainText($model, $postMail);
-
-		//$replyTo = key($postMail->replyTo());
-		// MailQueueは新規登録
-		//$mailQueue = $model->MailQueue->create();
-		$mailQueue['MailQueue'] = array(
-			'language_id' => $languageId,
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'replay_to' => $replyTo,
-			'mail_subject' => $postMail->subject,
-			'mail_body' => $postMail->body,
-			'send_time' => null,
-		);
 
 		// MailQueueUserは新規登録
 		//$mailQueueUser = $model->MailQueueUser->create();
@@ -640,7 +601,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 				// 登録者にも配信
 				$createdUserId = $this->__getCreatedUserId($model);
-				$addUserIds = $this->settings[$model->alias]['addUserIds'];
+				$addUserIds = $this->settings[$model->alias]['userIds'];
 				$addUserIds[] = $createdUserId;
 				// 登録者と追加ユーザ達の重複登録を排除
 				$addUserIds = array_unique($addUserIds);
@@ -660,7 +621,7 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 投稿メール - メールアドレスに配信(即時) - メールキューSave
+ * 回答メール配信(即時) - メールキューSave
  * 登録フォームの投稿を想定
  *
  * @param Model $model モデル
@@ -668,12 +629,18 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueuePostMailByToAddress(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
-		$toAddresses = $this->settings[$model->alias]['registration']['toAddresses'];
+	private function __saveQueuePostMailAnswer(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
+		$toAddresses = $this->settings[$model->alias]['toAddresses'];
+		$userIds = $this->settings[$model->alias]['userIds'];
 		$languageId = Current::read('Language.id');
 
-		// 投稿メール - メールアドレスに配信(即時) - メールキューSave
-		$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
+		if (isset($toAddresses)) {
+			// メールアドレスに配信(即時) - メールキューSave
+			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
+		} elseif (isset($userIds)) {
+			// ユーザIDに配信(即時) - メールキューSave
+			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, null, $typeKey);
+		}
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
@@ -750,45 +717,23 @@ class MailQueueBehavior extends ModelBehavior {
 			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
 		}
 
-		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
+		$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
 
-		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
-		if (empty($replyTo)) {
-			$replyTo = null;
+		/** @see MailQueue::saveMailQueue() */
+		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
+
+		$mailQueueId = $mailQueueResult['MailQueue']['id'];
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
-		$pluginName = $this->__getPluginName($model);
+		$blockKey = Current::read('Block.key');
 		$createdUserId = $this->__getCreatedUserId($model);
 
-		// 通知メール - （承認完了、差戻し）(即時) - メールキューSave
-		$noticeMail = new NetCommonsMail();
-		$noticeMail->initPlugin($languageId, $pluginName);
-		$noticeMail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType);
-		$noticeMail->setReplyTo($replyTo);
-		$noticeMail = $this->__convertPlainText($model, $noticeMail);
-
-		//$replyTo = key($noticeMail->replyTo());
-		$blockKey = Current::read('Block.key');
-		$now = NetCommonsTime::getNowDatetime();
-
-		// MailQueueは新規登録
-		$mailQueue = $model->MailQueue->create();
-		$mailQueue['MailQueue'] = array(
-			'language_id' => $languageId,
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'replay_to' => $replyTo,
-			'mail_subject' => $noticeMail->subject,
-			'mail_body' => $noticeMail->body,
-			'send_time' => $now,
-		);
-
-		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create();
+		// --- 登録者に配信
 		$mailQueueUser['MailQueueUser'] = array(
+			'mail_queue_id' => $mailQueueId,
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
 			'content_key' => $contentKey,
@@ -796,13 +741,8 @@ class MailQueueBehavior extends ModelBehavior {
 			'room_id' => null,
 			'to_address' => null,
 		);
-
-		// 登録者に配信
-		/** @see MailQueue::saveMailQueue() */
-		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-		}
-		$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
+		// MailQueueUserは新規登録
+		$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 
 		/** @see MailQueueUser::saveMailQueueUser() */
 		if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
@@ -820,45 +760,18 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueueApprovalMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
-		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
-
-		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
-		$pluginName = $this->__getPluginName($model);
-		$blockKey = Current::read('Block.key');
-		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
-		if (empty($replyTo)) {
-			$replyTo = null;
-		}
-
-		// 投稿メール - メールキューSave
-		$postMail = new NetCommonsMail();
-		$postMail->initPlugin($languageId, $pluginName);
-		$postMail->setMailFixedPhrasePlugin($mailSettings);
-		$postMail->setReplyTo($replyTo);
-		$postMail = $this->__convertPlainText($model, $postMail);
-
-		//$replyTo = key($postMail->replyTo());
-		// MailQueueは新規登録
-		$mailQueue['MailQueue'] = array(
-			'language_id' => $languageId,
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'replay_to' => $replyTo,
-			'mail_subject' => $postMail->subject,
-			'mail_body' => $postMail->body,
-			'send_time' => null,
-		);
-
+		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
 		$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
-		$mailQueue = $model->MailQueue->create($mailQueue);
+
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
+
 		$mailQueueId = $mailQueueResult['MailQueue']['id'];
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
+		$blockKey = Current::read('Block.key');
 
 		// MailQueueUserは新規登録
 		$mailQueueUser['MailQueueUser'] = array(
@@ -925,6 +838,58 @@ class MailQueueBehavior extends ModelBehavior {
 		);
 		$rolesRoomsUsers = $model->RolesRoomsUser->getRolesRoomsUsers($conditions);
 		return $rolesRoomsUsers;
+	}
+
+/**
+ * メールキューデータ 新規作成
+ *
+ * @param Model $model モデル
+ * @param int $languageId 言語ID
+ * @param string $typeKey メールの種類
+ * @param string $fixedPhraseType SiteSettingの定型文の種類
+ * @return array メールキューデータ
+ * @throws InternalErrorException
+ */
+	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE, $fixedPhraseType = null) {
+		/** @see MailSetting::getMailSettingPlugin() */
+		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+
+		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
+		if (empty($replyTo)) {
+			$replyTo = null;
+		}
+
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
+		$pluginName = $this->__getPluginName($model);
+		$blockKey = Current::read('Block.key');
+
+		// メール生文の作成
+		$mail = new NetCommonsMail();
+		$mail->initPlugin($languageId, $pluginName);
+		if (isset($fixedPhraseType)) {
+			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType);
+		} else {
+			$mail->setMailFixedPhrasePlugin($mailSettings);
+		}
+		$mail->setReplyTo($replyTo);
+		$mail = $this->__convertPlainText($model, $mail);
+
+		//$replyTo = key($postMail->replyTo());
+		$mailQueue['MailQueue'] = array(
+			'language_id' => $languageId,
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'replay_to' => $replyTo,
+			'mail_subject' => $mail->subject,
+			'mail_body' => $mail->body,
+			'send_time' => null,
+		);
+
+		// MailQueueは新規登録
+		$mailQueue = $model->MailQueue->create($mailQueue);
+		return $mailQueue;
 	}
 
 /**
