@@ -114,8 +114,8 @@ class NetCommonsMail extends CakeEmail {
 				'Workflow.disapproval_mail_body',
 				'Workflow.approval_completion_mail_subject',
 				'Workflow.approval_completion_mail_body',
-				'Mail.body_header',		// まだ対応処理書いてない
-				'Mail.signature',		// まだ対応処理書いてない
+				'Mail.body_header',
+				'Mail.signature',
 			)
 		));
 
@@ -202,6 +202,8 @@ class NetCommonsMail extends CakeEmail {
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
 		//$workflowComment = Hash::get($data, 'WorkflowComment.comment');
+		$bodyHeader = Hash::get($this->siteSetting['Mail.body_header'], $languageId . '.value');
+		$signature = Hash::get($this->siteSetting['Mail.signature'], $languageId . '.value');
 
 		$netCommonsTime = new NetCommonsTime();
 		$siteimezone = $netCommonsTime->getSiteTimezone();
@@ -219,6 +221,8 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		//$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+		$this->assignTag('X-BODY_HEADER', $bodyHeader);
+		$this->assignTag('X-SIGNATURE', $signature);
 
 		// X-ROOMタグ
 		$roomId = Current::read('Room.id');
@@ -428,8 +432,10 @@ class NetCommonsMail extends CakeEmail {
  * @return array タグ
  */
 	public function assignTagReplace() {
-		//public function assignTagReplace($body, $subject) {
 		$convertHtml = new ConvertHtml();
+
+		// メール本文の共通ヘッダー文、署名追加
+		$this->body = "{X-BODY_HEADER}\r\n" . $this->body . "\r\n{X-SIGNATURE}";
 
 		foreach ($this->assignTags as $key => $value) {
 			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {
@@ -461,7 +467,6 @@ class NetCommonsMail extends CakeEmail {
 				$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
 			}
 		}
-
 		// URLの置換は一度きり
 		//unset($this->assignTags['X-URL']);
 	}
