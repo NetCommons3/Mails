@@ -514,7 +514,7 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 回答
 			// 回答メール配信(即時) - メールキューSave
-			$this->__saveQueuePostMailAnswer($model, $typeKey);
+			$this->__saveQueueAnswerMail($model, $typeKey);
 		}
 
 		return true;
@@ -629,17 +629,28 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueuePostMailAnswer(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
+	private function __saveQueueAnswerMail(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$toAddresses = $this->settings[$model->alias]['toAddresses'];
 		$userIds = $this->settings[$model->alias]['userIds'];
 		$languageId = Current::read('Language.id');
 
-		if (isset($toAddresses)) {
+		if (!empty($toAddresses)) {
 			// メールアドレスに配信(即時) - メールキューSave
 			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
-		} elseif (isset($userIds)) {
+		} elseif (!empty($userIds)) {
 			// ユーザIDに配信(即時) - メールキューSave
 			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, null, $typeKey);
+		} else {
+			// toAddresses & userIds に設定なし
+			// メールキューSave
+			$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
+			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			/** @see MailQueue::saveMailQueue() */
+			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
+			$mailQueueId = $mailQueueResult['MailQueue']['id'];
 		}
 
 		$contentKey = $this->__getContentKey($model);
