@@ -542,7 +542,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $userIds 送信ユーザID 配列
  * @param string $toAddresses 送信先メールアドレス
  * @param string $typeKey メールの種類
- * @return array メールキューデータ
+ * @return int メールキューID
  * @throws InternalErrorException
  */
 	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = array(null), $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
@@ -638,14 +638,19 @@ class MailQueueBehavior extends ModelBehavior {
 				// ルームIDをクリア
 				$mailQueueUser['MailQueueUser']['room_id'] = null;
 
+				// 登録者にも配信
+				$createdUserId = $this->__getCreatedUserId($model);
+				$addUserIds = $this->settings[$model->alias]['addUserIds'];
+				$addUserIds[] = $createdUserId;
+				// 登録者と追加ユーザ達の重複登録を排除
+				$addUserIds = array_unique($addUserIds);
+
 				// 追加のユーザ達に配信
-				if (isset($this->settings[$model->alias]['addUserIds'])) {
-					foreach ($this->settings[$model->alias]['addUserIds'] as $addUserId) {
-						$mailQueueUser['MailQueueUser']['user_id'] = $addUserId;
-						$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-						if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-							throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-						}
+				foreach ($addUserIds as $addUserId) {
+					$mailQueueUser['MailQueueUser']['user_id'] = $addUserId;
+					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 					}
 				}
 			}
