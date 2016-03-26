@@ -203,6 +203,13 @@ class NetCommonsMail extends CakeEmail {
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
 		//$workflowComment = Hash::get($data, 'WorkflowComment.comment');
 
+		$netCommonsTime = new NetCommonsTime();
+		$siteimezone = $netCommonsTime->getSiteTimezone();
+		$now = NetCommonsTime::getNowDatetime();
+		$date = new DateTime($now);
+		$date->setTimezone(new DateTimeZone($siteimezone));
+		$siteNow = $date->format('Y/m/d H:i:s');
+
 		$this->assignTag('X-FROM_EMAIL', $from);
 		$this->assignTag('X-FROM_NAME', htmlspecialchars($fromName));
 		$this->assignTag('X-SITE_NAME', htmlspecialchars($siteName));
@@ -210,7 +217,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
-		$this->assignTag('X-TO_DATE', date('Y/m/d H:i:s'));
+		$this->assignTag('X-TO_DATE', $siteNow);
 		//$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 
 		// X-ROOMタグ
