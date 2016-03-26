@@ -604,7 +604,7 @@ class MailQueueBehavior extends ModelBehavior {
 			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
 			if (isset($userIds)) {
-				// --- 登録者に配信
+				// --- ユーザIDに配信
 				foreach ($userIds as $userId) {
 					$mailQueueUser['MailQueueUser']['user_id'] = $userId;
 					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
