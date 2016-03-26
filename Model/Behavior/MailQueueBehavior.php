@@ -188,6 +188,24 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * 承認つかうフラグ ゲット
+ *
+ * @param Model $model モデル
+ * @return int 承認つかうフラグ
+ */
+	private function __getUseWorkflow(Model $model) {
+		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+		$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
+		if ($key === null) {
+			// 暫定対応
+			$useWorkflow = 1;
+		} else {
+			$useWorkflow = Hash::get($model->data, $key);
+		}
+		return $useWorkflow;
+	}
+
+/**
  * コンテンツキー ゲット
  *
  * @param Model $model モデル
@@ -697,11 +715,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
-			// 暫定対応：3/20現時点では、承認機能=ON, OFFでも投稿者に承認完了通知メールを送る。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 			// 承認しないなら、承認完了通知メール送らない
-			//			$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
-			//			$useWorkflow = Hash::get($model->data, $key);
-			$useWorkflow = 1;
+			$useWorkflow = $this->__getUseWorkflow($model);
 			if (! $useWorkflow) {
 				return;
 			}
@@ -932,11 +947,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$url = NetCommonsUrl::url($url, true);
 		$mail->assignTag('X-URL', $url);
 
-		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 		// 承認つかう時、担当者へのコメントをメールに含める
-		//			$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
-		//			$useWorkflow = Hash::get($model->data, $key);
-		$useWorkflow = 1;
+		$useWorkflow = $this->__getUseWorkflow($model);
 		if ($useWorkflow) {
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
