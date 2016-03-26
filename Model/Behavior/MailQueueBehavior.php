@@ -60,9 +60,6 @@ class MailQueueBehavior extends ModelBehavior {
 	public function setup(Model $model, $settings = array()) {
 		$this->settings[$model->alias] = $settings;
 
-		// priorityを下記と モデルの$actsAs で設定したけど、機能しなかった。 http://book.cakephp.org/2.0/ja/core-libraries/collections.html#id6
-		//$this->settings[$model->alias]['priority'] = 15;
-
 		// --- 設定ないパラメータの処理
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType === null) {
