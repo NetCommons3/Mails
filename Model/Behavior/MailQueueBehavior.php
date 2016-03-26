@@ -113,8 +113,19 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $userIds ユーザID配列
  * @return void
  */
-	public function setUserIds(Model $model, $userIds) {
+	public function setToUserIds(Model $model, $userIds) {
 		$this->settings[$model->alias]['userIds'] = $userIds;
+	}
+
+/**
+ * 任意で送信するメールアドレス セット
+ *
+ * @param Model $model モデル
+ * @param array $toAddresses メールアドレス 配列
+ * @return void
+ */
+	public function setToAddresses(Model $model, $toAddresses) {
+		$this->settings[$model->alias]['toAddresses'] = $toAddresses;
 	}
 
 /**
@@ -127,17 +138,6 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function setIsMailSendNotice(Model $model, $isMailSendPost) {
 		$this->settings[$model->alias]['isMailSendPost'] = $isMailSendPost;
-	}
-
-/**
- * 任意で送信するメールアドレス セット
- *
- * @param Model $model モデル
- * @param array $toAddresses メールアドレス 配列
- * @return void
- */
-	public function setToAddresses(Model $model, $toAddresses) {
-		$this->settings[$model->alias]['toAddresses'] = $toAddresses;
 	}
 
 /**
@@ -183,7 +183,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param date $sendTime モデル
  * @return date 送信日時
  */
-	private function __getSaveSendTime($sendTime) {
+	private function __getSaveSendTime($sendTime = null) {
 		return isset($sendTime) ? $sendTime : NetCommonsTime::getNowDatetime();
 	}
 
@@ -531,7 +531,10 @@ class MailQueueBehavior extends ModelBehavior {
  * @return int メールキューID
  * @throws InternalErrorException
  */
-	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = array(null), $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
+		if ($sendTimes === null) {
+			$sendTimes[] = $this->__getSaveSendTime();
+		}
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
 
 		$contentKey = $this->__getContentKey($model);
@@ -642,7 +645,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// toAddresses & userIds に設定なし
 			// メールキューSave
 			$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
-			$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+			$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
 			/** @see MailQueue::saveMailQueue() */
 			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
@@ -727,7 +730,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
-		$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
 
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
@@ -770,7 +773,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveQueueApprovalMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
-		$mailQueue['MailQueue']['send_time'] = NetCommonsTime::getNowDatetime();
+		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
 
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
