@@ -13,6 +13,7 @@ App::uses('NetCommonsMail', 'Mails.Utility');
 App::uses('MailSetting', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
+App::uses('DefaultRolePermission', 'Roles.Model');
 
 /**
  * メールキュー Behavior
@@ -837,9 +838,16 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-		$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
+		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
+		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permission), DefaultRolePermission::TYPE_ROOM_ROLE);
+		foreach ($permissions['RoomRolePermission'][$permission] as $key => $roomRolePermission) {
+			if (!$roomRolePermission['value']) {
+				unset($permissions['RoomRolePermission'][$permission][$key]);
+			}
+		}
 
-		$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
+		//$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
+		$roleKeys = array_keys($permissions['RoomRolePermission'][$permission]);
 		$conditions = array(
 			'Room.id' => $roomId,
 			'RolesRoom.role_key' => $roleKeys,
