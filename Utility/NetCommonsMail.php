@@ -57,11 +57,6 @@ class NetCommonsMail extends CakeEmail {
  */
 	public $body = null;
 
-	///**
-	// * @var int メールで通知する
-	// */
-	//	public $isMailSend = null;
-
 /**
  * @var array 埋め込みタグ
  */
@@ -290,48 +285,6 @@ class NetCommonsMail extends CakeEmail {
 		}
 	}
 
-	///**
-	// * メール送信する定型文をセット(システム管理系)
-	// *
-	// * @param string $typeKey メールの種類
-	// * @return void
-	// */
-	//	private function __setMailSettingSystem($typeKey) {
-	//		// TODOO ここ見直し？。sitesettingから取得するfunction必要
-	//		$mailSetting = $this->MailSetting->getMailSettingSystem($typeKey);
-	//		//$this->__setMailSetting($mailSetting);
-	//	}
-
-	///**
-	// * メール送信する定型文をセット
-	// *
-	// * @param array $mailSetting メール設定データ
-	// * @return void
-	// */
-	//	private function __setMailSetting($mailSetting) {
-	//		//public function setSendMailSetting($blockKey = null, $pluginKey = null, $typeKey = 'contents') {
-	//		//public function setSendMailSetting($blockKey, $typeKey = 'contents') {
-	//		if (empty($mailSetting)) {
-	//			return;
-	//		}
-	//
-	//		// メール通知フラグをセット
-	//		//$this->isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
-	//
-	//		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
-	//		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
-	//		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
-	//
-	//		// 定型文をセット
-	//		$this->setSubject($subject);
-	//		$this->setBody($body);
-	//
-	//		// 返信先アドレス
-	//		if (! empty($replyTo)) {
-	//			parent::replyTo($replyTo);
-	//		}
-	//	}
-
 /**
  * メール送信する件名、本文をセット
  *
@@ -356,18 +309,6 @@ class NetCommonsMail extends CakeEmail {
 			parent::replyTo($replyTo);
 		}
 	}
-
-	//	/**
-	//	 * 重要度をセットする
-	//	 *
-	//	 * @param	string	$value	重要度
-	//	 *
-	//	 * @access	public
-	//	 */
-	//	function setPriority($value)
-	//	{
-	//		$this->priority = trim($value);
-	//	}
 
 /**
  * 件名をセットする
@@ -447,6 +388,12 @@ class NetCommonsMail extends CakeEmail {
 			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {
 				continue;
 			}
+
+			//			if (parent::emailFormat() == 'text') {
+			//				$this->body = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->body);
+			//			} else {
+			//				$this->body = str_replace('{' . $key . '}', $value, $this->body);
+			//			}
 			$this->body = str_replace('{' . $key . '}', $value, $this->body);
 			$this->subject = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->subject);
 		}
@@ -473,8 +420,6 @@ class NetCommonsMail extends CakeEmail {
 				$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
 			}
 		}
-		// URLの置換は一度きり
-		//unset($this->assignTags['X-URL']);
 	}
 
 /**
@@ -616,153 +561,6 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		return $messages;
-
-		// 重要度セット
-		//		if (!empty($this->priority)) {
-		//			$this->headers[] = 'X-Priority: '. $this->priority;
-		//		}
-		//		$this->headers[] = 'X-Mailer: PHP/'. phpversion();
-		//		$this->headers[] = 'Return-Path: '. $this->fromEmail;
-
-		// タグセット【済】
-		//		$container =& DIContainerFactory::getContainer();
-		//		$configView =& $container->getComponent('configView');
-		//		$this->assign('X-FROM_EMAIL', $this->fromEmail);
-		//		$this->assign('X-FROM_NAME', htmlspecialchars($this->fromName));
-		//		$confs = $configView->getConfigByConfname(_SYS_CONF_MODID, 'sitename');
-		//		$this->assign('X-SITE_NAME', htmlspecialchars($confs['conf_value']));
-		//		$this->assign('X-SITE_URL', BASE_URL.INDEX_FILE_NAME);
-		//
-		//		$session =& $container->getComponent('Session');
-		//		if (!isset($this->_assignedTags['X-ROOM'])) {
-		//			$request =& $container->getComponent('Request');
-		//			$pageView =& $container->getComponent('pagesView');
-		//			$roomId = $request->getParameter('room_id');
-		//			$pages = $pageView->getPageById($roomId);
-		//
-		//			$this->assign('X-ROOM', htmlspecialchars($pages['page_name']));
-		//		}
-		//		if (!isset($this->_assignedTags['X-USER'])) {
-		//			$this->assign('X-USER', htmlspecialchars($session->getParameter('_handle')));
-		//		}
-
-		// タグ置換【済】
-		//		$commonMain =& $container->getComponent('commonMain');
-		//		$convertHtml =& $commonMain->registerClass(WEBAPP_DIR.'/components/convert/Html.class.php', 'Convert_Html', 'convertHtml');
-		//		foreach ($this->_assignedTags as $k => $v) {
-		//			if (substr($k, 0, 4) == 'X-TO' || $k == 'X-URL') {
-		//				continue;
-		//			}
-		//
-		//			$this->body = str_replace('{'.$k.'}', $v, $this->body);
-		//			$this->subject = str_replace('{'.$k.'}', $convertHtml->convertHtmlToText($v), $this->subject);
-		//		}
-		//		$this->body = str_replace('\r\n', '\n', $this->body);
-		//		$this->body = str_replace('\r', '\n', $this->body);
-		//		$this->body = str_replace('\n', $this->_LE, $this->body);
-		//		$this->body = $this->_insertNewLine($this->body);
-		//	if(isset($this->_assignedTags['X-URL'])) {
-		//			$this->body = str_replace('{X-URL}', '<a href=\''. $this->_assignedTags['X-URL']. '\'>'. $this->_assignedTags['X-URL']. '</a>', $this->body);
-		//			$mobile_body = str_replace('{X-URL}', $this->_assignedTags['X-URL'], $this->body);
-		//			unset($this->_assignedTags['X-URL']);
-		//		} else {
-		//			$mobile_body = $this->body;
-		//		}
-		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
-		//		$mobile_body = $this->_insertNewLine($mobile_body);
-
-		//		if(count($this->toUsers) > 0) {
-		//			foreach ($this->toUsers as $user) {
-
-		// ループ内：タグ置換
-		//				$email = $user['email'];
-		//				if (empty($email)) {
-		//					continue;
-		//				}
-		//				if(isset($this->_assignedTags['X-TO_DATE'])) {
-		//					$date = timezone_date_format($this->_assignedTags['X-TO_DATE'], _FULL_DATE_FORMAT);
-		//				} else {
-		//					$date = '';
-		//				}
-		//				if(!isset($user['handle'])) {
-		//					$user['handle'] = '';
-		//				}
-		//
-		//				// type (html(email) or text(mobile_email))
-		//				if(!isset($user['type'])) {
-		//					$user['type'] = 'html';
-		//				}
-		//				if(empty($user['lang_dirname'])) {
-		//					$user['lang_dirname'] = $session->getParameter('_lang');
-		//					if(!isset($user['lang_dirname']) || $user['lang_dirname'] == '') {
-		//						$user['lang_dirname'] = 'japanese';
-		//					}
-		//				}
-		//				$subject = $this->subject;
-		//				if($this->isHTML == true && ($user['type'] == 'html' || $user['type'] == 'email')) {
-		//					// htmlメール
-		//					$this->_mailer->IsHTML(true);
-		//					$body = $this->body;
-		//					$body = str_replace('{X-TO_HANDLE}', htmlspecialchars($user['handle']), $body);
-		//				} else {
-		//					// テキストメール
-		//					$this->_mailer->IsHTML(false);
-		//					$body = $mobile_body;
-		//					$body = str_replace('{X-TO_HANDLE}', $user['handle'], $body);
-		//				}
-		//
-		//				$subject = str_replace('{X-TO_HANDLE}', $user['handle'], $subject);
-		//				$subject = str_replace('{X-TO_EMAIL}', $email, $subject);
-		//				$subject = str_replace('{X-TO_DATE}', $date, $subject);
-		//				$body = str_replace('{X-TO_EMAIL}', $email, $body);
-		//				$body = str_replace('{X-TO_DATE}', $date, $body);
-
-		// ループ内：本文、件名等セット
-		//				$localFilePath = WEBAPP_DIR. '/language/'. strtolower($user['lang_dirname']). '/Mailer_Local.php';
-		//				if (file_exists($localFilePath)) {
-		//					require_once($localFilePath);
-		//
-		//					$className = 'Mailer_Local_' . ucfirst(strtolower($user['lang_dirname']));
-		//					$local =& new $className();
-		//
-		//					$this->_mailer->CharSet = $local->charSet;
-		//					$this->_mailer->Encoding = $local->encoding;
-		//					if (!empty($this->fromName)) {
-		//						$this->_mailer->FromName = $local->encodeFromName($this->fromName);
-		//					}
-		//					$this->_mailer->Subject = $local->encodeSubject($subject);
-		//					$this->_mailer->Body = $local->encodeBody($body);
-		//				} else {
-		//					$this->_mailer->CharSet = $this->charSet;
-		//					$this->_mailer->Encoding = $this->encoding;
-		//					if (!empty($this->fromName)) {
-		//						$this->_mailer->FromName = $this->fromName;
-		//					}
-		//					$this->_mailer->Subject = $subject;
-		//					$this->_mailer->Body = $body;
-		//				}
-		//
-		//				$this->_mailer->ClearAllRecipients();
-		//				$this->_mailer->AddAddress($email);
-		//				if (!empty($this->fromEmail)) {
-		//					$this->_mailer->From = $this->fromEmail;
-		//				}
-		//				$this->_mailer->ClearCustomHeaders();
-		//				foreach ($this->headers as $header) {
-		//					$this->_mailer->AddCustomHeader($header);
-		//				}
-
-		// ループ内：メール送信
-		//				if (!$this->_mailer->Send()) {
-		//					$this->_log->warn($email. '宛にメールを送信できませんでした/'. $this->_mailer->ErrorInfo, 'Mailer#send');
-		//				} else {
-		//					$this->_log->trace($email. '宛にメールを送信しました', 'Mailer#send');
-		//				}
-		//
-		//				//flush();	// ob_contentが送られてしまうためコメント
-
-		//			}
-		//		}
 	}
 
 /**
