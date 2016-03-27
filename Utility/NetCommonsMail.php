@@ -38,11 +38,12 @@ class NetCommonsMail extends CakeEmail {
 /**
  * SiteSettingの定型文の種類
  *
+ * @var string 承認依頼通知
  * @var string 差戻し通知
  * @var string 承認完了通知
  */
 	const
-		//SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval',
+		SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval',
 		SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval',
 		SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
 
@@ -108,8 +109,8 @@ class NetCommonsMail extends CakeEmail {
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
 				'App.site_name',
-				//'Workflow.approval_mail_subject',
-				//'Workflow.approval_mail_body',
+				'Workflow.approval_mail_subject',
+				'Workflow.approval_mail_body',
 				'Workflow.disapproval_mail_subject',
 				'Workflow.disapproval_mail_body',
 				'Workflow.approval_completion_mail_subject',

@@ -523,8 +523,12 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
-				// 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
+				// 投稿メール - 登録者と承認者に配信(即時) - メールキューSave
 				$this->__saveQueueApprovalMail($model, $languageId, $typeKey);
+
+				// 承認依頼通知メール - 承認者に配信(即時)
+				$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL;
+				$this->__saveQueueAnswerMail($model, $languageId, null, null, $typeKey, $fixedPhraseType);
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
@@ -541,8 +545,12 @@ class MailQueueBehavior extends ModelBehavior {
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 回答
+			$toAddresses = $this->settings[$model->alias]['toAddresses'];
+			$userIds = $this->settings[$model->alias]['userIds'];
+			$languageId = Current::read('Language.id');
+
 			// 回答メール配信(即時) - メールキューSave
-			$this->__saveQueueAnswerMail($model, $typeKey);
+			$this->__saveQueueAnswerMail($model, $languageId, $userIds, $toAddresses, $typeKey);
 		}
 
 		return true;
@@ -556,7 +564,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $languageId 言語ID
  * @param array $sendTimes メール送信日時 配列
  * @param array $userIds 送信ユーザID 配列
- * @param string $toAddresses 送信先メールアドレス
+ * @param array $toAddresses 送信先メールアドレス 配列
  * @param string $typeKey メールの種類
  * @return int メールキューID
  * @throws InternalErrorException
@@ -653,18 +661,18 @@ class MailQueueBehavior extends ModelBehavior {
 
 /**
  * 回答メール配信(即時) - メールキューSave
- * 登録フォームの投稿を想定
+ * 登録フォーム、アンケートを想定
  *
  * @param Model $model モデル
+ * @param int $languageId 言語ID
+ * @param array $userIds 送信ユーザID 配列
+ * @param array $toAddresses 送信先メールアドレス 配列
  * @param string $typeKey メールの種類
+ * @param string $fixedPhraseType SiteSettingの定型文の種類
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueueAnswerMail(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
-		$toAddresses = $this->settings[$model->alias]['toAddresses'];
-		$userIds = $this->settings[$model->alias]['userIds'];
-		$languageId = Current::read('Language.id');
-
+	private function __saveQueueAnswerMail(Model $model, $languageId, $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE, $fixedPhraseType = null) {
 		if (!empty($toAddresses)) {
 			// メールアドレスに配信(即時) - メールキューSave
 			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
@@ -674,7 +682,7 @@ class MailQueueBehavior extends ModelBehavior {
 		} else {
 			// toAddresses & userIds に設定なし
 			// メールキューSave
-			$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
+			$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
 			$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
 			/** @see MailQueue::saveMailQueue() */
 			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
