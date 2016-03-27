@@ -558,8 +558,9 @@ class NetCommonsMail extends CakeEmail {
 
 		if (isset($roomId)) {
 			// --- ルーム単位でメール配信
+			$blockKey = $mailQueueUser['block_key'];
 			$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'));
+			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'), $roomId, $blockKey);
 
 			$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
 			$conditions = array(

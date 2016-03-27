@@ -20,16 +20,6 @@ App::uses('MailsAppModel', 'Mails.Model');
 class MailQueue extends MailsAppModel {
 
 /**
- * use behaviors
- *
- * @var array
- * @see OriginalKeyBehavior::beforeSave()
- */
-	public $actsAs = array(
-		'NetCommons.OriginalKey',		// 自動でkeyセット
-	);
-
-/**
  * Validation rules
  *
  * @var array
