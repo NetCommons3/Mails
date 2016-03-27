@@ -389,12 +389,11 @@ class NetCommonsMail extends CakeEmail {
 				continue;
 			}
 
-			//			if (parent::emailFormat() == 'text') {
-			//				$this->body = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->body);
-			//			} else {
-			//				$this->body = str_replace('{' . $key . '}', $value, $this->body);
-			//			}
-			$this->body = str_replace('{' . $key . '}', $value, $this->body);
+			if (parent::emailFormat() == 'text') {
+				$this->body = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->body);
+			} else {
+				$this->body = str_replace('{' . $key . '}', $value, $this->body);
+			}
 			$this->subject = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->subject);
 		}
 
@@ -501,6 +500,7 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 		}
 
+		$messages = null;
 		if (isset($roomId)) {
 			// --- ルーム単位でメール配信
 			$blockKey = $mailQueueUser['block_key'];
@@ -520,11 +520,12 @@ class NetCommonsMail extends CakeEmail {
 				'conditions' => array('id' => $rolesRoomsUserIds),
 				'callbacks' => false,
 			));
-
 			foreach ($users as $user) {
-				$userEmail = Hash::get($user, 'user.email');
+				// shell直だと モデル名 user, コントローラーからexec呼出だと Userだった。aliasで取得
+				$userEmail = Hash::get($user, $this->User->alias . '.email');
 				if (empty($userEmail)) {
-					CakeLog::debug("Email is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+					$userId = Hash::get($user, $this->User->alias . '.id');
+					CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 					continue;
 				}
 				$this->setFrom($mailQueueLanguageId);
@@ -541,7 +542,7 @@ class NetCommonsMail extends CakeEmail {
 				'callbacks' => false,
 			));
 
-			$userEmail = Hash::get($user, 'user.email');
+			$userEmail = Hash::get($user, $this->User->alias . '.email');
 			if (empty($userEmail)) {
 				CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
