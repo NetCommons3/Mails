@@ -975,10 +975,13 @@ class MailQueueBehavior extends ModelBehavior {
 		$url = NetCommonsUrl::url($url, true);
 		$mail->assignTag('X-URL', $url);
 
-		// 承認つかう時、担当者へのコメントをメールに含める
+		// 承認使って公開以外の時、担当者へのコメントをメールに含める
 		$useWorkflow = $this->__getUseWorkflow($model);
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($useWorkflow && $workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+		$status = Hash::get($model->data, $model->alias . '.status');
+		if ($useWorkflow &&
+			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW &&
+			$status != WorkflowComponent::STATUS_PUBLISHED) {
 			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
