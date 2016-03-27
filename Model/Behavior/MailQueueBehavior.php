@@ -977,11 +977,15 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認つかう時、担当者へのコメントをメールに含める
 		$useWorkflow = $this->__getUseWorkflow($model);
-		if ($useWorkflow) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($useWorkflow && $workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
 			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+		} else {
+			$mail->assignTag('X-WORKFLOW_COMMENT', '');
 		}
 
 		// --- 定型文の埋め込みタグをセット
