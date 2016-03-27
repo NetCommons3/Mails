@@ -11,6 +11,8 @@
 
 App::uses('NetCommonsMail', 'Mails.Utility');
 App::uses('NetCommonsTime', 'NetCommons.Utility');
+App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('ComponentCollection', 'Controller');
 
 /**
  * メール送信 Shell
@@ -21,6 +23,7 @@ App::uses('NetCommonsTime', 'NetCommons.Utility');
  * @property MailQueueUser $MailQueueUser
  * @property Language $Language
  * @property SiteSetting $SiteSetting
+ * @property RolesRoomsUser $RolesRoomsUser
  */
 class MailSendShell extends AppShell {
 
@@ -35,6 +38,7 @@ class MailSendShell extends AppShell {
 		'Mails.MailQueueUser',
 		'M17n.Language',
 		'SiteManager.SiteSetting',
+		'Rooms.RolesRoomsUser',
 	);
 
 /**
@@ -103,8 +107,10 @@ class MailSendShell extends AppShell {
 			return;
 		}
 
-		foreach ($mailQueues as $mailQueue) {
+		// ルーム配信時、同じメールは１通だけ送るようにする
+		$mailQueues = $this->__deleteDuplicateMailForRoom($mailQueues);
 
+		foreach ($mailQueues as $mailQueue) {
 			foreach ($mailQueue['MailQueueUser'] as $mailQueueUser) {
 				$mail = new NetCommonsMail();
 				$mail->initShell($siteSetting, $mailQueue);
@@ -115,6 +121,7 @@ class MailSendShell extends AppShell {
 				//				$mail->config($config);
 				//				$messages = $mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
 				//				CakeLog::debug(print_r($messages, true));
+
 				$mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
 
 				// 送信後にキュー削除
@@ -122,5 +129,52 @@ class MailSendShell extends AppShell {
 			}
 			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
 		}
+	}
+
+/**
+ * ルーム配信時、同じメールは１通だけ送るようにする
+ *
+ * @param array $mailQueues メールキュー
+ * @return array メールキュー
+ */
+	private function __deleteDuplicateMailForRoom($mailQueues) {
+		foreach ($mailQueues as &$mailQueue) {
+			$roomIds = Hash::extract($mailQueue['MailQueueUser'], '{n}.room_id');
+			$roomIds = array_filter($roomIds);
+			$userIds = Hash::extract($mailQueue['MailQueueUser'], '{n}.user_id');
+			$userIds = array_filter($userIds);
+
+			// ルーム配信時、同じメールは１通だけ送るようにする
+			// 複数件でルームIDあり
+			// ルームIDあり & ユーザIDあり
+			if (!empty($roomIds) && !empty($userIds)) {
+				$key = key($roomIds);
+				$roomId = $roomIds[$key];
+				$blockKey = $mailQueue['MailQueueUser'][$key]['block_key'];
+
+				// --- ルーム単位でメールするユーザID達
+				$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
+				$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'), $roomId, $blockKey);
+
+				$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
+				$conditions = array(
+					'Room.id' => $roomId,
+					'RolesRoom.role_key' => $roleKeys,
+				);
+				$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
+				$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.roles_room_id');
+
+				foreach ($userIds as $key => $userId) {
+					// ルーム配信に含まれる
+					if (in_array($userId, $rolesRoomsUserIds)) {
+						// ルーム配信とユーザID重複のため、キューユーザ削除
+						$this->MailQueueUser->deleteMailQueueUser($mailQueue['MailQueueUser'][$key]['id']);
+
+						unset($mailQueue['MailQueueUser'][$key]);
+					}
+				}
+			}
+		}
+		return $mailQueues;
 	}
 }
