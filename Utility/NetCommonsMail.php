@@ -202,7 +202,6 @@ class NetCommonsMail extends CakeEmail {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
-		//$workflowComment = Hash::get($data, 'WorkflowComment.comment');
 		$bodyHeader = Hash::get($this->siteSetting['Mail.body_header'], $languageId . '.value');
 		$signature = Hash::get($this->siteSetting['Mail.signature'], $languageId . '.value');
 
@@ -221,7 +220,6 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
 		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
 		$this->assignTag('X-TO_DATE', $siteNow);
-		//$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
 
