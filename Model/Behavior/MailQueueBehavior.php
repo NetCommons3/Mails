@@ -82,13 +82,11 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 
-		$model->loadModels([
-			'MailSetting' => 'Mails.MailSetting',
-			'MailQueue' => 'Mails.MailQueue',
-			'MailQueueUser' => 'Mails.MailQueueUser',
-			'SiteSetting' => 'SiteManager.SiteSetting',
-			'RolesRoomsUser' => 'Rooms.RolesRoomsUser',
-		]);
+		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
+		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
+		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
+		$model->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting', true);
+		$model->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser', true);
 	}
 
 /**
