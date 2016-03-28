@@ -472,7 +472,7 @@ class NetCommonsMail extends CakeEmail {
  *
  * @param array $mailQueueUser メール配信先データ
  * @param int $mailQueueLanguageId キューの言語ID
- * @return bool true:正常,false:エラー
+ * @return bool|string|array false:エラー|送信メール文|送信メール文配列
  */
 	public function sendQueueMail($mailQueueUser, $mailQueueLanguageId) {
 		if (empty($this->siteSetting)) {
@@ -518,19 +518,8 @@ class NetCommonsMail extends CakeEmail {
 				'conditions' => array('id' => $rolesRoomsUserIds),
 				'callbacks' => false,
 			));
-			foreach ($users as $user) {
-				// shell直だと モデル名 user, コントローラーからexec呼出だと Userだった。aliasで取得
-				$userEmail = Hash::get($user, $this->User->alias . '.email');
-				if (empty($userEmail)) {
-					$userId = Hash::get($user, $this->User->alias . '.id');
-					CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-					continue;
-				}
-				$this->setFrom($mailQueueLanguageId);
-				parent::to($userEmail);
-				parent::subject($this->subject);
-				$messages[] = parent::send($this->body);
-			}
+
+			$messages = $this->__sendUserEmails($users, $mailQueueLanguageId);
 
 		} elseif (isset($userId)) {
 			// --- user単位でメール配信
@@ -540,16 +529,7 @@ class NetCommonsMail extends CakeEmail {
 				'callbacks' => false,
 			));
 
-			$userEmail = Hash::get($user, $this->User->alias . '.email');
-			if (empty($userEmail)) {
-				CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
-				return false;
-			}
-			$this->setFrom($mailQueueLanguageId);
-			parent::to($userEmail);
-			parent::subject($this->subject);
-			$messages = parent::send($this->body);
+			$messages = $this->__sendUserEmails(array($user), $mailQueueLanguageId);
 
 		} elseif (isset($toAddress)) {
 			// --- メールアドレス単位でメール配信
@@ -559,6 +539,47 @@ class NetCommonsMail extends CakeEmail {
 			$messages = parent::send($this->body);
 		}
 
+		return $messages;
+	}
+
+/**
+ * ユーザメールで送信
+ *
+ * @param array $users ユーザ 配列
+ * @param int $mailQueueLanguageId キューの言語ID
+ * @return array 送信メール文配列
+ */
+	private function __sendUserEmails($users, $mailQueueLanguageId) {
+		$messages = null;
+		foreach ($users as $user) {
+			// shell直だと モデル名 user, コントローラーからexec呼出だと Userだった。aliasで取得
+			$userEmails = array(
+				array(
+					'email' => Hash::get($user, $this->User->alias . '.email'),
+					'is_email_reception' => Hash::get($user, $this->User->alias . '.is_email_reception'),
+				),
+				array(
+					'email' => Hash::get($user, $this->User->alias . '.moblie_mail'),
+					'is_email_reception' => Hash::get($user, $this->User->alias . '.is_moblie_mail_reception'),
+				),
+			);
+
+			foreach ($userEmails as $userEmail) {
+				// 個人のメール受け取らない
+				if (!$userEmail['is_email_reception']) {
+					continue;
+				}
+				if (empty($userEmail['email'])) {
+					$userId = Hash::get($user, $this->User->alias . '.id');
+					CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+					continue;
+				}
+				$this->setFrom($mailQueueLanguageId);
+				parent::to($userEmail['email']);
+				parent::subject($this->subject);
+				$messages[] = parent::send($this->body);
+			}
+		}
 		return $messages;
 	}
 
