@@ -24,7 +24,6 @@ class MailQueueFixture extends CakeTestFixture {
  */
 	public $fields = array(
 		'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary', 'comment' => 'ID |  |  | '),
-		'key' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8mb4_general_ci', 'charset' => 'utf8mb4'),
 		'language_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'length' => 6, 'unsigned' => false),
 		'plugin_key' => array('type' => 'string', 'null' => false, 'default' => null, 'key' => 'index', 'collate' => 'utf8mb4_general_ci', 'comment' => 'plugin key | プラグインKey | plugins.key | ', 'charset' => 'utf8mb4'),
 		'block_key' => array('type' => 'string', 'null' => true, 'default' => null, 'key' => 'index', 'collate' => 'utf8mb4_general_ci', 'comment' => 'ブロック削除用', 'charset' => 'utf8mb4'),
@@ -54,7 +53,6 @@ class MailQueueFixture extends CakeTestFixture {
 	public $records = array(
 		array(
 			'id' => 1,
-			'key' => 'Lorem ipsum dolor sit amet',
 			'language_id' => 1,
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
 			'block_key' => 'Lorem ipsum dolor sit amet',
