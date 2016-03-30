@@ -90,6 +90,35 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * afterSave is called after a model is saved.
+ *
+ * @param Model $model モデル
+ * @param bool $created True if this save created a new record
+ * @param array $options Options passed from Model::save().
+ * @return bool
+ * @see Model::save()
+ * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
+ */
+	public function afterSave(Model $model, $created, $options = array()) {
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
+		// --- リマインダー利用する
+		if ($useReminder) {
+			$this->__saveQueueReminder($model);
+		}
+
+		// --- 周知メール
+		// メールを送るかどうか
+		if (! $this->isMailSend($model)) {
+			return true;
+		}
+
+		$sendTime = $this->__getSendTimePublish($model);
+		$this->saveQueue($model, array($sendTime));
+
+		return true;
+	}
+
+/**
  * 追加の埋め込みタグ セット
  * ・追加タグをセットできる
  * ・X-URL等、既存タグ値の上書きできる
@@ -270,35 +299,6 @@ class MailQueueBehavior extends ModelBehavior {
 			$createdUserId = $data[$model->alias]['created_user'];
 		}
 		return $createdUserId;
-	}
-
-/**
- * afterSave is called after a model is saved.
- *
- * @param Model $model モデル
- * @param bool $created True if this save created a new record
- * @param array $options Options passed from Model::save().
- * @return bool
- * @see Model::save()
- * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
- */
-	public function afterSave(Model $model, $created, $options = array()) {
-		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
-		// --- リマインダー利用する
-		if ($useReminder) {
-			$this->__saveQueueReminder($model);
-		}
-
-		// --- 周知メール
-		// メールを送るかどうか
-		if (! $this->isMailSend($model)) {
-			return true;
-		}
-
-		$sendTime = $this->__getSendTimePublish($model);
-		$this->saveQueue($model, array($sendTime));
-
-		return true;
 	}
 
 /**
