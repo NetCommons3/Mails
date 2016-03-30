@@ -218,7 +218,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
 		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
-		$this->assignTag('X-USER', htmlspecialchars(AuthComponent::user('handlename')));
+		$this->assignTag('X-USER', htmlspecialchars(Current::read('User.handlename')));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
