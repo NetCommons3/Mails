@@ -77,8 +77,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
-		$this->settings[$model->alias]['beforeStatus'] = null;
-		$this->settings[$model->alias]['isEdit'] = null;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 
@@ -101,12 +99,12 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function afterSave(Model $model, $created, $options = array()) {
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
-		// --- リマインダー利用する
+		// --- リマインダー
 		if ($useReminder) {
 			$this->__saveQueueReminder($model);
 		}
 
-		// --- 周知メール
+		// --- 通常メール
 		// メールを送るかどうか
 		if (! $this->isMailSend($model)) {
 			return true;
@@ -265,6 +263,21 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * プラグイン設定を取得するためのプラグインキー ゲット
+ *
+ * @param Model $model モデル
+ * @return string コンテンツキー
+ */
+	private function __getSettingPluginKey(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			return $model->data[$model->alias]['plugin_key'];
+		}
+		// 通常
+		return Current::read('Plugin.key');
+	}
+
+/**
  * プラグイン名 ゲット
  *
  * @param Model $model モデル
@@ -302,6 +315,40 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * 編集か ゲット
+ *
+ * @param Model $model モデル
+ * @return bool
+ */
+	private function __isEdit(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		// --- コンテンツコメント
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			$created = Hash::get($model->data, $model->alias . '.created');
+			if (isset($created)) {
+				// 新規登録
+				return false;
+			}
+			return true;
+		}
+
+		// --- 通常
+		$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
+		$data = $model->find('all', array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array($model->alias . '.modified DESC'),
+			'callbacks' => false,
+		));
+
+		if (count($data) <= 1) {
+			// 新規登録
+			return false;
+		}
+		return true;
+	}
+
+/**
  * メールを送るかどうか
  *
  * @param Model $model モデル
@@ -325,6 +372,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -334,6 +382,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// プラグイン設定でメール通知を使わないなら、メール送らない
 		if (! $isMailSend) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -342,6 +391,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 一時保存はメール送らない
 		if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -356,11 +406,13 @@ class MailQueueBehavior extends ModelBehavior {
 				}
 			}
 			if (! $isMailSendReminder) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
 
 			// リマインダーの公開以外はメール送らない
 			if ($status != WorkflowComponent::STATUS_PUBLISHED) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
 
@@ -369,57 +421,24 @@ class MailQueueBehavior extends ModelBehavior {
 			// 投稿メールOFFなら、メール送らない
 			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
 			if (isset($isMailSendPost) && !$isMailSendPost) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
 
+			// DBに公開日時の項目あり & 公開日時がセットされていて & cron使えず未来日メールなら、送らない（ブログを想定）
 			// 公開日時
 			$sendTime = $this->__getSendTimePublish($model);
 			if (! $this->__isMailSendTime($model, $sendTime)) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
 
-			// --- 編集フラグ, 1つ前のコンテンツのステータス
-			$isEdit = $this->settings[$model->alias]['isEdit'];
-			if ($isEdit === null) {
-				//$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-				if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-					// コンテンツコメント
-					$conditions = array($model->alias . '.content_key' => $model->data[$model->alias]['content_key']);
-				} else {
-					// 通常
-					$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
-				}
-				$data = $model->find('all', array(
-					'recursive' => -1,
-					'conditions' => $conditions,
-					'order' => array($model->alias . '.modified DESC'),
-					'callbacks' => false,
-				));
-
-				// keyに対して2件以上記事がある = 編集
-				if (count($data) >= 2) {
-					$this->settings[$model->alias]['isEdit'] = 1;
-					$isEdit = 1;
-					// 1つ前のコンテンツのステータス
-					$this->settings[$model->alias]['beforeStatus'] = $data[1][$model->alias]['status'];
-				} else {
-					$this->settings[$model->alias]['isEdit'] = 0;
-					$isEdit = 0;
-				}
-			}
-
-			// 投稿メールフラグが未設定の場合のみ処理（カレンダー、回覧板のメール通知を想定）
-			if ($isEdit && $isMailSendPost === null) {
-				// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、メール送らない
-				// ・承認ONで、承認者が公開中の記事を編集しても、メール送らない
-				// ・承認OFFで、公開中の記事を編集しても、メール送らない
-				// ・・公開中の記事（１つ前の記事のstatus=1）
-				// ・・編集した記事が公開（status=1）
-				// ※承認ONで公開中の記事を編集して、編集した記事が公開なのは、承認者だけ
-				$beforeStatus = $this->settings[$model->alias]['beforeStatus'];
-				if ($beforeStatus == WorkflowComponent::STATUS_PUBLISHED && $status == WorkflowComponent::STATUS_PUBLISHED) {
-					return false;
-				}
+			// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
+			// 編集フラグ
+			$isEdit = $this->__isEdit($model);
+			if (Current::permission('content_comment_publishable') && $isEdit && $isMailSendPost === null) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
 			}
 		}
 
@@ -911,8 +930,10 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE, $fixedPhraseType = null) {
+		$settingPluginKey = $this->__getSettingPluginKey($model);
+
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey);
+		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
 
 		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
 		if (empty($replyTo)) {
