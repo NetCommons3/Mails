@@ -353,9 +353,10 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param string $typeKey メールの種類
+ * @param int $useReminder リマインダー使うか
  * @return bool
  */
-	public function isMailSend(Model $model, $typeKey = MailSetting::DEFAULT_TYPE) {
+	public function isMailSend(Model $model, $typeKey = MailSetting::DEFAULT_TYPE, $useReminder = null) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$pluginKey = Current::read('Plugin.key');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -386,7 +387,6 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		$status = Hash::get($model->data, $model->alias . '.status');
 
 		// 一時保存はメール送らない
@@ -420,7 +420,8 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- 通常の投稿
 			// 投稿メールOFFなら、メール送らない
 			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
-			if (isset($isMailSendPost) && !$isMailSendPost) {
+
+			if (isset($isMailSendPost) && $isMailSendPost == '0') {
 				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
@@ -494,7 +495,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveQueueReminder(Model $model) {
 		// メールを送るかどうか
-		if (! $this->isMailSend($model)) {
+		if (! $this->isMailSend($model, MailSetting::DEFAULT_TYPE, 1)) {
 			return true;
 		}
 
