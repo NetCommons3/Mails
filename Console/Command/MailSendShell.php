@@ -81,7 +81,7 @@ class MailSendShell extends AppShell {
 			)
 		));
 		if (empty($mailQueues)) {
-			CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			//CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
 		}
 
