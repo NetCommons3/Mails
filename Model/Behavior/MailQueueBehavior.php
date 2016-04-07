@@ -981,7 +981,7 @@ class MailQueueBehavior extends ModelBehavior {
 			$mail->setMailFixedPhrasePlugin($mailSettings);
 		}
 		$mail->setReplyTo($replyTo);
-		$mail = $this->__convertPlainText($model, $mail);
+		$mail = $this->__convertPlainText($model, $mail, $fixedPhraseType);
 
 		//$replyTo = key($postMail->replyTo());
 		$mailQueue['MailQueue'] = array(
@@ -1005,9 +1005,10 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param NetCommonsMail $mail NetCommonsメール
+ * @param string $fixedPhraseType SiteSettingの定型文の種類
  * @return NetCommonsMail
  */
-	private function __convertPlainText(Model $model, NetCommonsMail $mail) {
+	private function __convertPlainText(Model $model, NetCommonsMail $mail, $fixedPhraseType = null) {
 		$contentKey = $this->__getContentKey($model);
 
 		// fullpassのURL
@@ -1025,16 +1026,30 @@ class MailQueueBehavior extends ModelBehavior {
 		$useWorkflow = $this->__getUseWorkflow($model);
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
-		if ($useWorkflow &&
-			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW &&
-			$status != WorkflowComponent::STATUS_PUBLISHED) {
+		if (! $useWorkflow) {
+			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+
+		} elseif ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+
+		} elseif ($fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
+				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
+				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
 			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
 			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
-		} else {
+
+		} elseif ($status == WorkflowComponent::STATUS_PUBLISHED) {
 			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+
+		} else {
+			// ワークフロー
+			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
+			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
+			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
+			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 		}
 
 		// --- 定型文の埋め込みタグをセット
