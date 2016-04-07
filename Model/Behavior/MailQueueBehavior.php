@@ -315,12 +315,17 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 編集か ゲット
+ * 公開許可あり（承認者、承認OFF時の一般）の編集か ゲット
  *
  * @param Model $model モデル
  * @return bool
  */
-	private function __isEdit(Model $model) {
+	private function __isPublishableEdit(Model $model) {
+		if (Current::permission('content_comment_publishable')) {
+			// 公開権限なし
+			return false;
+		}
+
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		// --- コンテンツコメント
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -345,7 +350,25 @@ class MailQueueBehavior extends ModelBehavior {
 			// 新規登録
 			return false;
 		}
-		return true;
+
+		// keyに対して2件以上記事がある = 編集
+		// 1つ前のコンテンツのステータス
+		$beforeStatus = $data[1][$model->alias]['status'];
+		$status = $data[0][$model->alias]['status'];
+
+		// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、公開の編集
+		// ・承認ONで、承認者が公開中の記事を編集しても、公開許可ありの編集で、メール送らない
+		// ・承認OFFで、公開中の記事を編集しても、公開許可ありの編集で、メール送らない
+		// ・・公開中の記事（１つ前の記事のstatus=1）
+		// ・・編集した記事が公開（status=1）
+		// ※承認ONで公開中の記事を編集して、編集した記事が公開なのは、承認者だけ
+		if ($beforeStatus == WorkflowComponent::STATUS_PUBLISHED && $status == WorkflowComponent::STATUS_PUBLISHED) {
+			// 公開の編集
+			return true;
+		}
+
+		// 公開以外の編集
+		return false;
 	}
 
 /**
@@ -436,8 +459,8 @@ class MailQueueBehavior extends ModelBehavior {
 
 			// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
 			// 編集フラグ
-			$isEdit = $this->__isEdit($model);
-			if (Current::permission('content_comment_publishable') && $isEdit && $isMailSendPost === null) {
+			$isPublishableEdit = $this->__isPublishableEdit($model);
+			if ($isPublishableEdit && $isMailSendPost === null) {
 				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return false;
 			}
@@ -756,6 +779,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// 承認しないなら、承認完了通知メール送らない
 			$useWorkflow = $this->__getUseWorkflow($model);
 			if (! $useWorkflow) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return;
 			}
 
@@ -765,6 +789,7 @@ class MailQueueBehavior extends ModelBehavior {
 			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
 			$useCommentApproval = Hash::get($model->data, $key);
 			if (! $useCommentApproval) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 				return;
 			}
 		}
@@ -774,6 +799,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
 		$createdUserId = $this->__getCreatedUserId($model);
 		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
 		}
 
