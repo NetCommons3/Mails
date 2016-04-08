@@ -13,62 +13,66 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: Plugin/Blocks/View/Elements/block_tabs.ctp:50
+#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150
+#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
 msgid "Mail settings"
 msgstr ""
 
-#: Plugin/Mails/Model/MailSetting.php:60
+#: Plugin/Mails/Model/MailSetting.php:68
 msgid "%s, please enter by e-mail format"
 msgstr ""
 
-#: Plugin/Mails/Model/MailSetting.php:60
-#: Plugin/Mails/View/Elements/edit_form.ctp:61
+#: Plugin/Mails/Model/MailSetting.php:68
+#: Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
 msgstr ""
 
-#: Plugin/Mails/Model/MailSetting.php:67
-#: Plugin/Mails/View/Elements/edit_form.ctp:69
+#: Plugin/Mails/Model/MailSetting.php:75
+#: Plugin/Mails/View/Elements/edit_form.ctp:71
 msgid "Subject"
 msgstr ""
 
-#: Plugin/Mails/Model/MailSetting.php:74
-#: Plugin/Mails/View/Elements/edit_form.ctp:76
+#: Plugin/Mails/Model/MailSetting.php:82
+#: Plugin/Mails/View/Elements/edit_form.ctp:78
 msgid "Body"
 msgstr ""
 
-#: Plugin/Mails/View/Elements/edit_form.ctp:45
-msgid "Use the mail notification function"
-msgstr ""
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:54
-msgid "Notification to the authority"
-msgstr ""
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:64
-msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr ""
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:81
-msgid "Can use an embedded keyword in the subject line and body"
-msgstr ""
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:88
-msgid "Embedded keyword?"
-msgstr ""
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:89
-msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
-msgstr ""
-
-msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr ""
-
-#: Plugin/Videos/Controller/VideoMailSettingsController.php:96
+#: Plugin/Mails/Model/MailSetting.php:123
 msgid "MailSetting.mail_fixed_phrase_subject"
 msgstr ""
 
+#: Plugin/Mails/Model/MailSetting.php:126
 msgid "MailSetting.mail_fixed_phrase_body"
 msgstr ""
 
 msgid "MailSetting.mail_fixed_phrase_body.popover"
 msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:47
+msgid "Use the mail notification function"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:49
+msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:56
+msgid "Notification to the authority"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:66
+msgid "You can specify if you want to change the e-mail address to receive a reply"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:83
+msgid "Can use an embedded keyword in the subject line and body"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:90
+msgid "Embedded keyword?"
+msgstr ""
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:91
+msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
+msgstr ""
+

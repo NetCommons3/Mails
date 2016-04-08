@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"PO-Revision-Date: 2016-03-07 17:48+0900\n"
+"PO-Revision-Date: 2016-04-08 14:59+0900\n"
 "Language-Team: EMAIL@ADDRESS\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,67 +15,65 @@ msgstr ""
 "Last-Translator: \n"
 "Language: ja_JP\n"
 
-#: Plugin/Blocks/View/Elements/block_tabs.ctp:50
+#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150 Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
 msgid "Mail settings"
 msgstr "メール設定"
 
-#: Plugin/Mails/Model/MailSetting.php:60
+#: Plugin/Mails/Model/MailSetting.php:68
 msgid "%s, please enter by e-mail format"
 msgstr "%s はメール形式で入力してください"
 
-#: Plugin/Mails/Model/MailSetting.php:60
-#: Plugin/Mails/View/Elements/edit_form.ctp:61
+#: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
 msgstr "返信を受けるメールアドレス"
 
-#: Plugin/Mails/Model/MailSetting.php:67
-#: Plugin/Mails/View/Elements/edit_form.ctp:69
+#: Plugin/Mails/Model/MailSetting.php:75 Plugin/Mails/View/Elements/edit_form.ctp:71
 msgid "Subject"
 msgstr "件名"
 
-#: Plugin/Mails/Model/MailSetting.php:74
-#: Plugin/Mails/View/Elements/edit_form.ctp:76
+#: Plugin/Mails/Model/MailSetting.php:82 Plugin/Mails/View/Elements/edit_form.ctp:78
 msgid "Body"
 msgstr "本文"
 
-#: Plugin/Mails/View/Elements/edit_form.ctp:45
-msgid "Use the mail notification function"
-msgstr "メール通知機能を使用する"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:54
-msgid "Notification to the authority"
-msgstr "通知する権限"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:64
-msgid ""
-"You can specify if you want to change the e-mail address to receive a reply"
-msgstr "返信を受けるメールアドレスを変えたい場合に指定できます"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:81
-msgid "Can use an embedded keyword in the subject line and body"
-msgstr "件名と本文には埋め込みキーワードが使えます"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:88
-msgid "Embedded keyword?"
-msgstr "埋め込みキーワードとは？"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:89
-msgid ""
-"Each of the embedded keywords, will be sent is converted to the "
-"corresponding content. <br />"
-msgstr ""
-"それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br /"
-">"
-
-msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr "使用しない場合、未来に送る予定だったメールがあれば削除します"
-
-# メール関連
+#: Plugin/Mails/Model/MailSetting.php:123
 msgid "MailSetting.mail_fixed_phrase_subject"
 msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})"
 
+#: Plugin/Mails/Model/MailSetting.php:126
 msgid "MailSetting.mail_fixed_phrase_body"
-msgstr "{X-PLUGIN_NAME}にコンテンツが登録されたのでお知らせします。\nルーム名:{X-ROOM}\nブロック名:{X-BLOCK_NAME}\nタイトル:{X-SUBJECT}\n登録者:{X-USER}\n登録日時:{X-TO_DATE}\n\n{X-BODY}\n\n{X-WORKFLOW_COMMENT}\n\nこの登録内容を確認するには下記のリンクをクリックして下さい。\n{X-URL}"
+msgstr ""
+"{X-PLUGIN_NAME}にコンテンツが登録されたのでお知らせします。\\nルーム名:{X-ROOM}\\nブロック名:{X-BLOCK_NAME}\\nタイトル:{X-SUBJECT}\\n登録者:{X-USER}\\n登録日時:{X-TO_DATE}\\n\\n{X-BODY}\\n\\n{X-WORKFLOW_COMMENT}\\n\\nこの登録内容を確認するには下記"
+"のリンクをクリックして下さい。\\n{X-URL}"
 
 msgid "MailSetting.mail_fixed_phrase_body.popover"
-msgstr "{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル<br />{X-USER} : 登録者<br />{X-TO_DATE} : 登録日時<br />{X-BODY} : 内容<br />{X-URL} : 登録内容のURL<br />{X-WORKFLOW_COMMENT} : 担当者へのコメント"
+msgstr ""
+"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル<br />{X-USER} : 登録者<br />{X-TO_DATE} : 登録日時<br />{X-BODY} : 内容<br />{X-URL} : 登録内容のURL<br /"
+">{X-WORKFLOW_COMMENT} : 担当者へのコメント"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:47
+msgid "Use the mail notification function"
+msgstr "メール通知機能を使用する"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:49
+msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
+msgstr "使用しない場合、未来に送る予定だったメールがあれば削除します"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:56
+msgid "Notification to the authority"
+msgstr "通知する権限"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:66
+msgid "You can specify if you want to change the e-mail address to receive a reply"
+msgstr "返信を受けるメールアドレスを変えたい場合に指定できます"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:83
+msgid "Can use an embedded keyword in the subject line and body"
+msgstr "件名と本文には埋め込みキーワードが使えます"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:90
+msgid "Embedded keyword?"
+msgstr "埋め込みキーワードとは？"
+
+#: Plugin/Mails/View/Elements/edit_form.ctp:91
+msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
+msgstr "それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />"
