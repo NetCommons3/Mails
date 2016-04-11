@@ -260,15 +260,25 @@ class NetCommonsMail extends CakeEmail {
  *
  * @param int $languageId 言語ID
  * @param string $fixedPhraseType 定型文の種類
+ * @param array $mailSetting プラグイン側のメール設定データ
  * @return void
  */
-	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType) {
+	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSetting = null) {
 		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'], $languageId . '.value');
 		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'], $languageId . '.value');
 
 		// 定型文をセット
 		$this->setSubject($subject);
 		$this->setBody($body);
+
+		if ($mailSetting === null) {
+			return;
+		}
+
+		$pluginSubject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
+		$pluginBody = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+		$this->assignTag('X-PLUGIN_MAIL_SUBJECT', $pluginSubject);
+		$this->assignTag('X-PLUGIN_MAIL_BODY', $pluginBody);
 	}
 
 /**
@@ -381,6 +391,14 @@ class NetCommonsMail extends CakeEmail {
 
 		// メール本文の共通ヘッダー文、署名追加
 		$this->body = $this->assignTags['X-BODY_HEADER'] . "\r\n" . $this->body . "\r\n" . $this->assignTags['X-SIGNATURE'];
+		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
+
+		// 承認系メールのタグは先に置換
+		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
+			$this->body = str_replace('{X-PLUGIN_MAIL_BODY}', $this->assignTags['X-PLUGIN_MAIL_BODY'], $this->body);
+			$this->subject = str_replace('{X-PLUGIN_MAIL_SUBJECT}', $this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->subject);
+			unset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY']);
+		}
 
 		foreach ($this->assignTags as $key => $value) {
 			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {

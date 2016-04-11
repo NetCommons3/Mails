@@ -795,13 +795,13 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
-		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
-		$createdUserId = $this->__getCreatedUserId($model);
-		if (in_array($createdUserId, $rolesRoomsUserIds)) {
-			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return;
-		}
+		//		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		//		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
+		//		$createdUserId = $this->__getCreatedUserId($model);
+		//		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+		//			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+		//			return;
+		//		}
 
 		$fixedPhraseType = null;
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -976,12 +976,17 @@ class MailQueueBehavior extends ModelBehavior {
 		$mail = new NetCommonsMail();
 		$mail->initPlugin($languageId, $pluginName);
 		if (isset($fixedPhraseType)) {
-			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType);
+			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettings);
 		} else {
 			$mail->setMailFixedPhrasePlugin($mailSettings);
 		}
 		$mail->setReplyTo($replyTo);
-		$mail = $this->__convertPlainText($model, $mail, $fixedPhraseType);
+
+		$assignTags = $this->__getAssignTags($model, $fixedPhraseType);
+		$mail->assignTags($assignTags);
+
+		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
+		$mail->assignTagReplace();
 
 		//$replyTo = key($postMail->replyTo());
 		$mailQueue['MailQueue'] = array(
@@ -1001,16 +1006,15 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 定型文からメール生文に変換
+ * 埋め込みタグ 取得
  *
  * @param Model $model モデル
- * @param NetCommonsMail $mail NetCommonsメール
  * @param string $fixedPhraseType SiteSettingの定型文の種類
  * @return NetCommonsMail
  */
-	private function __convertPlainText(Model $model, NetCommonsMail $mail, $fixedPhraseType = null) {
+	private function __getAssignTags(Model $model, $fixedPhraseType = null) {
+		$assignTags = array();
 		$contentKey = $this->__getContentKey($model);
-
 		// fullpassのURL
 		$url = NetCommonsUrl::actionUrl(array(
 			'controller' => Current::read('Plugin.key'),
@@ -1020,17 +1024,17 @@ class MailQueueBehavior extends ModelBehavior {
 			'key' => $contentKey
 		));
 		$url = NetCommonsUrl::url($url, true);
-		$mail->assignTag('X-URL', $url);
+		$assignTags['X-URL'] = $url;
 
 		// 承認使って公開以外の時、担当者へのコメントをメールに含める
 		$useWorkflow = $this->__getUseWorkflow($model);
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
 		if (! $useWorkflow) {
-			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+			$assignTags['X-WORKFLOW_COMMENT'] = '';
 
 		} elseif ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+			$assignTags['X-WORKFLOW_COMMENT'] = '';
 
 		} elseif ($fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
 				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
@@ -1039,37 +1043,34 @@ class MailQueueBehavior extends ModelBehavior {
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
-			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
 
 		} elseif ($status == WorkflowComponent::STATUS_PUBLISHED) {
-			$mail->assignTag('X-WORKFLOW_COMMENT', '');
+			$assignTags['X-WORKFLOW_COMMENT'] = '';
 
 		} else {
 			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
-			$mail->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
 		}
 
 		// --- 定型文の埋め込みタグをセット
 		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
 		foreach ($embedTags as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
-			$mail->assignTag($embedTag, $dataValue);
+			$assignTags[$embedTag] = $dataValue;
 		}
 
 		// --- 追加の埋め込みタグ セット
 		if (isset($this->settings[$model->alias]['addEmbedTagsValues'])) {
 			// 既にセットされているタグであっても、上書きされる
 			foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
-				$mail->assignTag($embedTag, $value);
+				$assignTags[$embedTag] = $value;
 			}
 		}
 
-		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
-		$mail->assignTagReplace();
-
-		return $mail;
+		return $assignTags;
 	}
 }
