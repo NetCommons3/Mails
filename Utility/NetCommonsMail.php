@@ -336,13 +336,6 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function setBody($body) {
 		$this->body = trim($body);
-		//$this->body = str_replace("\n", '<br />', $this->body). '<br />';
-
-		//		$container =& DIContainerFactory::getContainer();
-		//		$commonMain =& $container->getComponent('commonMain');
-		//		$escapeText =& $commonMain->registerClass(WEBAPP_DIR . '/components/escape/Text.class.php', 'Escape_Text', 'escapeText');
-		//
-		//		$this->body = $escapeText->escapeWysiwyg($this->body);
 	}
 
 /**
@@ -387,8 +380,6 @@ class NetCommonsMail extends CakeEmail {
  * @return array タグ
  */
 	public function assignTagReplace() {
-		$convertHtml = new ConvertHtml();
-
 		// 承認系メールのタグは先に置換
 		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
 			$this->body = str_replace('{X-PLUGIN_MAIL_BODY}', $this->assignTags['X-PLUGIN_MAIL_BODY'], $this->body);
@@ -400,33 +391,36 @@ class NetCommonsMail extends CakeEmail {
 		$this->body = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->body . "\n" . $this->assignTags['X-SIGNATURE'];
 		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
-		foreach ($this->assignTags as $key => $value) {
-			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {
-				continue;
-			}
-
-			if (parent::emailFormat() == 'text') {
-				$this->body = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->body);
-			} else {
-				$this->body = str_replace('{' . $key . '}', $value, $this->body);
-			}
-			$this->subject = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->subject);
-		}
-
-		$this->body = str_replace("\r\n", "\n", $this->body);
-		$this->body = str_replace("\r", "\n", $this->body);
-		//$this->body = $this->insertNewLine($this->body);
-		// テキストのブロックを決められた幅や折り返す
-		/** @link http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap */
-		$this->body = CakeText::wrap($this->body, $this::MAX_LINE_LENGTH);
-
+		// URL
 		if (Hash::get($this->assignTags, 'X-URL')) {
 			if (parent::emailFormat() == 'text') {
 				$this->body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
 			} else {
 				$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
 			}
+			unset($this->assignTags['X-URL']);
 		}
+
+		// 本文
+		if (Hash::get($this->assignTags, 'X-BODY')) {
+			$this->body = str_replace('{X-BODY}', h($this->assignTags['X-BODY']), $this->body);
+			unset($this->assignTags['X-BODY']);
+		}
+
+		foreach ($this->assignTags as $key => $value) {
+			if (parent::emailFormat() == 'text') {
+				$this->body = str_replace('{' . $key . '}', h($value), $this->body);
+			} else {
+				$this->body = str_replace('{' . $key . '}', $value, $this->body);
+			}
+			$this->subject = str_replace('{' . $key . '}', h($value), $this->subject);
+		}
+
+		$this->body = str_replace("\r\n", "\n", $this->body);
+		$this->body = str_replace("\r", "\n", $this->body);
+		// テキストのブロックを決められた幅で折り返す
+		// http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap
+		$this->body = CakeText::wrap($this->body, $this::MAX_LINE_LENGTH);
 	}
 
 /**
