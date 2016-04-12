@@ -47,6 +47,7 @@ class MailSendShell extends AppShell {
  * cake Mails.mailSend
  *
  * @return void
+ * @link http://book.cakephp.org/2.0/ja/console-and-shells/cron-jobs.html
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#id2
  */
 	public function main() {
