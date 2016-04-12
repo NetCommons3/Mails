@@ -415,7 +415,10 @@ class NetCommonsMail extends CakeEmail {
 
 		$this->body = str_replace("\r\n", "\n", $this->body);
 		$this->body = str_replace("\r", "\n", $this->body);
-		$this->body = $this->insertNewLine($this->body);
+		//$this->body = $this->insertNewLine($this->body);
+		// テキストのブロックを決められた幅や折り返す
+		/** @link http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap */
+		$this->body = CakeText::wrap($this->body, $this::MAX_LINE_LENGTH);
 
 		if (Hash::get($this->assignTags, 'X-URL')) {
 			if (parent::emailFormat() == 'text') {
@@ -438,40 +441,6 @@ class NetCommonsMail extends CakeEmail {
 		} else {
 			$this->body = str_replace("\n", '<br />', $this->body);
 		}
-	}
-
-/**
- * 1行の最大文字数で、改行入れて本文整形
- *
- * @param string $body 本文
- * @return string 整形した本文
- */
-	public function insertNewLine($body) {
-		//$lines = explode($this->_LE, $body);
-		$lines = explode("\n", $body);
-		//$pos = 0;
-		//$max_line_length = 300;
-		$linesOut = array();
-
-		while (list(, $line) = each($lines)) {
-			// 1行が300文字以下になったら抜ける
-			while (mb_strlen($line) > $this::MAX_LINE_LENGTH) {
-				// 1行300文字で改行。なので配列にセット。
-				// 1行300文字まで取得、< があるか
-				$pos = strrpos(mb_substr($line, 0, $this::MAX_LINE_LENGTH), '<');
-				// 1行300文字の中に '<' ありなら、途中で改行
-				if ($pos > 0) {
-					$linesOut[] = substr($line, 0, $pos);
-					$line = substr($line, $pos);
-				} else {
-					$linesOut[] = mb_substr($line, 0, $this::MAX_LINE_LENGTH);
-					$line = mb_substr($line, $this::MAX_LINE_LENGTH);
-				}
-			}
-			$linesOut[] = $line;
-		}
-		//return implode($this->_LE, $linesOut);
-		return implode("\n", $linesOut);
 	}
 
 /**
