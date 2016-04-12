@@ -2,11 +2,11 @@
 /**
  * Element of mail edit form
  *   - $action: Action for delete request.
- *   - $callback: Callback element for parameters and messages.
- *   - $callbackOptions: Callback options for element.
  *   - $cancelUrl: Cancel url.
  *   - $mailTypeKey: メールの種類
  *   - $mailBodyPopoverMessage: メール定型文ポップオーバー内の説明文（HTML可）
+ *   - $useNoticeAuthority: 通知する権限を使うか
+ *   - $useReplayTo: 返信を受けるメールアドレスを使うか
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -28,6 +28,12 @@ if (! isset($cancelUrl)) {
 }
 if (! isset($mailTypeKey)) {
 	$mailTypeKey = MailSetting::DEFAULT_TYPE;
+}
+if (! isset($useNoticeAuthority)) {
+	$useNoticeAuthority = 1;
+}
+if (! isset($useReplayTo)) {
+	$useReplayTo = 1;
 }
 ?>
 
@@ -51,20 +57,24 @@ if (! isset($mailTypeKey)) {
 			</div>
 
 			<div class="col-xs-11 col-xs-offset-1">
-				<?php echo $this->element('Blocks.block_permission_setting', array(
-					'settingPermissions' => array(
-						'mail_content_receivable' => __d('mails', 'Notification to the authority'),
-					),
-				)); ?>
-
-				<div class="form-group">
-					<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
-						'type' => 'text',
-						'label' => __d('mails', 'E-mail address to receive a reply'),
-						'div' => '',
+				<?php if ($useNoticeAuthority): ?>
+					<?php echo $this->element('Blocks.block_permission_setting', array(
+						'settingPermissions' => array(
+							'mail_content_receivable' => __d('mails', 'Notification to the authority'),
+						),
 					)); ?>
-					<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
-				</div>
+				<?php endif; ?>
+
+				<?php if ($useReplayTo): ?>
+					<div class="form-group">
+						<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
+							'type' => 'text',
+							'label' => __d('mails', 'E-mail address to receive a reply'),
+							'div' => '',
+						)); ?>
+						<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
+					</div>
+				<?php endif; ?>
 
 				<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_subject', array(
 					'type' => 'text',
