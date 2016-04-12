@@ -539,10 +539,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$model->Behaviors->load('Mails.MailQueueDelete');
 		/** @see MailQueueDeleteBehavior::deleteQueue() */
 		$model->deleteQueue($contentKey);
-		// 暫定対応: 下記エラーができるため、コメントアウト。後処理で使わないので、本当はunloadしたい。
+		// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
 		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
 		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
-		// $model->Behaviors->unload('Mails.MailQueueDelete');
 
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 		return $this->saveQueue($model, $sendTimeReminders);
