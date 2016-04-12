@@ -77,6 +77,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
+		$this->settings[$model->alias]['notSendRoomUserIds'] = null;
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 
@@ -186,6 +187,17 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
+	}
+
+/**
+ * ルーム配信で送らないユーザID セット
+ *
+ * @param Model $model モデル
+ * @param array $notSendRoomUserIds ユーザID配列
+ * @return void
+ */
+	public function setNotSendRoomUserIds(Model $model, $notSendRoomUserIds) {
+		$this->settings[$model->alias]['notSendRoomUserIds'] = $notSendRoomUserIds;
 	}
 
 /**
@@ -556,42 +568,34 @@ class MailQueueBehavior extends ModelBehavior {
 
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// --- 公開
-				// 投稿メール - ルーム配信 - メールキューSave
-				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
-
-				// 承認完了通知メール - 登録者に配信 - メールキューSave
+				// 承認完了通知メール(即時)
 				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
+
+				// 投稿メール - ルーム配信
+				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
 
 			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 				// --- 承認依頼
-				// 投稿メール - 登録者と承認者に配信(即時) - メールキューSave
-				$this->__saveQueueApprovalMail($model, $languageId, $typeKey);
-
-				// 承認依頼通知メール - 承認者に配信(即時)
-				$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL;
-				$this->__saveQueueAnswerMail($model, $languageId, null, null, $typeKey, $fixedPhraseType);
+				// 承認依頼通知メール(即時)
+				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
 			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 				// --- 差戻し
-				// コンテンツコメントは、ここの処理に入ることはない
-				// 差戻し通知メール - 登録者に配信(即時) - メールキューSave
+				// ※ コンテンツコメントは、ここの処理に入ることはない
+				// 差戻し通知メール(即時)
 				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			// --- ワークフローの機能自体、使ってないプラグインの処理
 			// --- 公開
-			// 投稿メール - ルーム配信 - メールキューSave
+			// 投稿メール - ルーム配信
 			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 回答
-			$toAddresses = $this->settings[$model->alias]['toAddresses'];
-			$userIds = $this->settings[$model->alias]['userIds'];
-			$languageId = Current::read('Language.id');
-
-			// 回答メール配信(即時) - メールキューSave
-			$this->__saveQueueAnswerMail($model, $languageId, $userIds, $toAddresses, $typeKey);
+			// 回答メール配信(即時)
+			$this->__saveQueueAnswerMail($model, $languageId, $typeKey);
 		}
 
 		return true;
@@ -629,6 +633,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'user_id' => null,
 			'room_id' => null,
 			'to_address' => null,
+			'not_send_room_user_ids' => null,
 		);
 
 		// 以下、実行する時は、公開時を想定
@@ -670,6 +675,18 @@ class MailQueueBehavior extends ModelBehavior {
 				// --- ルーム配信
 				$roomId = Current::read('Room.id');
 				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
+
+				// 未来日送信は2通（承認完了とルーム配信）送るため、送らないユーザIDをセットしない
+				$now = NetCommonsTime::getNowDatetime();
+				if ($mailQueue['MailQueue']['send_time'] <= $now) {
+					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+					// ルーム配信で送らないユーザID セット
+					$notSendRoomUserIds = $this->settings[$model->alias]['notSendRoomUserIds'];
+					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
+					$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
+					$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
+				}
+
 				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 				/** @see MailQueueUser::saveMailQueueUser() */
 				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
@@ -706,33 +723,79 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
- * @param array $userIds 送信ユーザID 配列
- * @param array $toAddresses 送信先メールアドレス 配列
  * @param string $typeKey メールの種類
- * @param string $fixedPhraseType SiteSettingの定型文の種類
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueueAnswerMail(Model $model, $languageId, $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE, $fixedPhraseType = null) {
+	private function __saveQueueAnswerMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
+		$toAddresses = $this->settings[$model->alias]['toAddresses'];
+		$userIds = $this->settings[$model->alias]['userIds'];
+
 		if (!empty($toAddresses)) {
 			// メールアドレスに配信(即時) - メールキューSave
 			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
 		} elseif (!empty($userIds)) {
 			// ユーザIDに配信(即時) - メールキューSave
 			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, null, $typeKey);
-		} else {
-			// toAddresses & userIds に設定なし
-			// メールキューSave
-			$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
-			$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
-			/** @see MailQueue::saveMailQueue() */
-			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-
-			$mailQueueId = $mailQueueResult['MailQueue']['id'];
 		}
 
+		// ルーム内の承認者達に配信
+		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
+
+		return true;
+	}
+
+/**
+ * 登録者に配信
+ *
+ * @param Model $model モデル
+ * @param int $mailQueueId メールキューID
+ * @return void
+ * @throws InternalErrorException
+ */
+	private function __saveMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
+		$createdUserId = $this->__getCreatedUserId($model);
+		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
+		if (empty($createdUserId)) {
+			return;
+		}
+
+		$contentKey = $this->__getContentKey($model);
+		$pluginKey = $this->__getPluginKey($model);
+		$blockKey = Current::read('Block.key');
+
+		$mailQueueUser['MailQueueUser'] = array(
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'mail_queue_id' => $mailQueueId,
+			'user_id' => $createdUserId,
+			'room_id' => null,
+			'to_address' => null,
+			'not_send_room_user_ids' => null,
+		);
+
+		// MailQueueUserは新規登録
+		$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
+		/** @see MailQueueUser::saveMailQueueUser() */
+		if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+
+		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+		// ルーム配信で送らないユーザID セット
+		$this->settings[$model->alias]['notSendRoomUserIds'][] = $createdUserId;
+	}
+
+/**
+ * ルーム内の承認者達に配信
+ *
+ * @param Model $model モデル
+ * @param int $mailQueueId メールキューID
+ * @return bool
+ * @throws InternalErrorException
+ */
+	private function __saveMailQueueUserInRoomsAuthorizer(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
 		$blockKey = Current::read('Block.key');
@@ -746,25 +809,35 @@ class MailQueueBehavior extends ModelBehavior {
 			'user_id' => null,
 			'room_id' => null,
 			'to_address' => null,
+			'not_send_room_user_ids' => null,
 		);
 
-		// ルーム内の承認者達に配信(即時)
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$publishablePermission = 'content_publishable';
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			$publishablePermission = 'content_comment_publishable';
+		}
+
 		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishablePermission);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+			// MailQueueUserは新規登録
 			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 			/** @see MailQueueUser::saveMailQueueUser() */
 			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
-		}
 
-		return true;
+			// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+			// ルーム配信で送らないユーザID セット
+			$this->settings[$model->alias]['notSendRoomUserIds'][] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+		}
 	}
 
 /**
  * 通知メール - 登録者に配信(即時) - メールキューSave
+ * - 承認依頼通知, 差戻し通知, 承認完了通知メール
  *
  * @param Model $model モデル
  * @param int $languageId 言語ID
@@ -810,6 +883,11 @@ class MailQueueBehavior extends ModelBehavior {
 			// 承認完了通知メール
 			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
 
+		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+			// --- 承認依頼
+			// 承認依頼通知メール
+			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL;
+
 		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 			// --- 差戻し
 			// 差戻し通知メール
@@ -823,95 +901,12 @@ class MailQueueBehavior extends ModelBehavior {
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
-
 		$mailQueueId = $mailQueueResult['MailQueue']['id'];
-		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
-		$blockKey = Current::read('Block.key');
-		$createdUserId = $this->__getCreatedUserId($model);
 
-		// --- 登録者に配信
-		$mailQueueUser['MailQueueUser'] = array(
-			'mail_queue_id' => $mailQueueId,
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'user_id' => $createdUserId,
-			'room_id' => null,
-			'to_address' => null,
-		);
-		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-
-		/** @see MailQueueUser::saveMailQueueUser() */
-		if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-		}
-	}
-
-/**
- * 承認依頼メール - 登録者と承認者に配信(即時) - メールキューSave
- *
- * @param Model $model モデル
- * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
- * @return void
- * @throws InternalErrorException
- */
-	private function __saveQueueApprovalMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
-		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
-		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
-
-		/** @see MailQueue::saveMailQueue() */
-		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-		}
-
-		$mailQueueId = $mailQueueResult['MailQueue']['id'];
-		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
-		$blockKey = Current::read('Block.key');
-
-		// MailQueueUserは新規登録
-		$mailQueueUser['MailQueueUser'] = array(
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'mail_queue_id' => $mailQueueId,
-			'user_id' => null,
-			'room_id' => null,
-			'to_address' => null,
-		);
-
-		$createdUserId = $this->__getCreatedUserId($model);
-		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
-		if (!empty($createdUserId)) {
-			// 投稿メール - 登録者に配信(即時)
-			$mailQueueUser['MailQueueUser']['user_id'] = $createdUserId;
-			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-		}
-
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$publishablePermission = 'content_publishable';
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			$publishablePermission = 'content_comment_publishable';
-		}
-
-		// ルーム内の承認者達に配信(即時)
-		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishablePermission);
-		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
-			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
-			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-		}
+		// 登録者に配信
+		$this->__saveMailQueueUserInCreatedUser($model, $mailQueueId);
+		// ルーム内の承認者達に配信
+		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
 	}
 
 /**

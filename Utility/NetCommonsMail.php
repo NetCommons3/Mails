@@ -499,7 +499,6 @@ class NetCommonsMail extends CakeEmail {
 		}
 		if ($this->body == '') {
 			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
 
@@ -512,7 +511,6 @@ class NetCommonsMail extends CakeEmail {
 		$toAddress = Hash::get($mailQueueUser, 'to_address');
 		if ($roomId === null && $userId === null && $toAddress === null) {
 			LogError('Mail delivery destination is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			//CakeLog::debug('MailQueueUser - ' . print_r($mailQueueUser, true));
 			return false;
 		}
 
@@ -531,9 +529,14 @@ class NetCommonsMail extends CakeEmail {
 			$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
 			$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.roles_room_id');
 
+			// 送らないユーザIDをルーム配信ユーザIDから排除
+			$notSendRoomUserIds = Hash::get($mailQueueUser, 'not_send_room_user_ids');
+			$notSendRoomUserIds = explode('|', $notSendRoomUserIds);
+			$userIds = array_diff($rolesRoomsUserIds, $notSendRoomUserIds);
+
 			$users = $this->User->find('all', array(
 				'recursive' => -1,
-				'conditions' => array('id' => $rolesRoomsUserIds),
+				'conditions' => array('id' => $userIds),
 				'callbacks' => false,
 			));
 
