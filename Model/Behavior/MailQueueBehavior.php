@@ -1020,6 +1020,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$url = NetCommonsUrl::url($url, true);
 		$assignTags['X-URL'] = $url;
 
+		// --- ワークフロー
 		// 承認使って公開以外の時、担当者へのコメントをメールに含める
 		$useWorkflow = $this->__getUseWorkflow($model);
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
@@ -1033,7 +1034,7 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
 				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
 				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
-			// ワークフロー
+
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\n" . $workflowComment;
@@ -1043,11 +1044,17 @@ class MailQueueBehavior extends ModelBehavior {
 			$assignTags['X-WORKFLOW_COMMENT'] = '';
 
 		} else {
-			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\n" . $workflowComment;
 			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
+		}
+
+		// --- タグプラグイン
+		if ($model->Behaviors->loaded('Tags.Tag')) {
+			$tags = Hash::extract($model->data, 'Tag.{n}.name');
+			$tags = implode(',', $tags);
+			$assignTags['X-TAGS'] = $tags;
 		}
 
 		// --- 定型文の埋め込みタグをセット
