@@ -392,7 +392,7 @@ class NetCommonsMail extends CakeEmail {
 		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
 		// URL
-		if (Hash::get($this->assignTags, 'X-URL')) {
+		if (isset($this->assignTags['X-URL'])) {
 			if (parent::emailFormat() == 'text') {
 				$this->body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
 			} else {
@@ -402,7 +402,7 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		// 本文
-		if (Hash::get($this->assignTags, 'X-BODY')) {
+		if (isset($this->assignTags['X-BODY'])) {
 			$this->body = str_replace('{X-BODY}', h($this->assignTags['X-BODY']), $this->body);
 			unset($this->assignTags['X-BODY']);
 		}
