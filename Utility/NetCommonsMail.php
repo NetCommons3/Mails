@@ -336,7 +336,7 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function setBody($body) {
 		$this->body = trim($body);
-		//$this->body = str_replace('\n', '<br />', $this->body). '<br />';
+		//$this->body = str_replace("\n", '<br />', $this->body). '<br />';
 
 		//		$container =& DIContainerFactory::getContainer();
 		//		$commonMain =& $container->getComponent('commonMain');
@@ -389,16 +389,16 @@ class NetCommonsMail extends CakeEmail {
 	public function assignTagReplace() {
 		$convertHtml = new ConvertHtml();
 
-		// メール本文の共通ヘッダー文、署名追加
-		$this->body = $this->assignTags['X-BODY_HEADER'] . "\r\n" . $this->body . "\r\n" . $this->assignTags['X-SIGNATURE'];
-		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
-
 		// 承認系メールのタグは先に置換
 		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
 			$this->body = str_replace('{X-PLUGIN_MAIL_BODY}', $this->assignTags['X-PLUGIN_MAIL_BODY'], $this->body);
 			$this->subject = str_replace('{X-PLUGIN_MAIL_SUBJECT}', $this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->subject);
 			unset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY']);
 		}
+
+		// メール本文の共通ヘッダー文、署名追加
+		$this->body = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->body . "\n" . $this->assignTags['X-SIGNATURE'];
+		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
 		foreach ($this->assignTags as $key => $value) {
 			if (substr($value, 0, 4) == 'X-TO' || $key == 'X-URL') {
@@ -413,20 +413,9 @@ class NetCommonsMail extends CakeEmail {
 			$this->subject = str_replace('{' . $key . '}', $convertHtml->convertHtmlToText($value), $this->subject);
 		}
 
-		$this->body = str_replace('\r\n', '\n', $this->body);
-		$this->body = str_replace('\r', '\n', $this->body);
-		//$this->body = str_replace('\n', $this->_LE, $this->body);
+		$this->body = str_replace("\r\n", "\n", $this->body);
+		$this->body = str_replace("\r", "\n", $this->body);
 		$this->body = $this->insertNewLine($this->body);
-
-		//		if(isset($this->assignTags['X-URL'])) {
-		//			$this->body = str_replace('{X-URL}', '<a href=\''. $this->assignTags['X-URL']. '\'>'. $this->assignTags['X-URL']. '</a>', $this->body);
-		//			$mobile_body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
-		//			unset($this->assignTags['X-URL']);
-		//		} else {
-		//			$mobile_body = $this->body;
-		//		}
-		//		$mobile_body = $convertHtml->convertHtmlToText($mobile_body);
-		//		$mobile_body = $this->insertNewLine($mobile_body);
 
 		if (Hash::get($this->assignTags, 'X-URL')) {
 			if (parent::emailFormat() == 'text') {
@@ -445,9 +434,9 @@ class NetCommonsMail extends CakeEmail {
 	public function brReplace() {
 		if (parent::emailFormat() == 'text') {
 			// text形式は配列にすると改行される
-			$this->body = explode('\n', $this->body);
+			$this->body = explode("\n", $this->body);
 		} else {
-			$this->body = str_replace('\n', '<br />', $this->body);
+			$this->body = str_replace("\n", '<br />', $this->body);
 		}
 	}
 
@@ -459,7 +448,7 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function insertNewLine($body) {
 		//$lines = explode($this->_LE, $body);
-		$lines = explode('\n', $body);
+		$lines = explode("\n", $body);
 		//$pos = 0;
 		//$max_line_length = 300;
 		$linesOut = array();
@@ -482,7 +471,7 @@ class NetCommonsMail extends CakeEmail {
 			$linesOut[] = $line;
 		}
 		//return implode($this->_LE, $linesOut);
-		return implode('\n', $linesOut);
+		return implode("\n", $linesOut);
 	}
 
 /**

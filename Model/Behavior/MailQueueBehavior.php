@@ -77,7 +77,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
-		$this->settings[$model->alias]['notSendRoomUserIds'] = null;
+		$this->settings[$model->alias]['notSendRoomUserIds'] = array();
 		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 
@@ -868,13 +868,13 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
-		//		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
-		//		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
-		//		$createdUserId = $this->__getCreatedUserId($model);
-		//		if (in_array($createdUserId, $rolesRoomsUserIds)) {
-		//			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-		//			return;
-		//		}
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
+		$createdUserId = $this->__getCreatedUserId($model);
+		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return;
+		}
 
 		$fixedPhraseType = null;
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -1037,7 +1037,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
+			$workflowComment = $commentLabel . ":\n" . $workflowComment;
 			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
 
 		} elseif ($status == WorkflowComponent::STATUS_PUBLISHED) {
@@ -1047,7 +1047,7 @@ class MailQueueBehavior extends ModelBehavior {
 			// ワークフロー
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-			$workflowComment = $commentLabel . ":\r\n" . $workflowComment;
+			$workflowComment = $commentLabel . ":\n" . $workflowComment;
 			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
 		}
 
