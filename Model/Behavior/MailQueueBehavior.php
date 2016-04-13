@@ -62,8 +62,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias] = $settings;
 
 		// --- 設定ないパラメータの処理
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType === null) {
+		if (!isset($this->settings[$model->alias]['workflowType'])) {
 			// --- ワークフローのstatusによって送信内容を変える
 			if ($model->Behaviors->loaded('Workflow.Workflow')) {
 				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
@@ -71,8 +70,10 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
 		}
+		if (!isset($this->settings[$model->alias]['keyField'])) {
+			$this->settings[$model->alias]['keyField'] = 'key';
+		}
 
-		//$this->settings[$model->alias]['mailSendTime'] = null;
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
@@ -255,7 +256,8 @@ class MailQueueBehavior extends ModelBehavior {
 			return $model->data[$model->alias]['content_key'];
 		}
 		// 通常
-		return $model->data[$model->alias]['key'];
+		$keyField = $this->settings[$model->alias]['keyField'];
+		return $model->data[$model->alias][$keyField];
 	}
 
 /**
@@ -350,7 +352,9 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// --- 通常
-		$conditions = array($model->alias . '.key' => $model->data[$model->alias]['key']);
+		$contentKey = $this->__getContentKey($model);
+		$keyField = $this->settings[$model->alias]['keyField'];
+		$conditions = array($model->alias . '.' . $keyField => $contentKey);
 		$data = $model->find('all', array(
 			'recursive' => -1,
 			'conditions' => $conditions,
