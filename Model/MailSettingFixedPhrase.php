@@ -155,7 +155,7 @@ class MailSettingFixedPhrase extends MailsAppModel {
 
 		try {
 			// 保存
-			if (! $mailSetting = $this->save(null, false)) {
+			if (! $mailSettingFixedPhrase = $this->save(null, false)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
@@ -167,6 +167,6 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			$this->rollback($ex);
 		}
 
-		return $mailSetting;
+		return $mailSettingFixedPhrase;
 	}
 }
