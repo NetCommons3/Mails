@@ -10,6 +10,7 @@
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 
 /**
  * メール設定
@@ -21,6 +22,7 @@ class MailSetting extends MailsAppModel {
 
 /**
  * typeのデフォルト値
+ * ！！！MailSettingFixedPhrase　に移動予定
  *
  * @var int
  */
@@ -41,10 +43,18 @@ class MailSetting extends MailsAppModel {
  * @see OriginalKeyBehavior
  */
 	public $actsAs = array(
-		'NetCommons.OriginalKey',
+		//'NetCommons.OriginalKey',
 		'Blocks.BlockRolePermission',
 		'Mails.MailQueueDelete',
 	);
+
+/**
+ * hasMany associations.
+ *
+ * @var array
+ * @link http://book.cakephp.org/2.0/ja/models/associations-linking-models-together.html#hasmany
+ */
+	public $hasMany = 'MailSettingFixedPhrase';
 
 /**
  * beforeValidate
@@ -56,6 +66,13 @@ class MailSetting extends MailsAppModel {
  */
 	public function beforeValidate($options = array()) {
 		$this->validate = Hash::merge($this->validate, array(
+			'plugin_key' => array(
+				'notBlank' => array(
+					'rule' => array('notBlank'),
+					'message' => __d('net_commons', 'Invalid request.'),
+					'required' => true,
+				),
+			),
 			'is_mail_send' => array(
 				'boolean' => array(
 					'rule' => array('boolean'),
@@ -69,20 +86,6 @@ class MailSetting extends MailsAppModel {
 					'allowEmpty' => true,
 				),
 			),
-			'mail_fixed_phrase_subject' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Subject')),
-					'required' => true,
-				),
-			),
-			'mail_fixed_phrase_body' => array(
-				'notBlank' => array(
-					'rule' => array('notBlank'),
-					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Body')),
-					'required' => true,
-				),
-			),
 		));
 
 		return parent::beforeValidate($options);
@@ -91,25 +94,24 @@ class MailSetting extends MailsAppModel {
 /**
  * メール設定 データ新規作成
  *
- * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
-		if ($languageId === null) {
-			$languageId = Current::read('Language.id');
-		}
+	public function createMailSetting($pluginKey = null) {
+		//public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
+		$this->loadModels(array(
+			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
+		));
+
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}
 
 		//デフォルトデータ取得
 		$conditions = array(
-			'language_id' => $languageId,
+			//'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
 			'block_key' => null,
-			'type_key' => $typeKey,
 		);
 		$mailSetting = $this->getMailSetting($conditions);
 		if ($mailSetting) {
@@ -117,19 +119,15 @@ class MailSetting extends MailsAppModel {
 		} else {
 			$mailSetting = $this->create();
 		}
-
-		//初期データセット
-		if (! $mailSetting[$this->alias]['mail_fixed_phrase_subject']) {
-			$mailSetting[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
-		}
-		if (! $mailSetting[$this->alias]['mail_fixed_phrase_body']) {
-			$mailSetting[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
-		}
 		$mailSetting = Hash::remove($mailSetting, '{s}.created');
 		$mailSetting = Hash::remove($mailSetting, '{s}.created_user');
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified');
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified_user');
 
+		//$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey, $pluginKey);
+
+		//$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
+		//return $result;
 		return $mailSetting;
 	}
 
@@ -141,7 +139,11 @@ class MailSetting extends MailsAppModel {
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
+	public function getMailSettingPlugin($languageId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $pluginKey = null) {
+		$this->loadModels(array(
+			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
+		));
+
 		//if ($blockKey === null) {
 		//	$blockKey = Current::read('Block.key');
 		//}
@@ -153,20 +155,28 @@ class MailSetting extends MailsAppModel {
 		}
 		$blockKey = Current::read('Block.key');
 
-		// $blockKey, $typeKeyで、mail_settings を SELECT する
+		// $blockKeyで SELECT する
 		$conditions = array(
-			'language_id' => $languageId,
+			//'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
-			'type_key' => $typeKey,
+			//'type_key' => $typeKey,
 		);
 		$mailSetting = $this->getMailSetting($conditions);
-
 		if (! $mailSetting) {
 			$mailSetting = $this->createMailSetting($languageId, $typeKey);
 		}
 
-		return $mailSetting;
+		// $blockKey, $typeKeyでSELECT する
+		$conditions['language_id'] = $languageId;
+		$conditions['type_key'] = $typeKey;
+		$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
+		if (! $mailSettingFixedPhrase) {
+			$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey);
+		}
+
+		$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
+		return $result;
 	}
 
 /**
@@ -178,12 +188,19 @@ class MailSetting extends MailsAppModel {
 	public function getMailSettingSystem($typeKey) {
 		$pluginKey = Current::read('Plugin.key');
 
-		// $pluginKey, $typeKeyで、mail_settings を SELECT する
+		// $pluginKeyで SELECT する
 		$conditions = array(
 			'plug_key' => $pluginKey,
-			'type_key' => $typeKey,
+			//'type_key' => $typeKey,
 		);
-		return $this->getMailSetting($conditions);
+		$mailSetting = $this->getMailSetting($conditions);
+
+		// $blockKey, $typeKeyでSELECT する
+		$conditions['type_key'] = $typeKey;
+		$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
+
+		$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
+		return $result;
 	}
 
 /**

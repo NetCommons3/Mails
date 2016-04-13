@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
  * @package NetCommons\Mails\Model
  * @property MailQueue $MailQueue
  * @property MailQueueUser $MailQueueUser
+ * @property MailSettingFixedPhrase $MailSettingFixedPhrase
  * @property User $User
  * @property Room $Room
  */
