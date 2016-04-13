@@ -10,7 +10,7 @@
  */
 
 App::uses('NetCommonsMail', 'Mails.Utility');
-App::uses('MailSetting', 'Mails.Model');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
 App::uses('DefaultRolePermission', 'Roles.Model');
@@ -395,7 +395,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param int $useReminder リマインダー使うか
  * @return bool
  */
-	public function isMailSend(Model $model, $typeKey = MailSetting::DEFAULT_TYPE, $useReminder = null) {
+	public function isMailSend(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $useReminder = null) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$pluginKey = Current::read('Plugin.key');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -534,7 +534,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveQueueReminder(Model $model) {
 		// メールを送るかどうか
-		if (! $this->isMailSend($model, MailSetting::DEFAULT_TYPE, 1)) {
+		if (! $this->isMailSend($model, MailSettingFixedPhrase::DEFAULT_TYPE, 1)) {
 			return true;
 		}
 
@@ -559,7 +559,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $typeKey メールの種類
  * @return bool
  */
-	public function saveQueue(Model $model, $sendTimes, $typeKey = MailSetting::DEFAULT_TYPE) {
+	public function saveQueue(Model $model, $sendTimes, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -617,7 +617,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return int メールキューID
  * @throws InternalErrorException
  */
-	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null, $toAddresses = null, $typeKey = MailSetting::DEFAULT_TYPE) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null, $toAddresses = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		if ($sendTimes === null) {
 			$sendTimes[] = $this->__getSaveSendTime();
 		}
@@ -730,7 +730,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveQueueAnswerMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
+	private function __saveQueueAnswerMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$toAddresses = $this->settings[$model->alias]['toAddresses'];
 		$userIds = $this->settings[$model->alias]['userIds'];
 
@@ -848,7 +848,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE) {
+	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
@@ -954,7 +954,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSetting::DEFAULT_TYPE, $fixedPhraseType = null) {
+	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
 		$settingPluginKey = $this->__getSettingPluginKey($model);
 
 		/** @see MailSetting::getMailSettingPlugin() */

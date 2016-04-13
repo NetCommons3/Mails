@@ -27,7 +27,7 @@ if (! isset($cancelUrl)) {
 	$cancelUrl = null;
 }
 if (! isset($mailTypeKey)) {
-	$mailTypeKey = MailSetting::DEFAULT_TYPE;
+	$mailTypeKey = MailSettingFixedPhrase::DEFAULT_TYPE;
 }
 if (! isset($useNoticeAuthority)) {
 	$useNoticeAuthority = 1;

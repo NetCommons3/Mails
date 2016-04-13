@@ -21,14 +21,6 @@ App::uses('MailSettingFixedPhrase', 'Mails.Model');
 class MailSetting extends MailsAppModel {
 
 /**
- * typeのデフォルト値
- * ！！！MailSettingFixedPhrase　に移動予定
- *
- * @var int
- */
-	const DEFAULT_TYPE = 'contents';
-
-/**
  * Validation rules
  *
  * @var array
