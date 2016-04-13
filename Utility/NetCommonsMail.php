@@ -420,6 +420,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->body = str_replace("\r", "\n", $this->body);
 		// テキストのブロックを決められた幅で折り返す
 		// http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap
+		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなる
 		$this->body = CakeText::wrap($this->body, $this::MAX_LINE_LENGTH);
 	}
 
