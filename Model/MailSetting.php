@@ -43,18 +43,9 @@ class MailSetting extends MailsAppModel {
  * @see OriginalKeyBehavior
  */
 	public $actsAs = array(
-		//'NetCommons.OriginalKey',
 		'Blocks.BlockRolePermission',
 		'Mails.MailQueueDelete',
 	);
-
-/**
- * hasMany associations.
- *
- * @var array
- * @link http://book.cakephp.org/2.0/ja/models/associations-linking-models-together.html#hasmany
- */
-	public $hasMany = 'MailSettingFixedPhrase';
 
 /**
  * beforeValidate

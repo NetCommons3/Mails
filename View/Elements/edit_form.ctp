@@ -39,10 +39,13 @@ if (! isset($useReplayTo)) {
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.language_id', array('value' => Current::read('Language.id'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
 	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.type_key', array('value' => $mailTypeKey)); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.id'); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.language_id', array('value' => Current::read('Language.id'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.block_key', array('value' => Current::read('Block.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.type_key', array('value' => $mailTypeKey)); ?>
 
 	<div class="panel panel-default">
 		<div class="panel-body">
@@ -76,14 +79,14 @@ if (! isset($useReplayTo)) {
 					</div>
 				<?php endif; ?>
 
-				<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_subject', array(
+				<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_subject', array(
 					'type' => 'text',
 					'label' => __d('mails', 'Subject'),
 					'required' => true,
 				)); ?>
 
 				<div class="form-group">
-					<?php echo $this->NetCommonsForm->input('MailSetting.mail_fixed_phrase_body', array(
+					<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_body', array(
 						'type' => 'textarea',
 						'label' => __d('mails', 'Body'),
 						'required' => true,

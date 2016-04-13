@@ -31,6 +31,7 @@ App::uses('AppController', 'Controller');
  * @author Shohei Nakajima <nakajimashouhei@gmail.com>
  * @package NetCommons\Mails\Controller
  * @property MailSetting $MailSetting
+ * @property MailSettingFixedPhrase $MailSettingFixedPhrase
  */
 class MailSettingsController extends AppController {
 
@@ -64,6 +65,7 @@ class MailSettingsController extends AppController {
  */
 	public $uses = array(
 		'Mails.MailSetting',
+		'Mails.MailSettingFixedPhrase',
 	);
 
 /**
@@ -73,18 +75,26 @@ class MailSettingsController extends AppController {
  */
 	public function edit() {
 		if ($this->request->is('post') || $this->request->is('put')) {
-			if ($this->MailSetting->saveMailSetting($this->request->data)) {
+			$mailSetting = $this->MailSetting->saveMailSetting($this->request->data);
+
+			$data['MailSettingFixedPhrase'] = $this->request->data['MailSettingFixedPhrase'];
+			$data['MailSettingFixedPhrase']['mail_setting_id'] = $mailSetting['MailSetting']['id'];
+			$MailSettingFixedPhrase = $this->MailSettingFixedPhrase->saveMailSettingFixedPhrase($data);
+
+			if ($mailSetting && $MailSettingFixedPhrase) {
 				$this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
 				return;
 			}
 			$this->NetCommons->handleValidationError($this->MailSetting->validationErrors);
+			$this->NetCommons->handleValidationError($this->MailSettingFixedPhrase->validationErrors);
 			$this->request->data['BlockRolePermission'] = Hash::merge(
 				$this->viewVars['permissions']['BlockRolePermissions'],
 				$this->request->data['BlockRolePermission']
 			);
 		} else {
-			$mailSetting = $this->MailSetting->getMailSettingPlugin();
-			$this->request->data['MailSetting'] = $mailSetting['MailSetting'];
+			$mailSettingPlugin = $this->MailSetting->getMailSettingPlugin();
+			$this->request->data['MailSetting'] = $mailSettingPlugin['MailSetting'];
+			$this->request->data['MailSettingFixedPhrase'] = $mailSettingPlugin['MailSettingFixedPhrase'];
 			$this->request->data['BlockRolePermission'] = $this->viewVars['permissions']['BlockRolePermissions'];
 			$this->request->data['Frame'] = Current::read('Frame');
 		}
