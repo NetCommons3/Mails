@@ -417,8 +417,8 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSetting = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $pluginKey);
-		$isMailSend = Hash::get($mailSetting, 'MailSetting.is_mail_send');
+		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $pluginKey);
+		$isMailSend = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send');
 
 		// プラグイン設定でメール通知を使わないなら、メール送らない
 		if (! $isMailSend) {
@@ -958,9 +958,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$settingPluginKey = $this->__getSettingPluginKey($model);
 
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettings = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
-
-		$replyTo = Hash::get($mailSettings, 'MailSetting.replay_to');
+		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
+		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		if (empty($replyTo)) {
 			$replyTo = null;
 		}
@@ -974,9 +973,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$mail = new NetCommonsMail();
 		$mail->initPlugin($languageId, $pluginName);
 		if (isset($fixedPhraseType)) {
-			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettings);
+			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin);
 		} else {
-			$mail->setMailFixedPhrasePlugin($mailSettings);
+			$mail->setMailFixedPhrasePlugin($mailSettingPlugin);
 		}
 		$mail->setReplyTo($replyTo);
 

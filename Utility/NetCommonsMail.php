@@ -240,13 +240,13 @@ class NetCommonsMail extends CakeEmail {
 /**
  * プラグインの定型文 セット
  *
- * @param array $mailSetting メール設定データ
+ * @param array $mailSettingPlugin メール設定データ
  * @return void
  */
-	public function setMailFixedPhrasePlugin($mailSetting) {
-		$subject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
-		$body = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
-		$replyTo = Hash::get($mailSetting, 'MailSetting.replay_to');
+	public function setMailFixedPhrasePlugin($mailSettingPlugin) {
+		$subject = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_subject');
+		$body = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_body');
+		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 
 		// 定型文をセット
 		$this->setSubject($subject);
@@ -260,10 +260,10 @@ class NetCommonsMail extends CakeEmail {
  *
  * @param int $languageId 言語ID
  * @param string $fixedPhraseType 定型文の種類
- * @param array $mailSetting プラグイン側のメール設定データ
+ * @param array $mailSettingPlugin プラグイン側のメール設定データ
  * @return void
  */
-	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSetting = null) {
+	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin = null) {
 		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'], $languageId . '.value');
 		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'], $languageId . '.value');
 
@@ -271,12 +271,12 @@ class NetCommonsMail extends CakeEmail {
 		$this->setSubject($subject);
 		$this->setBody($body);
 
-		if ($mailSetting === null) {
+		if ($mailSettingPlugin === null) {
 			return;
 		}
 
-		$pluginSubject = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_subject');
-		$pluginBody = Hash::get($mailSetting, 'MailSetting.mail_fixed_phrase_body');
+		$pluginSubject = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_subject');
+		$pluginBody = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_body');
 		$this->assignTag('X-PLUGIN_MAIL_SUBJECT', $pluginSubject);
 		$this->assignTag('X-PLUGIN_MAIL_BODY', $pluginBody);
 	}
