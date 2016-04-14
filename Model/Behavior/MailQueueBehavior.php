@@ -12,8 +12,6 @@
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
-App::uses('ComponentCollection', 'Controller');
-App::uses('DefaultRolePermission', 'Roles.Model');
 
 /**
  * メールキュー Behavior
@@ -91,7 +89,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
 		$model->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting', true);
-		$model->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser', true);
+		//$model->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser', true);
 	}
 
 /**
@@ -812,7 +810,9 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishable);
+		//$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishable);
+		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
+		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($publishable);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 			// MailQueueUserは新規登録
@@ -861,7 +861,9 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		//$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
+		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
+		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission('content_publishable');
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
 		$createdUserId = $this->__getCreatedUserId($model);
 		if (in_array($createdUserId, $rolesRoomsUserIds)) {
@@ -870,8 +872,9 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 定型文の種類
+		$mailAssignTag = new NetCommonsMailAssignTag();
 		$status = Hash::get($model->data, $model->alias . '.status');
-		$fixedPhraseType = $this->__getFixedPhraseType($status);
+		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status);
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
 		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
@@ -886,64 +889,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->__saveMailQueueUserInCreatedUser($model, $mailQueueId);
 		// ルーム内の承認者達に配信
 		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
-	}
-
-/**
- * SiteSettingの定型文の種類 ゲット
- *
- * @param string $status 承認ステータス
- * @return string
- * @throws InternalErrorException
- */
-	private function __getFixedPhraseType($status) {
-		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-			// --- 公開
-			// 承認完了通知メール
-			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
-
-		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-			// --- 承認依頼
-			// 承認依頼通知メール
-			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL;
-
-		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
-			// --- 差戻し
-			// 差戻し通知メール
-			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
-		}
-		return null;
-	}
-
-/**
- * ルーム内で該当パーミッションありのユーザ ゲット
- *
- * @param Model $model モデル
- * @param string $permission パーミッション
- * @param string $roomId ルームID
- * @return array
- */
-	private function __getRolesRoomsUsersByPermission(Model $model, $permission, $roomId = null) {
-		if ($roomId === null) {
-			$roomId = Current::read('Room.id');
-		}
-
-		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
-		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permission), DefaultRolePermission::TYPE_ROOM_ROLE);
-		foreach ($permissions['RoomRolePermission'][$permission] as $key => $roomRolePermission) {
-			if (!$roomRolePermission['value']) {
-				unset($permissions['RoomRolePermission'][$permission][$key]);
-			}
-		}
-
-		//$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
-		$roleKeys = array_keys($permissions['RoomRolePermission'][$permission]);
-		$conditions = array(
-			'Room.id' => $roomId,
-			'RolesRoom.role_key' => $roleKeys,
-		);
-		$rolesRoomsUsers = $model->RolesRoomsUser->getRolesRoomsUsers($conditions);
-		return $rolesRoomsUsers;
 	}
 
 /**

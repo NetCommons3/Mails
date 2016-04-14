@@ -10,6 +10,8 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
+App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+
 /**
  * NetCommonsメール 埋め込みタグ Utility
  *
@@ -348,5 +350,31 @@ class NetCommonsMailAssignTag {
 		$tagLabel = __d('blogs', 'tag');
 		$tags = $tagLabel . ':' . $tags;
 		return $tags;
+	}
+
+/**
+ * SiteSettingの定型文の種類 ゲット
+ *
+ * @param string $status 承認ステータス
+ * @return string
+ * @throws InternalErrorException
+ */
+	public function getFixedPhraseType($status) {
+		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+			// --- 公開
+			// 承認完了通知メール
+			return self::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
+
+		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+			// --- 承認依頼
+			// 承認依頼通知メール
+			return self::SITE_SETTING_FIXED_PHRASE_APPROVAL;
+
+		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
+			// --- 差戻し
+			// 差戻し通知メール
+			return self::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
+		}
+		return null;
 	}
 }

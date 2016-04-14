@@ -10,6 +10,9 @@
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
+App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('ComponentCollection', 'Controller');
+App::uses('DefaultRolePermission', 'Roles.Model');
 
 /**
  * メールキュー送信先
@@ -200,5 +203,41 @@ class MailQueueUser extends MailsAppModel {
 		}
 
 		return true;
+	}
+
+/**
+ * ルーム内で該当パーミッションありのユーザ ゲット
+ * - MailQueueUser に 複数saveするために必要
+ *
+ * @param string $permission パーミッション
+ * @param string $roomId ルームID
+ * @return array
+ */
+	public function getRolesRoomsUsersByPermission($permission, $roomId = null) {
+		$this->loadModels(array(
+			'RolesRoomsUser' => 'Rooms.RolesRoomsUser',
+		));
+
+		if ($roomId === null) {
+			$roomId = Current::read('Room.id');
+		}
+
+		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
+		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
+		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permission), DefaultRolePermission::TYPE_ROOM_ROLE);
+		foreach ($permissions['RoomRolePermission'][$permission] as $key => $roomRolePermission) {
+			if (!$roomRolePermission['value']) {
+				unset($permissions['RoomRolePermission'][$permission][$key]);
+			}
+		}
+
+		//$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
+		$roleKeys = array_keys($permissions['RoomRolePermission'][$permission]);
+		$conditions = array(
+			'Room.id' => $roomId,
+			'RolesRoom.role_key' => $roleKeys,
+		);
+		$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
+		return $rolesRoomsUsers;
 	}
 }

@@ -20,6 +20,7 @@ App::uses('AppModel', 'Model');
  * @property MailQueueUser $MailQueueUser
  * @property MailSettingFixedPhrase $MailSettingFixedPhrase
  * @property User $User
+ * @property RolesRoomsUser $RolesRoomsUser
  * @property Room $Room
  */
 class MailsAppModel extends AppModel {
