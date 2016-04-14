@@ -281,7 +281,6 @@ class NetCommonsMailAssignTag {
 			unset($this->assignTags['X-BODY']);
 		}
 
-
 		foreach ($this->assignTags as $key => $value) {
 			if ($messageType == 'text') {
 				$this->fixedPhraseBody = str_replace('{' . $key . '}', h($value), $this->fixedPhraseBody);
