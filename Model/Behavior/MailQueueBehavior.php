@@ -81,7 +81,7 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		}
 
-		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
+		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
@@ -1055,11 +1055,9 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// --- 追加の埋め込みタグ セット
-		if (isset($this->settings[$model->alias]['addEmbedTagsValues'])) {
-			// 既にセットされているタグであっても、上書きされる
-			foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
-				$assignTags[$embedTag] = $value;
-			}
+		// 既にセットされているタグであっても、上書きされる
+		foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
+			$assignTags[$embedTag] = $value;
 		}
 
 		return $assignTags;
