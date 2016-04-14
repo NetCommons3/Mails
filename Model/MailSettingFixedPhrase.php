@@ -99,26 +99,26 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			'block_key' => null,
 			'type_key' => $typeKey,
 		);
-		$mailSettingFixedPhrase = $this->getMailSettingFixedPhrase($conditions);
-		if ($mailSettingFixedPhrase) {
-			$mailSettingFixedPhrase = Hash::remove($mailSettingFixedPhrase, '{s}.id');
+		$mailFixedPhrase = $this->getMailSettingFixedPhrase($conditions);
+		if ($mailFixedPhrase) {
+			$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.id');
 		} else {
-			$mailSettingFixedPhrase = $this->create();
+			$mailFixedPhrase = $this->create();
 		}
 
 		//初期データセット
-		if (! $mailSettingFixedPhrase[$this->alias]['mail_fixed_phrase_subject']) {
-			$mailSettingFixedPhrase[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
+		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject']) {
+			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
 		}
-		if (! $mailSettingFixedPhrase[$this->alias]['mail_fixed_phrase_body']) {
-			$mailSettingFixedPhrase[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
+		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_body']) {
+			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
 		}
-		$mailSettingFixedPhrase = Hash::remove($mailSettingFixedPhrase, '{s}.created');
-		$mailSettingFixedPhrase = Hash::remove($mailSettingFixedPhrase, '{s}.created_user');
-		$mailSettingFixedPhrase = Hash::remove($mailSettingFixedPhrase, '{s}.modified');
-		$mailSettingFixedPhrase = Hash::remove($mailSettingFixedPhrase, '{s}.modified_user');
+		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created');
+		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created_user');
+		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.modified');
+		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.modified_user');
 
-		return $mailSettingFixedPhrase;
+		return $mailFixedPhrase;
 	}
 
 /**
@@ -155,7 +155,7 @@ class MailSettingFixedPhrase extends MailsAppModel {
 
 		try {
 			// 保存
-			if (! $mailSettingFixedPhrase = $this->save(null, false)) {
+			if (! $mailFixedPhrase = $this->save(null, false)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
@@ -167,6 +167,6 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			$this->rollback($ex);
 		}
 
-		return $mailSettingFixedPhrase;
+		return $mailFixedPhrase;
 	}
 }

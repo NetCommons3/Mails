@@ -81,7 +81,6 @@ class MailSetting extends MailsAppModel {
  * @return array メール設定データ配列
  */
 	public function createMailSetting($pluginKey = null) {
-		//public function createMailSetting($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
 		$this->loadModels(array(
 			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
 		));
@@ -92,7 +91,6 @@ class MailSetting extends MailsAppModel {
 
 		//デフォルトデータ取得
 		$conditions = array(
-			//'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
 			'block_key' => null,
 		);
@@ -107,10 +105,6 @@ class MailSetting extends MailsAppModel {
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified');
 		$mailSetting = Hash::remove($mailSetting, '{s}.modified_user');
 
-		//$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey, $pluginKey);
-
-		//$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
-		//return $result;
 		return $mailSetting;
 	}
 
@@ -140,10 +134,8 @@ class MailSetting extends MailsAppModel {
 
 		// $blockKeyで SELECT する
 		$conditions = array(
-			//'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
-			//'type_key' => $typeKey,
 		);
 		$mailSetting = $this->getMailSetting($conditions);
 		if (! $mailSetting) {
@@ -153,12 +145,12 @@ class MailSetting extends MailsAppModel {
 		// $blockKey, $typeKeyでSELECT する
 		$conditions['language_id'] = $languageId;
 		$conditions['type_key'] = $typeKey;
-		$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
-		if (! $mailSettingFixedPhrase) {
-			$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey);
+		$mailFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
+		if (! $mailFixedPhrase) {
+			$mailFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey);
 		}
 
-		$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
+		$result = Hash::merge($mailSetting, $mailFixedPhrase);
 		return $result;
 	}
 
@@ -180,9 +172,9 @@ class MailSetting extends MailsAppModel {
 
 		// $blockKey, $typeKeyでSELECT する
 		$conditions['type_key'] = $typeKey;
-		$mailSettingFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
+		$mailFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
 
-		$result = Hash::merge($mailSetting, $mailSettingFixedPhrase);
+		$result = Hash::merge($mailSetting, $mailFixedPhrase);
 		return $result;
 	}
 
