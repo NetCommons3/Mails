@@ -89,7 +89,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
 		$model->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting', true);
-		//$model->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser', true);
 	}
 
 /**
