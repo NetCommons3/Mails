@@ -318,7 +318,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	private function __isPublishableEdit(Model $model) {
-		if (Current::permission('content_comment_publishable')) {
+		if (!Current::permission('content_comment_publishable')) {
 			// 公開権限なし
 			return false;
 		}
