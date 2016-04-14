@@ -459,16 +459,9 @@ class MailQueueBehavior extends ModelBehavior {
 			return false;
 		}
 
-		// プラグインキー
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$pluginKey = Current::read('Plugin.key');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// コンテンツコメントは使ってくれているプラグインのキーでメール設定取得
-			$pluginKey = $model->data[$model->alias]['plugin_key'];
-		}
-
+		$settingPluginKey = $this->__getSettingPluginKey($model);
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $pluginKey);
+		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $settingPluginKey);
 		$isMailSend = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send');
 
 		// プラグイン設定でメール通知を使わないなら、メール送らない
