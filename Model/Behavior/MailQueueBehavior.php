@@ -863,23 +863,9 @@ class MailQueueBehavior extends ModelBehavior {
 			return;
 		}
 
-		$fixedPhraseType = null;
+		// 定型文の種類
 		$status = Hash::get($model->data, $model->alias . '.status');
-		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-			// --- 公開
-			// 承認完了通知メール
-			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
-
-		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-			// --- 承認依頼
-			// 承認依頼通知メール
-			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL;
-
-		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
-			// --- 差戻し
-			// 差戻し通知メール
-			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
-		}
+		$fixedPhraseType = $this->__getFixedPhraseType($status);
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
 		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
@@ -894,6 +880,32 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->__saveMailQueueUserInCreatedUser($model, $mailQueueId);
 		// ルーム内の承認者達に配信
 		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
+	}
+
+/**
+ * SiteSettingの定型文の種類 ゲット
+ *
+ * @param string $status 承認ステータス
+ * @return string
+ * @throws InternalErrorException
+ */
+	private function __getFixedPhraseType($status) {
+		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+			// --- 公開
+			// 承認完了通知メール
+			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
+
+		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+			// --- 承認依頼
+			// 承認依頼通知メール
+			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL;
+
+		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
+			// --- 差戻し
+			// 差戻し通知メール
+			return NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
+		}
+		return null;
 	}
 
 /**
