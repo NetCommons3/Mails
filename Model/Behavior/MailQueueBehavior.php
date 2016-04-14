@@ -918,13 +918,11 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// --- 埋め込みタグ
-		$url = $mailAssignTag->getXUrl($contentKey);
-		$mailAssignTag->assignTag('X-URL', $url);
+		$mailAssignTag->setXUrl($contentKey);
 
 		// ワークフロー
 		if ($model->Behaviors->loaded('Workflow.Workflow')) {
-			$workflowComment = $mailAssignTag->getXWorkflowComment($fixedPhraseType, $model->data);
-			$mailAssignTag->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+			$mailAssignTag->setXWorkflowComment($fixedPhraseType, $model->data);
 		}
 
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
@@ -938,8 +936,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 定型文の埋め込みタグをセット
-		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
-		foreach ($embedTags as $embedTag => $dataKey) {
+		foreach ($this->settings[$model->alias]['embedTags'] as $embedTag => $dataKey) {
 			$dataValue = Hash::get($model->data, $dataKey);
 			$mailAssignTag->assignTag($embedTag, $dataValue);
 		}

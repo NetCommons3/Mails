@@ -300,12 +300,12 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
- * 埋め込みタグ{X-URL}の値 ゲット
+ * 埋め込みタグ{X-URL} セット
  *
  * @param string $contentKey コンテンツキー
- * @return string X-URLの値
+ * @return void
  */
-	public function getXUrl($contentKey) {
+	public function setXUrl($contentKey) {
 		// fullpassのURL
 		$url = NetCommonsUrl::actionUrl(array(
 			'controller' => Current::read('Plugin.key'),
@@ -315,18 +315,18 @@ class NetCommonsMailAssignTag {
 			'key' => $contentKey
 		));
 		$url = NetCommonsUrl::url($url, true);
-		return $url;
+		$this->assignTag('X-URL', $url);
 	}
 
 /**
- * 埋め込みタグ{X-WORKFLOW_COMMENT}の値 ゲット
+ * 埋め込みタグ{X-WORKFLOW_COMMENT} セット
  *
  * @param string $fixedPhraseType コンテンツキー
  * @param array $data saveしたデータ
- * @return string X-WORKFLOW_COMMENTの値
+ * @return void
  */
-	public function getXWorkflowComment($fixedPhraseType, $data) {
-		$workflowComment = '';
+	public function setXWorkflowComment($fixedPhraseType, $data) {
+		$this->assignTag('X-WORKFLOW_COMMENT', '');
 		if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
 			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
 			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
@@ -334,8 +334,8 @@ class NetCommonsMailAssignTag {
 			$workflowComment = Hash::get($data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
 			$workflowComment = $commentLabel . ":\n" . $workflowComment;
+			$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
 		}
-		return $workflowComment;
 	}
 
 /**
