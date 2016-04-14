@@ -509,7 +509,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
-
 		if (! $useReminder) {
 			return true;
 		}
