@@ -11,10 +11,10 @@
  */
 
 App::uses('CakeEmail', 'Network/Email');
-App::uses('ConvertHtml', 'Mails.Utility');
 App::uses('SiteSetting', 'SiteManager.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
+App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 
 /**
  * NetCommonsメール Utility
@@ -31,41 +31,24 @@ App::uses('ComponentCollection', 'Controller');
 class NetCommonsMail extends CakeEmail {
 
 /**
- * @var int メール本文の1行の最大文字数
- */
-	const MAX_LINE_LENGTH = 300;
-
-/**
- * SiteSettingの定型文の種類
- *
- * @var string 承認依頼通知
- * @var string 差戻し通知
- * @var string 承認完了通知
- */
-	const
-		SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval',
-		SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval',
-		SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
-
-/**
- * @var string 件名(定型文)
+ * @var string 件名
  */
 	public $subject = null;
 
 /**
- * @var string|array 本文(定型文)
+ * @var string|array 本文
  */
 	public $body = null;
-
-/**
- * @var array 埋め込みタグ
- */
-	public $assignTags = array();
 
 /**
  * @var array SiteSetting model data
  */
 	public $siteSetting = null;
+
+/**
+ * @var NetCommonsMailAssignTag 埋め込みタグ Utility
+ */
+	public $mailAssignTag = null;
 
 /**
  * Constructor
@@ -81,6 +64,8 @@ class NetCommonsMail extends CakeEmail {
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
 		$this->User = ClassRegistry::init('Users.user');
+
+		$this->mailAssignTag = new NetCommonsMailAssignTag();
 	}
 
 /**
@@ -103,20 +88,12 @@ class NetCommonsMail extends CakeEmail {
 				'Mail.smtp.port',
 				'Mail.smtp.user',
 				'Mail.smtp.pass',
-				'App.site_name',
-				'Workflow.approval_mail_subject',
-				'Workflow.approval_mail_body',
-				'Workflow.disapproval_mail_subject',
-				'Workflow.disapproval_mail_body',
-				'Workflow.approval_completion_mail_subject',
-				'Workflow.approval_completion_mail_body',
-				'Mail.body_header',
-				'Mail.signature',
 			)
 		));
 
 		$this->__initConfig();
-		$this->__setTags($languageId, $pluginName);
+		//$this->__setTags($languageId, $pluginName);
+		$this->mailAssignTag->initTags($languageId, $pluginName);
 	}
 
 /**
@@ -189,111 +166,6 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * 初期設定 タグ
- *
- * @param int $languageId 言語ID
- * @param string $pluginName プラグイン名
- * @return void
- */
-	private function __setTags($languageId, $pluginName = null) {
-		if ($pluginName === null) {
-			$pluginName = Current::read('Plugin.name');
-		}
-		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
-		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
-		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
-		$bodyHeader = Hash::get($this->siteSetting['Mail.body_header'], $languageId . '.value');
-		$signature = Hash::get($this->siteSetting['Mail.signature'], $languageId . '.value');
-
-		$netCommonsTime = new NetCommonsTime();
-		$siteimezone = $netCommonsTime->getSiteTimezone();
-		$now = NetCommonsTime::getNowDatetime();
-		$date = new DateTime($now);
-		$date->setTimezone(new DateTimeZone($siteimezone));
-		$siteNow = $date->format('Y/m/d H:i:s');
-
-		$this->assignTag('X-FROM_EMAIL', $from);
-		$this->assignTag('X-FROM_NAME', htmlspecialchars($fromName));
-		$this->assignTag('X-SITE_NAME', htmlspecialchars($siteName));
-		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
-		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
-		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
-		$this->assignTag('X-USER', htmlspecialchars(Current::read('User.handlename')));
-		$this->assignTag('X-TO_DATE', $siteNow);
-		$this->assignTag('X-BODY_HEADER', $bodyHeader);
-		$this->assignTag('X-SIGNATURE', $signature);
-
-		// X-ROOMタグ
-		$roomId = Current::read('Room.id');
-		$roomsLanguage = $this->RoomsLanguage->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'room_id' => $roomId,
-				'language_id' => $languageId,
-			),
-			'callbacks' => false,
-		));
-		$roomName = Hash::get($roomsLanguage, 'RoomsLanguage.name');
-		$this->assignTag('X-ROOM', htmlspecialchars($roomName));
-	}
-
-/**
- * プラグインの定型文 セット
- *
- * @param array $mailSettingPlugin メール設定データ
- * @return void
- */
-	public function setMailFixedPhrasePlugin($mailSettingPlugin) {
-		$subject = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_subject');
-		$body = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_body');
-		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
-
-		// 定型文をセット
-		$this->setSubject($subject);
-		$this->setBody($body);
-
-		$this->setReplyTo($replyTo);
-	}
-
-/**
- * サイト設定の定型文 セット
- *
- * @param int $languageId 言語ID
- * @param string $fixedPhraseType 定型文の種類
- * @param array $mailSettingPlugin プラグイン側のメール設定データ
- * @return void
- */
-	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin = null) {
-		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'], $languageId . '.value');
-		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'], $languageId . '.value');
-
-		// 定型文をセット
-		$this->setSubject($subject);
-		$this->setBody($body);
-
-		if ($mailSettingPlugin === null) {
-			return;
-		}
-
-		$pluginSubject = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_subject');
-		$pluginBody = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_body');
-		$this->assignTag('X-PLUGIN_MAIL_SUBJECT', $pluginSubject);
-		$this->assignTag('X-PLUGIN_MAIL_BODY', $pluginBody);
-	}
-
-/**
- * 返信先アドレス セット
- *
- * @param string $replyTo 返信先アドレス
- * @return void
- */
-	public function setReplyTo($replyTo) {
-		if (! empty($replyTo)) {
-			parent::replyTo($replyTo);
-		}
-	}
-
-/**
  * メール送信する件名、本文をセット
  *
  * @param array $mailQueue メールキューデータ
@@ -308,14 +180,12 @@ class NetCommonsMail extends CakeEmail {
 		$body = Hash::get($mailQueue, 'MailQueue.mail_body');
 		$replyTo = Hash::get($mailQueue, 'MailQueue.replay_to');
 
-		// 定型文をセット
+		// 生文
 		$this->setSubject($subject);
 		$this->setBody($body);
 
 		// 返信先アドレス
-		if (! empty($replyTo)) {
-			parent::replyTo($replyTo);
-		}
+		$this->setReplyTo($replyTo);
 	}
 
 /**
@@ -339,6 +209,18 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
+ * 返信先アドレス セット
+ *
+ * @param string $replyTo 返信先アドレス
+ * @return void
+ */
+	public function setReplyTo($replyTo) {
+		if (! empty($replyTo)) {
+			parent::replyTo($replyTo);
+		}
+	}
+
+/**
  * 埋め込みタグの追加
  *
  * @param string $tag タグ
@@ -346,20 +228,7 @@ class NetCommonsMail extends CakeEmail {
  * @return array タグ
  */
 	public function assignTag($tag, $value = null) {
-		if (empty($tag)) {
-			return;
-		}
-		// $tagあり、$valueなしで、タグの値取得
-		if ($value === null) {
-			return Hash::get($this->assignTags, $tag);
-		}
-		// タグの両端空白なくして、大文字に変換
-		$tag = strtoupper(trim($tag));
-
-		// 頭に X- 付タグならセット
-		if (substr($tag, 0, 2) == 'X-') {
-			$this->assignTags[$tag] = $value;
-		}
+		$this->mailAssignTag->assignTag($tag, $value);
 	}
 
 /**
@@ -369,59 +238,7 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	public function assignTags($tags) {
-		foreach ($tags as $key => $value) {
-			$this->assignTag($key, $value);
-		}
-	}
-
-/**
- * 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
- *
- * @return array タグ
- */
-	public function assignTagReplace() {
-		// 承認系メールのタグは先に置換
-		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
-			$this->body = str_replace('{X-PLUGIN_MAIL_BODY}', $this->assignTags['X-PLUGIN_MAIL_BODY'], $this->body);
-			$this->subject = str_replace('{X-PLUGIN_MAIL_SUBJECT}', $this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->subject);
-			unset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY']);
-		}
-
-		// メール本文の共通ヘッダー文、署名追加
-		$this->body = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->body . "\n" . $this->assignTags['X-SIGNATURE'];
-		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
-
-		// URL
-		if (isset($this->assignTags['X-URL'])) {
-			if (parent::emailFormat() == 'text') {
-				$this->body = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->body);
-			} else {
-				$this->body = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->body);
-			}
-			unset($this->assignTags['X-URL']);
-		}
-
-		// 本文
-		if (isset($this->assignTags['X-BODY'])) {
-			$this->body = str_replace('{X-BODY}', h($this->assignTags['X-BODY']), $this->body);
-			unset($this->assignTags['X-BODY']);
-		}
-
-		foreach ($this->assignTags as $key => $value) {
-			if (parent::emailFormat() == 'text') {
-				$this->body = str_replace('{' . $key . '}', h($value), $this->body);
-			} else {
-				$this->body = str_replace('{' . $key . '}', $value, $this->body);
-			}
-			$this->subject = str_replace('{' . $key . '}', h($value), $this->subject);
-		}
-
-		$this->body = str_replace("\r\n", "\n", $this->body);
-		$this->body = str_replace("\r", "\n", $this->body);
-		// テキストのブロックを決められた幅で折り返す
-		// http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap
-		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなる
-		$this->body = CakeText::wrap($this->body, $this::MAX_LINE_LENGTH);
+		$this->mailAssignTag->assignTags($tags);
 	}
 
 /**
@@ -573,7 +390,8 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-		$this->assignTagReplace();
+		//$this->assignTagReplace();
+		$this->mailAssignTag->assignTagReplace();
 
 		// 改行対応
 		$this->brReplace();

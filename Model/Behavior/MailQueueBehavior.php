@@ -9,7 +9,7 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
-App::uses('NetCommonsMail', 'Mails.Utility');
+App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
@@ -884,17 +884,17 @@ class MailQueueBehavior extends ModelBehavior {
 		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 			// --- 公開
 			// 承認完了通知メール
-			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
+			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
 
 		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
 			// --- 承認依頼
 			// 承認依頼通知メール
-			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL;
+			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL;
 
 		} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
 			// --- 差戻し
 			// 差戻し通知メール
-			$fixedPhraseType = NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
+			$fixedPhraseType = NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
 		}
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
@@ -960,30 +960,26 @@ class MailQueueBehavior extends ModelBehavior {
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
-		if (empty($replyTo)) {
-			$replyTo = null;
-		}
-
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->__getPluginKey($model);
 		$pluginName = $this->__getPluginName($model);
 		$blockKey = Current::read('Block.key');
 
 		// メール生文の作成
-		$mail = new NetCommonsMail();
-		$mail->initPlugin($languageId, $pluginName);
+		$mailAssignTag = new NetCommonsMailAssignTag();
+		$mailAssignTag->initPlugin($languageId, $pluginName);
 		if (isset($fixedPhraseType)) {
-			$mail->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin);
+			$mailAssignTag->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin);
 		} else {
-			$mail->setMailFixedPhrasePlugin($mailSettingPlugin);
+			$mailAssignTag->setMailFixedPhrasePlugin($mailSettingPlugin);
 		}
-		$mail->setReplyTo($replyTo);
+		//$mailAssignTag->setReplyTo($replyTo);
 
 		$assignTags = $this->__getAssignTags($model, $fixedPhraseType);
-		$mail->assignTags($assignTags);
+		$mailAssignTag->assignTags($assignTags);
 
 		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
-		$mail->assignTagReplace();
+		$mailAssignTag->assignTagReplace();
 
 		//$replyTo = key($postMail->replyTo());
 		$mailQueue['MailQueue'] = array(
@@ -992,8 +988,8 @@ class MailQueueBehavior extends ModelBehavior {
 			'block_key' => $blockKey,
 			'content_key' => $contentKey,
 			'replay_to' => $replyTo,
-			'mail_subject' => $mail->subject,
-			'mail_body' => $mail->body,
+			'mail_subject' => $mailAssignTag->fixedPhraseSubject,
+			'mail_body' => $mailAssignTag->fixedPhraseBody,
 			'send_time' => null,
 		);
 
@@ -1007,7 +1003,7 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param string $fixedPhraseType SiteSettingの定型文の種類
- * @return NetCommonsMail
+ * @return array
  */
 	private function __getAssignTags(Model $model, $fixedPhraseType = null) {
 		$assignTags = array();
@@ -1034,9 +1030,9 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			$assignTags['X-WORKFLOW_COMMENT'] = '';
 
-		} elseif ($fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
-				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
-				$fixedPhraseType == NetCommonsMail::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
+		} elseif ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
+				$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
+				$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
 
 			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
 			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
