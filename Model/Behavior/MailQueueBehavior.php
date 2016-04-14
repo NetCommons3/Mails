@@ -809,7 +809,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 送信者データ取得
-		//$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishable);
 		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
 		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($publishable);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
@@ -860,7 +859,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
-		//$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, 'content_publishable');
 		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
 		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission('content_publishable');
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
