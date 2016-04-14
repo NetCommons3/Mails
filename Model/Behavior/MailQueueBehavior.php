@@ -1016,33 +1016,16 @@ class MailQueueBehavior extends ModelBehavior {
 		$assignTags['X-URL'] = $url;
 
 		// --- ワークフロー
-		// 承認使って公開以外の時、担当者へのコメントをメールに含める
-		$useWorkflow = $this->__getUseWorkflow($model);
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$status = Hash::get($model->data, $model->alias . '.status');
-		if (! $useWorkflow) {
-			$assignTags['X-WORKFLOW_COMMENT'] = '';
+		if ($model->Behaviors->loaded('Workflow.Workflow')) {
+			if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
+					$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
+					$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
 
-		} elseif ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			$assignTags['X-WORKFLOW_COMMENT'] = '';
-
-		} elseif ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
-				$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
-				$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
-
-			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-			$workflowComment = $commentLabel . ":\n" . $workflowComment;
-			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
-
-		} elseif ($status == WorkflowComponent::STATUS_PUBLISHED) {
-			$assignTags['X-WORKFLOW_COMMENT'] = '';
-
-		} else {
-			$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-			$workflowComment = $commentLabel . ":\n" . $workflowComment;
-			$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
+				$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
+				$commentLabel = __d('net_commons', 'Comments to the person in charge.');
+				$workflowComment = $commentLabel . ":\n" . $workflowComment;
+				$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
+			}
 		}
 
 		// --- タグプラグイン
