@@ -79,9 +79,9 @@ class MailSettingsController extends AppController {
 
 			$data['MailSettingFixedPhrase'] = $this->request->data['MailSettingFixedPhrase'];
 			$data['MailSettingFixedPhrase']['mail_setting_id'] = $mailSetting['MailSetting']['id'];
-			$MailSettingFixedPhrase = $this->MailSettingFixedPhrase->saveMailSettingFixedPhrase($data);
+			$mailFixedPhrase = $this->MailSettingFixedPhrase->saveMailSettingFixedPhrase($data);
 
-			if ($mailSetting && $MailSettingFixedPhrase) {
+			if ($mailSetting && $mailFixedPhrase) {
 				$this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
 				return;
 			}
