@@ -73,6 +73,9 @@ class MailQueueBehavior extends ModelBehavior {
 		if (!isset($this->settings[$model->alias]['keyField'])) {
 			$this->settings[$model->alias]['keyField'] = 'key';
 		}
+		if (!isset($this->settings[$model->alias]['pluginKey'])) {
+			$this->settings[$model->alias]['pluginKey'] = Current::read('Plugin.key');
+		}
 		if (!isset($this->settings[$model->alias]['reminder'])) {
 			$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 			$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
@@ -254,22 +257,6 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __getContentKey(Model $model) {
 		$keyField = $this->settings[$model->alias]['keyField'];
 		return $model->data[$model->alias][$keyField];
-	}
-
-/**
- * プラグインキー ゲット
- *
- * @param Model $model モデル
- * @return string コンテンツキー
- */
-	private function __getPluginKey(Model $model) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// コンテンツコメントは pluginsテーブルに登録なしで Current::read('Plugin') とれないため、ここで直セット
-			return 'content_comments';
-		}
-		// 通常
-		return Current::read('Plugin.key');
 	}
 
 /**
@@ -620,7 +607,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
 
 		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
+		$pluginKey = $this->settings[$model->alias]['pluginKey'];
+
 		$blockKey = Current::read('Block.key');
 
 		// MailQueueUserは新規登録
@@ -760,7 +748,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
+		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 		$blockKey = Current::read('Block.key');
 
 		$mailQueueUser['MailQueueUser'] = array(
@@ -796,7 +784,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveMailQueueUserInRoomsAuthorizer(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
+		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 		$blockKey = Current::read('Block.key');
 
 		// MailQueueUserは新規登録
@@ -957,7 +945,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		$contentKey = $this->__getContentKey($model);
-		$pluginKey = $this->__getPluginKey($model);
+		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 		$pluginName = $this->__getPluginName($model);
 		$blockKey = Current::read('Block.key');
 
