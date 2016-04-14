@@ -21,6 +21,18 @@ App::uses('MailSend', 'Mails.Utility');
 class MailsUtilityMailSendSendTest extends NetCommonsCakeTestCase {
 
 /**
+ * Fixtures
+ *
+ * @var array
+ */
+	public $fixtures = array(
+		'plugin.mails.mail_queue',
+		'plugin.mails.mail_queue_user',
+		'plugin.mails.mail_setting',
+		'plugin.mails.mail_setting_fixed_phrase',
+	);
+
+/**
  * Plugin name
  *
  * @var string
