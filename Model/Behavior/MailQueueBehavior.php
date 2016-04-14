@@ -800,13 +800,13 @@ class MailQueueBehavior extends ModelBehavior {
 		);
 
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$publishablePermission = 'content_publishable';
+		$publishable = 'content_publishable';
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			$publishablePermission = 'content_comment_publishable';
+			$publishable = 'content_comment_publishable';
 		}
 
 		// 送信者データ取得
-		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishablePermission);
+		$rolesRoomsUsers = $this->__getRolesRoomsUsersByPermission($model, $publishable);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 			// MailQueueUserは新規登録
