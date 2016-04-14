@@ -638,25 +638,13 @@ class MailQueueBehavior extends ModelBehavior {
 
 			if (isset($userIds)) {
 				// --- ユーザIDに配信
-				foreach ($userIds as $userId) {
-					$mailQueueUser['MailQueueUser']['user_id'] = $userId;
-					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-					/** @see MailQueueUser::saveMailQueueUser() */
-					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-					}
-				}
+				/** @see MailQueueUser::addMailQueueUsers() */
+				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $userIds);
 
 			} elseif (isset($toAddresses)) {
 				// --- メールアドレスに配信
-				foreach ($toAddresses as $toAddress) {
-					$mailQueueUser['MailQueueUser']['to_address'] = $toAddress;
-					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-					/** @see MailQueueUser::saveMailQueueUser() */
-					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-					}
-				}
+				/** @see MailQueueUser::addMailQueueUsers() */
+				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'to_address', $toAddresses);
 
 			} else {
 				// --- ルーム配信
@@ -691,13 +679,8 @@ class MailQueueBehavior extends ModelBehavior {
 				$addUserIds = array_unique($addUserIds);
 
 				// 追加のユーザ達に配信
-				foreach ($addUserIds as $addUserId) {
-					$mailQueueUser['MailQueueUser']['user_id'] = $addUserId;
-					$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-					if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-						throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-					}
-				}
+				/** @see MailQueueUser::addMailQueueUsers() */
+				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
 			}
 		}
 

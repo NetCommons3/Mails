@@ -113,6 +113,25 @@ class MailQueueUser extends MailsAppModel {
 	);
 
 /**
+ * キューの配信先データ登録(複数)
+ *
+ * @param array $mailQueueUser received post data
+ * @param string $filed 一部だけ変更するフィールド
+ * @param array $values 一部だけ変更するフィールドの値(配列)
+ * @return void
+ * @throws InternalErrorException
+ */
+	public function addMailQueueUsers($mailQueueUser, $filed, $values) {
+		foreach ($values as $value) {
+			$mailQueueUser['MailQueueUser'][$filed] = $value;
+			$mailQueueUser = $this->create($mailQueueUser);
+			if (! self::saveMailQueueUser($mailQueueUser)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+		}
+	}
+
+/**
  * キューの配信先データ保存 - （誰に）
  *
  * セットするパターンが３つ。いずれかをセットする
