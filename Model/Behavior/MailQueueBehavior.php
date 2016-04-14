@@ -371,25 +371,88 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * メールを送るかどうか
+ * 通常の投稿メールを送るかどうか
  *
  * @param Model $model モデル
  * @param string $typeKey メールの種類
- * @param int $useReminder リマインダー使うか
  * @return bool
  */
-	public function isMailSend(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $useReminder = null) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$pluginKey = Current::read('Plugin.key');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// コンテンツコメントは使ってくれているプラグインのキーでメール設定取得
-			$pluginKey = $model->data[$model->alias]['plugin_key'];
+	public function isMailSend(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		if (! $this->__isMailSendCommon($model, $typeKey)) {
+			return false;
 		}
 
+		// 投稿メールOFFなら、メール送らない
+		$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
+		if (isset($isMailSendPost) && $isMailSendPost == '0') {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// DBに公開日時の項目あり & 公開日時がセットされていて & cron使えず未来日メールなら、送らない（ブログを想定）
+		// 公開日時
+		$sendTime = $this->__getSendTimePublish($model);
+		if (! $this->__isMailSendTime($model, $sendTime)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
+		// 編集フラグ
+		$isPublishableEdit = $this->__isPublishableEdit($model);
+		if ($isPublishableEdit && $isMailSendPost === null) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		return true;
+	}
+
+/**
+ * リマインダーメールを送るかどうか
+ *
+ * @param Model $model モデル
+ * @param string $typeKey メールの種類
+ * @return bool
+ */
+	public function isMailSendReminder(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		if (! $this->__isMailSendCommon($model, $typeKey)) {
+			return false;
+		}
+
+		// リマインダーの公開以外はメール送らない
+		$status = Hash::get($model->data, $model->alias . '.status');
+		if ($status != WorkflowComponent::STATUS_PUBLISHED) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// リマインダーが複数日あって、全て日時が過ぎてたら、メール送らない
+		$isMailSendReminder = false;
+		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
+		foreach ($sendTimeReminders as $sendTime) {
+			if ($this->__isMailSendTime($model, $sendTime)) {
+				$isMailSendReminder = true;
+			}
+		}
+		if (! $isMailSendReminder) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		return true;
+	}
+
+/**
+ * メールを送るかどうか - 共通処理
+ *
+ * @param Model $model モデル
+ * @param string $typeKey メールの種類
+ * @return bool
+ */
+	private function __isMailSendCommon(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-			)
+			'SiteSetting.key' => array('Mail.from')
 		));
 		$from = Hash::get($siteSetting['Mail.from'], '0.value');
 
@@ -397,6 +460,14 @@ class MailQueueBehavior extends ModelBehavior {
 		if (empty($from)) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
+		}
+
+		// プラグインキー
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$pluginKey = Current::read('Plugin.key');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// コンテンツコメントは使ってくれているプラグインのキーでメール設定取得
+			$pluginKey = $model->data[$model->alias]['plugin_key'];
 		}
 
 		/** @see MailSetting::getMailSettingPlugin() */
@@ -415,54 +486,6 @@ class MailQueueBehavior extends ModelBehavior {
 		if ($status == WorkflowComponent::STATUS_IN_DRAFT) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
-		}
-
-		if ($useReminder) {
-			// --- リマインダー
-			// リマインダーが複数日あって、全て日時が過ぎてたら、メール送らない
-			$isMailSendReminder = false;
-			$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
-			foreach ($sendTimeReminders as $sendTime) {
-				if ($this->__isMailSendTime($model, $sendTime)) {
-					$isMailSendReminder = true;
-				}
-			}
-			if (! $isMailSendReminder) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
-
-			// リマインダーの公開以外はメール送らない
-			if ($status != WorkflowComponent::STATUS_PUBLISHED) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
-
-		} else {
-			// --- 通常の投稿
-			// 投稿メールOFFなら、メール送らない
-			$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
-
-			if (isset($isMailSendPost) && $isMailSendPost == '0') {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
-
-			// DBに公開日時の項目あり & 公開日時がセットされていて & cron使えず未来日メールなら、送らない（ブログを想定）
-			// 公開日時
-			$sendTime = $this->__getSendTimePublish($model);
-			if (! $this->__isMailSendTime($model, $sendTime)) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
-
-			// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
-			// 編集フラグ
-			$isPublishableEdit = $this->__isPublishableEdit($model);
-			if ($isPublishableEdit && $isMailSendPost === null) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
 		}
 
 		return true;
@@ -516,8 +539,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	private function __saveQueueReminder(Model $model) {
-		// メールを送るかどうか
-		if (! $this->isMailSend($model, MailSettingFixedPhrase::DEFAULT_TYPE, 1)) {
+		// リマインダーメールを送るかどうか
+		if (! $this->isMailSendReminder($model)) {
 			return true;
 		}
 
