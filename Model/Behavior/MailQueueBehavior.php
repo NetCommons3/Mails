@@ -252,12 +252,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @return string コンテンツキー
  */
 	private function __getContentKey(Model $model) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// コンテンツコメント
-			return $model->data[$model->alias]['content_key'];
-		}
-		// 通常
 		$keyField = $this->settings[$model->alias]['keyField'];
 		return $model->data[$model->alias][$keyField];
 	}
