@@ -296,4 +296,57 @@ class NetCommonsMailAssignTag {
 		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなる
 		$this->fixedPhraseBody = CakeText::wrap($this->fixedPhraseBody, $this::MAX_LINE_LENGTH);
 	}
+
+/**
+ * 埋め込みタグ{X-URL}の値 ゲット
+ *
+ * @param string $contentKey コンテンツキー
+ * @return string X-URLの値
+ */
+	public function getXUrl($contentKey) {
+		// fullpassのURL
+		$url = NetCommonsUrl::actionUrl(array(
+			'controller' => Current::read('Plugin.key'),
+			'action' => 'view',
+			'block_id' => Current::read('Block.id'),
+			'frame_id' => Current::read('Frame.id'),
+			'key' => $contentKey
+		));
+		$url = NetCommonsUrl::url($url, true);
+		return $url;
+	}
+
+/**
+ * 埋め込みタグ{X-WORKFLOW_COMMENT}の値 ゲット
+ *
+ * @param string $fixedPhraseType コンテンツキー
+ * @param array $data saveしたデータ
+ * @return string X-WORKFLOW_COMMENTの値
+ */
+	public function getXWorkflowComment($fixedPhraseType, $data) {
+		$workflowComment = '';
+		if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
+			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
+			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
+
+			$workflowComment = Hash::get($data, 'WorkflowComment.comment');
+			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
+			$workflowComment = $commentLabel . ":\n" . $workflowComment;
+		}
+		return $workflowComment;
+	}
+
+/**
+ * 埋め込みタグ{X-TAGS}の値 ゲット
+ *
+ * @param array $data saveしたデータ
+ * @return string X-TAGSの値
+ */
+	public function getXTags($data) {
+		$tags = Hash::extract($data, 'Tag.{n}.name');
+		$tags = implode(',', $tags);
+		$tagLabel = __d('blogs', 'tag');
+		$tags = $tagLabel . ':' . $tags;
+		return $tags;
+	}
 }

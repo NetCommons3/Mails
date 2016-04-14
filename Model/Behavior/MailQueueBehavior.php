@@ -975,15 +975,43 @@ class MailQueueBehavior extends ModelBehavior {
 		} else {
 			$mailAssignTag->setMailFixedPhrasePlugin($mailSettingPlugin);
 		}
-		//$mailAssignTag->setReplyTo($replyTo);
 
-		$assignTags = $this->__getAssignTags($model, $fixedPhraseType);
-		$mailAssignTag->assignTags($assignTags);
+		// --- 埋め込みタグ
+		$url = $mailAssignTag->getXUrl($contentKey);
+		$mailAssignTag->assignTag('X-URL', $url);
+
+		// ワークフロー
+		if ($model->Behaviors->loaded('Workflow.Workflow')) {
+			$workflowComment = $mailAssignTag->getXWorkflowComment($fixedPhraseType, $model->data);
+			$mailAssignTag->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
+		}
+
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+
+		// タグプラグイン
+		$mailAssignTag->assignTag('X-TAGS', '');
+		// コメント以外
+		if ($model->Behaviors->loaded('Tags.Tag') && $workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			$tags = $mailAssignTag->getXTags($model->data);
+			$mailAssignTag->assignTag('X-TAGS', $tags);
+		}
+
+		// 定型文の埋め込みタグをセット
+		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
+		foreach ($embedTags as $embedTag => $dataKey) {
+			$dataValue = Hash::get($model->data, $dataKey);
+			$mailAssignTag->assignTag($embedTag, $dataValue);
+		}
+
+		// - 追加の埋め込みタグ セット
+		// 既にセットされているタグであっても、上書きされる
+		foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
+			$mailAssignTag->assignTag($embedTag, $value);
+		}
 
 		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
 		$mailAssignTag->assignTagReplace();
 
-		//$replyTo = key($postMail->replyTo());
 		$mailQueue['MailQueue'] = array(
 			'language_id' => $languageId,
 			'plugin_key' => $pluginKey,
@@ -998,68 +1026,5 @@ class MailQueueBehavior extends ModelBehavior {
 		// MailQueueは新規登録
 		$mailQueue = $model->MailQueue->create($mailQueue);
 		return $mailQueue;
-	}
-
-/**
- * 埋め込みタグ 取得
- *
- * @param Model $model モデル
- * @param string $fixedPhraseType SiteSettingの定型文の種類
- * @return array
- */
-	private function __getAssignTags(Model $model, $fixedPhraseType = null) {
-		$assignTags = array();
-		$contentKey = $this->__getContentKey($model);
-		// fullpassのURL
-		$url = NetCommonsUrl::actionUrl(array(
-			'controller' => Current::read('Plugin.key'),
-			'action' => 'view',
-			'block_id' => Current::read('Block.id'),
-			'frame_id' => Current::read('Frame.id'),
-			'key' => $contentKey
-		));
-		$url = NetCommonsUrl::url($url, true);
-		$assignTags['X-URL'] = $url;
-
-		// --- ワークフロー
-		if ($model->Behaviors->loaded('Workflow.Workflow')) {
-			if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
-					$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
-					$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
-
-				$workflowComment = Hash::get($model->data, 'WorkflowComment.comment');
-				$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-				$workflowComment = $commentLabel . ":\n" . $workflowComment;
-				$assignTags['X-WORKFLOW_COMMENT'] = $workflowComment;
-			}
-		}
-
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-
-		// --- タグプラグイン
-		$assignTags['X-TAGS'] = '';
-		// コメント以外
-		if ($model->Behaviors->loaded('Tags.Tag') && $workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			$tags = Hash::extract($model->data, 'Tag.{n}.name');
-			$tags = implode(',', $tags);
-			$tagLabel = __d('blogs', 'tag');
-			$tags = $tagLabel . ':' . $tags;
-			$assignTags['X-TAGS'] = $tags;
-		}
-
-		// --- 定型文の埋め込みタグをセット
-		$embedTags = Hash::get($this->settings, $model->alias . '.embedTags');
-		foreach ($embedTags as $embedTag => $dataKey) {
-			$dataValue = Hash::get($model->data, $dataKey);
-			$assignTags[$embedTag] = $dataValue;
-		}
-
-		// --- 追加の埋め込みタグ セット
-		// 既にセットされているタグであっても、上書きされる
-		foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
-			$assignTags[$embedTag] = $value;
-		}
-
-		return $assignTags;
 	}
 }
