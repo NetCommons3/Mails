@@ -73,14 +73,16 @@ class MailQueueBehavior extends ModelBehavior {
 		if (!isset($this->settings[$model->alias]['keyField'])) {
 			$this->settings[$model->alias]['keyField'] = 'key';
 		}
+		if (!isset($this->settings[$model->alias]['reminder'])) {
+			$this->settings[$model->alias]['reminder']['sendTimes'] = null;
+			$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
+		}
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = null;
 		$this->settings[$model->alias]['userIds'] = null;
 		$this->settings[$model->alias]['toAddresses'] = null;
 		$this->settings[$model->alias]['isMailSendPost'] = null;
 		$this->settings[$model->alias]['notSendRoomUserIds'] = array();
-		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
-		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 
 		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
