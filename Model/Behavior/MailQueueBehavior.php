@@ -1034,10 +1034,16 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 		}
 
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+
 		// --- タグプラグイン
-		if ($model->Behaviors->loaded('Tags.Tag')) {
+		$assignTags['X-TAGS'] = '';
+		// コメント以外
+		if ($model->Behaviors->loaded('Tags.Tag') && $workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			$tags = Hash::extract($model->data, 'Tag.{n}.name');
 			$tags = implode(',', $tags);
+			$tagLabel = __d('blogs', 'tag');
+			$tags = $tagLabel . ':' . $tags;
 			$assignTags['X-TAGS'] = $tags;
 		}
 
