@@ -631,8 +631,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$blockKey = Current::read('Block.key');
 
-		// MailQueueUserは新規登録
-		//$mailQueueUser = $model->MailQueueUser->create();
+		// MailQueueUser
 		$mailQueueUser['MailQueueUser'] = array(
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
