@@ -210,11 +210,11 @@ class MailQueueUser extends MailsAppModel {
  * ルーム内で該当パーミッションありのユーザ ゲット
  * - MailQueueUser に 複数saveするために必要
  *
- * @param string $permission パーミッション
+ * @param string $permissionKey パーミッションキー
  * @param string $roomId ルームID
  * @return array
  */
-	public function getRolesRoomsUsersByPermission($permission, $roomId = null) {
+	public function getRolesRoomsUsersByPermission($permissionKey, $roomId = null) {
 		$this->loadModels(array(
 			'RolesRoomsUser' => 'Rooms.RolesRoomsUser',
 		));
@@ -225,15 +225,15 @@ class MailQueueUser extends MailsAppModel {
 
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
 		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
-		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permission), DefaultRolePermission::TYPE_ROOM_ROLE);
-		foreach ($permissions['RoomRolePermission'][$permission] as $key => $roomRolePermission) {
+		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey), DefaultRolePermission::TYPE_ROOM_ROLE);
+		foreach ($permissions['RoomRolePermission'][$permissionKey] as $key => $roomRolePermission) {
 			if (!$roomRolePermission['value']) {
-				unset($permissions['RoomRolePermission'][$permission][$key]);
+				unset($permissions['RoomRolePermission'][$permissionKey][$key]);
 			}
 		}
 
 		//$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
-		$roleKeys = array_keys($permissions['RoomRolePermission'][$permission]);
+		$roleKeys = array_keys($permissions['RoomRolePermission'][$permissionKey]);
 		$conditions = array(
 			'Room.id' => $roomId,
 			'RolesRoom.role_key' => $roleKeys,
@@ -280,13 +280,13 @@ class MailQueueUser extends MailsAppModel {
  * ルーム内の承認者達に配信 登録
  *
  * @param int $mailQueueId メールキューID
- * @param string $contentKey 各プラグイン側のコンテンツのキー
+ * @param string $contentKey 各プラグイン側のコンテンツキー
  * @param string $pluginKey プラグインキー
- * @param string $permissionName パーミッション名
+ * @param string $permissionKey パーミッションキー
  * @return array ユーザID
  * @throws InternalErrorException
  */
-	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null, $permissionName = 'content_publishable') {
+	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null, $permissionKey = 'content_publishable') {
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}
@@ -306,7 +306,7 @@ class MailQueueUser extends MailsAppModel {
 		$notSendRoomUserIds = array();
 
 		// 送信者データ取得
-		$rolesRoomsUsers = self::getRolesRoomsUsersByPermission($permissionName);
+		$rolesRoomsUsers = self::getRolesRoomsUsersByPermission($permissionKey);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 			// 新規登録

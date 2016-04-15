@@ -94,6 +94,9 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->settings[$model->alias]['reminder']['sendTimes'] = null;
 			$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		}
+		if (!isset($this->settings[$model->alias]['publishablePermissionKey'])) {
+			$this->settings[$model->alias]['publishablePermissionKey'] = 'content_publishable';
+		}
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = null;
@@ -688,15 +691,10 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __addMailQueueUserInRoomAuthorizers(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$permissionName = 'content_publishable';
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			$permissionName = 'content_comment_publishable';
-		}
+		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
 
 		/** @see MailQueueUser::addMailQueueUserInRoomAuthorizers() */
-		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey, $permissionName);
+		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey, $permissionKey);
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
@@ -714,34 +712,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			// --- ワークフロー
-			// 承認しないなら、承認完了通知メール送らない
-			$useWorkflow = $this->__getUseWorkflow($model);
-			if (! $useWorkflow) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return;
-			}
-
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// --- コンテンツコメント
-			// コメント承認しないなら、承認完了通知メール送らない
-			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
-			$useCommentApproval = Hash::get($model->data, $key);
-			if (! $useCommentApproval) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return;
-			}
-		}
-
-		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
-		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
-		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission('content_publishable');
-		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
-		$createdUserId = $this->__getCreatedUserId($model);
-		if (in_array($createdUserId, $rolesRoomsUserIds)) {
-			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+		if (! $this->__isSendMailQueueNotice($model)) {
 			return;
 		}
 
@@ -764,6 +735,49 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// ルーム内の承認者達に配信
 		$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
+	}
+
+/**
+ * 通知メールを送るか
+ *
+ * @param Model $model モデル
+ * @return void
+ */
+	private function __isSendMailQueueNotice(Model $model) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// --- ワークフロー
+			// 承認しないなら、承認完了通知メール送らない
+			$useWorkflow = $this->__getUseWorkflow($model);
+			if (! $useWorkflow) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// --- コンテンツコメント
+			// コメント承認しないなら、承認完了通知メール送らない
+			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
+			$useCommentApproval = Hash::get($model->data, $key);
+			if (! $useCommentApproval) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+		}
+
+		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
+
+		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
+		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
+		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($permissionKey);
+		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
+		$createdUserId = $this->__getCreatedUserId($model);
+		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		return true;
 	}
 
 /**
