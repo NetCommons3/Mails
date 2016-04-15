@@ -42,12 +42,14 @@ class MailQueueBehavior extends ModelBehavior {
  * @var string 任意で送信するメールアドレス（登録フォーム等を想定）
  * @var string 投稿メールのON, OFF（回覧板、カレンダー等を想定）
  * @var string ルーム配信で送らないユーザID
+ * @var string プラグイン名
  */
 	const
 		MAIL_QUEUE_SETTING_USER_IDS = 'userIds',
 		MAIL_QUEUE_SETTING_TO_ADDRESSES = 'toAddresses',
 		MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST = 'isMailSendPost',
-		MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS = 'notSendRoomUserIds';
+		MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS = 'notSendRoomUserIds',
+		MAIL_QUEUE_SETTING_PLUGIN_NAME = 'pluginName';
 
 /**
  * setup
@@ -98,6 +100,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array();
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME] = Current::read('Plugin.Name');
 
 		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
@@ -166,6 +169,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_PLUGIN_NAME
  */
 	public function setSetting(Model $model, $settingKey, $settingValue) {
 		$this->settings[$model->alias][$settingKey] = $settingValue;
@@ -260,22 +264,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		// 通常
 		return Current::read('Plugin.key');
-	}
-
-/**
- * プラグイン名 ゲット
- *
- * @param Model $model モデル
- * @return string コンテンツキー
- */
-	private function __getPluginName(Model $model) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// コンテンツコメントは pluginsテーブルに登録なしで Current::read('Plugin') とれないため、ここで直セット
-			return __d('content_comments', 'comment');
-		}
-		// 通常
-		return Current::read('Plugin.Name');
 	}
 
 /**
@@ -796,7 +784,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-		$pluginName = $this->__getPluginName($model);
+		$pluginName = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME];
 		$blockKey = Current::read('Block.key');
 
 		// メール生文の作成
