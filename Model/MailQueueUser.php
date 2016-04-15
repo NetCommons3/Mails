@@ -240,4 +240,85 @@ class MailQueueUser extends MailsAppModel {
 		$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
 		return $rolesRoomsUsers;
 	}
+
+/**
+ * 登録者に配信 登録
+ *
+ * @param int $mailQueueId メールキューID
+ * @param Model $createdUserId 登録ユーザID
+ * @param string $contentKey 各プラグイン側のコンテンツのキー
+ * @param string $pluginKey プラグインキー
+ * @return void
+ * @throws InternalErrorException
+ */
+	public function addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey, $pluginKey = null) {
+		if ($pluginKey === null) {
+			$pluginKey = Current::read('Plugin.key');
+		}
+		$blockKey = Current::read('Block.key');
+
+		$mailQueueUser['MailQueueUser'] = array(
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'mail_queue_id' => $mailQueueId,
+			'user_id' => $createdUserId,
+			'room_id' => null,
+			'to_address' => null,
+			'not_send_room_user_ids' => null,
+		);
+
+		// 新規登録
+		$mailQueueUser = $this->create($mailQueueUser);
+		if (! self::saveMailQueueUser($mailQueueUser)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+	}
+
+/**
+ * ルーム内の承認者達に配信 登録
+ *
+ * @param int $mailQueueId メールキューID
+ * @param string $contentKey 各プラグイン側のコンテンツのキー
+ * @param string $pluginKey プラグインキー
+ * @param string $permissionName パーミッション名
+ * @return array ユーザID
+ * @throws InternalErrorException
+ */
+	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null, $permissionName = 'content_publishable') {
+		if ($pluginKey === null) {
+			$pluginKey = Current::read('Plugin.key');
+		}
+		$blockKey = Current::read('Block.key');
+
+		$mailQueueUser['MailQueueUser'] = array(
+			'plugin_key' => $pluginKey,
+			'block_key' => $blockKey,
+			'content_key' => $contentKey,
+			'mail_queue_id' => $mailQueueId,
+			'user_id' => null,
+			'room_id' => null,
+			'to_address' => null,
+			'not_send_room_user_ids' => null,
+		);
+
+		$notSendRoomUserIds = array();
+
+		// 送信者データ取得
+		$rolesRoomsUsers = self::getRolesRoomsUsersByPermission($permissionName);
+		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+			// 新規登録
+			$mailQueueUser = $this->create($mailQueueUser);
+			if (! self::saveMailQueueUser($mailQueueUser)) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
+			// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+			// ルーム配信で送らないユーザID を返す
+			$notSendRoomUserIds[] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
+		}
+
+		return $notSendRoomUserIds;
+	}
 }

@@ -721,20 +721,20 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// ルーム内の承認者達に配信
-		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
+		$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
 
 		return true;
 	}
 
 /**
- * 登録者に配信
+ * 登録者に配信 登録
  *
  * @param Model $model モデル
  * @param int $mailQueueId メールキューID
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
+	private function __addMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
 		$createdUserId = $this->__getCreatedUserId($model);
 		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
 		if (empty($createdUserId)) {
@@ -743,25 +743,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-		$blockKey = Current::read('Block.key');
 
-		$mailQueueUser['MailQueueUser'] = array(
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'mail_queue_id' => $mailQueueId,
-			'user_id' => $createdUserId,
-			'room_id' => null,
-			'to_address' => null,
-			'not_send_room_user_ids' => null,
-		);
-
-		// MailQueueUserは新規登録
-		$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-		/** @see MailQueueUser::saveMailQueueUser() */
-		if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-		}
+		/** @see MailQueueUser::addMailQueueUserInCreatedUser() */
+		$model->MailQueueUser->addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey, $pluginKey);
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
@@ -769,52 +753,29 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * ルーム内の承認者達に配信
+ * ルーム内の承認者達に配信 登録
  *
  * @param Model $model モデル
  * @param int $mailQueueId メールキューID
  * @return bool
  * @throws InternalErrorException
  */
-	private function __saveMailQueueUserInRoomsAuthorizer(Model $model, $mailQueueId) {
+	private function __addMailQueueUserInRoomAuthorizers(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-		$blockKey = Current::read('Block.key');
-
-		// MailQueueUserは新規登録
-		$mailQueueUser['MailQueueUser'] = array(
-			'plugin_key' => $pluginKey,
-			'block_key' => $blockKey,
-			'content_key' => $contentKey,
-			'mail_queue_id' => $mailQueueId,
-			'user_id' => null,
-			'room_id' => null,
-			'to_address' => null,
-			'not_send_room_user_ids' => null,
-		);
 
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$publishable = 'content_publishable';
+		$permissionName = 'content_publishable';
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			$publishable = 'content_comment_publishable';
+			$permissionName = 'content_comment_publishable';
 		}
 
-		// 送信者データ取得
-		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
-		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($publishable);
-		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
-			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
-			// MailQueueUserは新規登録
-			$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-			/** @see MailQueueUser::saveMailQueueUser() */
-			if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
+		/** @see MailQueueUser::addMailQueueUserInRoomAuthorizers() */
+		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey, $permissionName);
 
-			// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
-			// ルーム配信で送らないユーザID セット
-			$this->settings[$model->alias]['notSendRoomUserIds'][] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
-		}
+		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+		// ルーム配信で送らないユーザID セット
+		$this->settings[$model->alias]['notSendRoomUserIds'] = array_merge($this->settings[$model->alias]['notSendRoomUserIds'], $notSendRoomUserIds);
 	}
 
 /**
@@ -874,9 +835,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailQueueId = $mailQueueResult['MailQueue']['id'];
 
 		// 登録者に配信
-		$this->__saveMailQueueUserInCreatedUser($model, $mailQueueId);
+		$this->__addMailQueueUserInCreatedUser($model, $mailQueueId);
+
 		// ルーム内の承認者達に配信
-		$this->__saveMailQueueUserInRoomsAuthorizer($model, $mailQueueId);
+		$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
 	}
 
 /**
