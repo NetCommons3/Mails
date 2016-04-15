@@ -116,20 +116,27 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
+		$model->Behaviors->load('Mails.MailQueueDelete');
+		$contentKey = $this->__getContentKey($model);
+
+		// 未来日系の送信日時更新を考慮して delete->insert
+		/** @see MailQueueDeleteBehavior::deleteQueue() */
+		$model->deleteQueue($contentKey);
+		// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
+		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
+		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
+
 		// --- リマインダー
-		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
-		if ($useReminder) {
-			$this->__saveQueueReminder($model);
+		if ($this->isMailSendReminder($model)) {
+			$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
+			$this->saveQueue($model, $sendTimeReminders);
 		}
 
 		// --- 通常メール
-		// メールを送るかどうか
-		if (! $this->isMailSend($model)) {
-			return true;
+		if ($this->isMailSend($model)) {
+			$sendTime = $this->__getSendTimePublish($model);
+			$this->saveQueue($model, array($sendTime));
 		}
-
-		$sendTime = $this->__getSendTimePublish($model);
-		$this->saveQueue($model, array($sendTime));
 
 		return true;
 	}
@@ -397,7 +404,13 @@ class MailQueueBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isMailSendReminder(Model $model, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
+		if (! $useReminder) {
+			return false;
+		}
+
 		if (! $this->__isMailSendCommon($model, $typeKey)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -504,31 +517,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * リマインダーでキュー保存
- *
- * @param Model $model モデル
- * @return bool
- */
-	private function __saveQueueReminder(Model $model) {
-		// リマインダーメールを送るかどうか
-		if (! $this->isMailSendReminder($model)) {
-			return true;
-		}
-
-		// リマインダーは delete->insert
-		$contentKey = $this->__getContentKey($model);
-		$model->Behaviors->load('Mails.MailQueueDelete');
-		/** @see MailQueueDeleteBehavior::deleteQueue() */
-		$model->deleteQueue($contentKey);
-		// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
-		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
-		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
-
-		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
-		return $this->saveQueue($model, $sendTimeReminders);
-	}
-
-/**
  * キュー保存
  *
  * @param Model $model モデル
@@ -575,7 +563,14 @@ class MailQueueBehavior extends ModelBehavior {
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 回答
 			// 回答メール配信(即時)
-			$this->__saveQueueAnswerMail($model, $languageId, $typeKey);
+			$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+			$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
+
+			// ユーザIDに配信(即時)、メールアドレスに配信(即時) - メールキューSave
+			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses, $typeKey);
+
+			// ルーム内の承認者達に配信
+			$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
 		}
 
 		return true;
@@ -677,34 +672,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		return $mailQueueResult['MailQueue']['id'];
-	}
-
-/**
- * 回答メール配信(即時) - メールキューSave
- * 登録フォーム、アンケートを想定
- *
- * @param Model $model モデル
- * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
- * @return bool
- * @throws InternalErrorException
- */
-	private function __saveQueueAnswerMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
-		$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
-		$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-
-		if (!empty($toAddresses)) {
-			// メールアドレスに配信(即時) - メールキューSave
-			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, null, $toAddresses, $typeKey);
-		} elseif (!empty($userIds)) {
-			// ユーザIDに配信(即時) - メールキューSave
-			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, null, $typeKey);
-		}
-
-		// ルーム内の承認者達に配信
-		$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
-
-		return true;
 	}
 
 /**
@@ -834,9 +801,9 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
 		$settingPluginKey = $this->__getSettingPluginKey($model);
-
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
+
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
