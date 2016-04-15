@@ -534,24 +534,13 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフローのstatusによって送信内容を変える
 			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
 
-			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-				// --- 公開
-				// 承認完了通知メール(即時)
-				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
+			// 承認依頼通知, 差戻し通知, 承認完了通知メール(即時)
+			$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
+			// --- 公開
+			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// 投稿メール - ルーム配信
 				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
-
-			} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
-				// --- 承認依頼
-				// 承認依頼通知メール(即時)
-				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
-
-			} elseif ($status == WorkflowComponent::STATUS_DISAPPROVED) {
-				// --- 差戻し
-				// ※ コンテンツコメントは、ここの処理に入ることはない
-				// 差戻し通知メール(即時)
-				$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
