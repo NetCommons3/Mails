@@ -27,13 +27,27 @@ class MailQueueBehavior extends ModelBehavior {
  * @var string 承認機能なし
  * @var string ワークフロー
  * @var string コンテンツコメント
- * @var string 回答（アンケート、登録フォームなど）
+ * @var string 回答（アンケート、登録フォーム等）
  */
 	const
 		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
 		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment',
 		MAIL_QUEUE_WORKFLOW_TYPE_ANSWER = 'answer';
+
+/**
+ * セッティングの種類(setSettingで利用)
+ *
+ * @var string 任意で送信するユーザID（グループ送信（回覧板、カレンダー等）、アンケートを想定）
+ * @var string 任意で送信するメールアドレス（登録フォーム等を想定）
+ * @var string 投稿メールのON, OFF（回覧板、カレンダー等を想定）
+ * @var string ルーム配信で送らないユーザID
+ */
+	const
+		MAIL_QUEUE_SETTING_USER_IDS = 'userIds',
+		MAIL_QUEUE_SETTING_TO_ADDRESSES = 'toAddresses',
+		MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST = 'isMailSendPost',
+		MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS = 'notSendRoomUserIds';
 
 /**
  * setup
@@ -80,10 +94,10 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
-		$this->settings[$model->alias]['userIds'] = null;
-		$this->settings[$model->alias]['toAddresses'] = null;
-		$this->settings[$model->alias]['isMailSendPost'] = null;
-		$this->settings[$model->alias]['notSendRoomUserIds'] = array();
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = null;
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array();
 
 		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
@@ -102,8 +116,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		// --- リマインダー
+		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
 		if ($useReminder) {
 			$this->__saveQueueReminder($model);
 		}
@@ -135,38 +149,19 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 任意で送信するユーザID セット
- * グループ送信（回覧板、カレンダー等）、アンケートを想定
+ * セッティング セット
  *
  * @param Model $model モデル
- * @param array $userIds ユーザID配列
+ * @param string $settingKey セッティングのキー
+ * @param string|array $settingValue セッティングの値
  * @return void
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS
  */
-	public function setToUserIds(Model $model, $userIds) {
-		$this->settings[$model->alias]['userIds'] = $userIds;
-	}
-
-/**
- * 任意で送信するメールアドレス セット
- *
- * @param Model $model モデル
- * @param array $toAddresses メールアドレス 配列
- * @return void
- */
-	public function setToAddresses(Model $model, $toAddresses) {
-		$this->settings[$model->alias]['toAddresses'] = $toAddresses;
-	}
-
-/**
- * 投稿メールのON, OFF セット
- * 回覧板、カレンダー等の利用を想定
- *
- * @param Model $model モデル
- * @param int $isMailSendPost 0:通知しない、1:通知する(デフォルト)
- * @return void
- */
-	public function setIsMailSendNotice(Model $model, $isMailSendPost) {
-		$this->settings[$model->alias]['isMailSendPost'] = $isMailSendPost;
+	public function setSetting(Model $model, $settingKey, $settingValue) {
+		$this->settings[$model->alias][$settingKey] = $settingValue;
 	}
 
 /**
@@ -190,17 +185,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
-	}
-
-/**
- * ルーム配信で送らないユーザID セット
- *
- * @param Model $model モデル
- * @param array $notSendRoomUserIds ユーザID配列
- * @return void
- */
-	public function setNotSendRoomUserIds(Model $model, $notSendRoomUserIds) {
-		$this->settings[$model->alias]['notSendRoomUserIds'] = $notSendRoomUserIds;
 	}
 
 /**
@@ -380,7 +364,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 投稿メールOFFなら、メール送らない
-		$isMailSendPost = $this->settings[$model->alias]['isMailSendPost'];
+		$isMailSendPost = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST];
 		if (isset($isMailSendPost) && $isMailSendPost == '0') {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
@@ -395,7 +379,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
-		// 編集フラグ
+		// 公開記事 編集フラグ
 		$isPublishableEdit = $this->__isPublishableEdit($model);
 		if ($isPublishableEdit && $isMailSendPost === null) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
@@ -495,9 +479,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// SiteSettingからメール設定を取得する
 		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.use_cron',
-			)
+			'SiteSetting.key' => array('Mail.use_cron')
 		));
 
 		$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
@@ -620,7 +602,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-
 		$blockKey = Current::read('Block.key');
 
 		// MailQueueUser
@@ -667,7 +648,7 @@ class MailQueueBehavior extends ModelBehavior {
 				if ($mailQueue['MailQueue']['send_time'] <= $now) {
 					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 					// ルーム配信で送らないユーザID セット
-					$notSendRoomUserIds = $this->settings[$model->alias]['notSendRoomUserIds'];
+					$notSendRoomUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS];
 					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
 					$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
 					$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
@@ -684,7 +665,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 				// 登録者にも配信
 				$createdUserId = $this->__getCreatedUserId($model);
-				$addUserIds = $this->settings[$model->alias]['userIds'];
+				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 				$addUserIds[] = $createdUserId;
 				// 登録者と追加ユーザ達の重複登録を排除
 				$addUserIds = array_unique($addUserIds);
@@ -709,8 +690,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __saveQueueAnswerMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
-		$toAddresses = $this->settings[$model->alias]['toAddresses'];
-		$userIds = $this->settings[$model->alias]['userIds'];
+		$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
+		$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 
 		if (!empty($toAddresses)) {
 			// メールアドレスに配信(即時) - メールキューSave
@@ -749,7 +730,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$this->settings[$model->alias]['notSendRoomUserIds'][] = $createdUserId;
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS][] = $createdUserId;
 	}
 
 /**
@@ -775,7 +756,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$this->settings[$model->alias]['notSendRoomUserIds'] = array_merge($this->settings[$model->alias]['notSendRoomUserIds'], $notSendRoomUserIds);
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array_merge($this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS], $notSendRoomUserIds);
 	}
 
 /**
