@@ -127,6 +127,7 @@ class MailQueueUser extends MailsAppModel {
 	public function addMailQueueUsers($mailQueueUser, $filed, $values) {
 		foreach ($values as $value) {
 			$mailQueueUser['MailQueueUser'][$filed] = $value;
+			// 新規登録
 			$mailQueueUser = $this->create($mailQueueUser);
 			if (! self::saveMailQueueUser($mailQueueUser)) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
