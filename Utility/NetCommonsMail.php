@@ -74,7 +74,8 @@ class NetCommonsMail extends CakeEmail {
  * @param int $languageId 言語ID
  * @param string $pluginName プラグイン名
  * @return void
- * @see CakeEmail::$charset
+ * @see CakeEmail::$charset default=utf-8
+ * @see CakeEmail::$headerCharset default=utf-8
  */
 	public function initPlugin($languageId, $pluginName = null) {
 		// SiteSettingからメール設定を取得する
@@ -158,10 +159,12 @@ class NetCommonsMail extends CakeEmail {
 		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
 		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
 		parent::from($from, $fromName);
+		// 通称envelope-fromセット(正式名reverse-path RFC 5321)
+		parent::sender($from, $fromName);
 
-		// Return-Path
+		// Return-Path(RFC 5322)セット - config['transport' => 'Mail']用
 		$config = $this->config();
-		$config['additionalParameters'] = '-f ' . $from;
+		$config['additionalParameters'] = '-f' . $from;
 		$this->config($config);
 	}
 
