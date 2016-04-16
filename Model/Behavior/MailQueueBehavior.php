@@ -515,7 +515,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $typeKey メールの種類
  * @return bool
  */
-	public function saveQueue(Model $model, $sendTimes, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+	public function saveQueue(Model $model, $sendTimes = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -741,7 +741,7 @@ class MailQueueBehavior extends ModelBehavior {
  * 通知メールを送るか
  *
  * @param Model $model モデル
- * @return void
+ * @return bool
  */
 	private function __isSendMailQueueNotice(Model $model) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
