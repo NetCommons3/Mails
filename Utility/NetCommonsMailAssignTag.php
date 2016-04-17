@@ -11,6 +11,7 @@
  */
 
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
 
 /**
  * NetCommonsメール 埋め込みタグ Utility
@@ -320,12 +321,17 @@ class NetCommonsMailAssignTag {
 /**
  * 埋め込みタグ{X-WORKFLOW_COMMENT} セット
  *
- * @param string $fixedPhraseType コンテンツキー
  * @param array $data saveしたデータ
+ * @param string $fixedPhraseType コンテンツキー
+ * @param int $useWorkflowBehavior ワークフロービヘイビアを使う
  * @return void
  */
-	public function setXWorkflowComment($fixedPhraseType, $data) {
+	public function setXWorkflowComment($data, $fixedPhraseType, $useWorkflowBehavior) {
 		$this->assignTag('X-WORKFLOW_COMMENT', '');
+		if (!$useWorkflowBehavior) {
+			return;
+		}
+
 		if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
 			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
 			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
@@ -338,17 +344,28 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
- * 埋め込みタグ{X-TAGS}の値 ゲット
+ * 埋め込みタグ{X-TAGS}の値 セット
  *
  * @param array $data saveしたデータ
- * @return string X-TAGSの値
+ * @param string $workflowType ワークフロータイプ
+ * @param int $useTagBehavior タグビヘイビアを使う
+ * @return void
  */
-	public function getXTags($data) {
-		$tags = Hash::extract($data, 'Tag.{n}.name');
-		$tags = implode(',', $tags);
-		$tagLabel = __d('blogs', 'tag');
-		$tags = $tagLabel . ':' . $tags;
-		return $tags;
+	public function setXTags($data, $workflowType, $useTagBehavior) {
+		$this->assignTag('X-TAGS', '');
+		if (!$useTagBehavior) {
+			return;
+		}
+
+		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
+				$workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+
+			$tags = Hash::extract($data, 'Tag.{n}.name');
+			$tags = implode(',', $tags);
+			$tagLabel = __d('blogs', 'tag');
+			$tags = $tagLabel . ':' . $tags;
+			$this->assignTag('X-TAGS', $tags);
+		}
 	}
 
 /**

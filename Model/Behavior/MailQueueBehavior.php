@@ -230,7 +230,10 @@ class MailQueueBehavior extends ModelBehavior {
  * @return date 送信日時
  */
 	private function __getSaveSendTime($sendTime = null) {
-		return isset($sendTime) ? $sendTime : NetCommonsTime::getNowDatetime();
+		if ($sendTime === null) {
+			$sendTime = NetCommonsTime::getNowDatetime();
+		}
+		return $sendTime;
 	}
 
 /**
@@ -566,19 +569,14 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag->setXUrl($contentKey);
 
 		// ワークフロー
-		if ($model->Behaviors->loaded('Workflow.Workflow')) {
-			$mailAssignTag->setXWorkflowComment($fixedPhraseType, $model->data);
-		}
+		$useWorkflowBehavior = $model->Behaviors->loaded('Workflow.Workflow');
+		$mailAssignTag->setXWorkflowComment($model->data, $fixedPhraseType, $useWorkflowBehavior);
 
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$useTagBehavior = $model->Behaviors->loaded('Tags.Tag');
 
 		// タグプラグイン
-		$mailAssignTag->assignTag('X-TAGS', '');
-		// コメント以外
-		if ($model->Behaviors->loaded('Tags.Tag') && $workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			$tags = $mailAssignTag->getXTags($model->data);
-			$mailAssignTag->assignTag('X-TAGS', $tags);
-		}
+		$mailAssignTag->setXTags($model->data, $workflowType, $useTagBehavior);
 
 		// 定型文の埋め込みタグをセット
 		foreach ($this->settings[$model->alias]['embedTags'] as $embedTag => $dataKey) {
