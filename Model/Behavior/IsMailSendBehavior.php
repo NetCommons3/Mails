@@ -149,13 +149,13 @@ class IsMailSendBehavior extends ModelBehavior {
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// 登録日時
 			$created = Hash::get($model->data, $model->alias . '.created');
-			$isCommentApproveAction = Hash::get($this->settings, $model->alias . '.isCommentApproveAction');
+			$isApproveAction = Hash::get($this->settings, $model->alias . '.isCommentApproveAction');
 
 			if (isset($created)) {
 				// 新規登録
 				return false;
 			}
-			if ($isCommentApproveAction) {
+			if ($isApproveAction) {
 				// 承認時
 				return false;
 			}
