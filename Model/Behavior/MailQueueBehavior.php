@@ -148,8 +148,7 @@ class MailQueueBehavior extends ModelBehavior {
 		/** @see IsMailSendBehavior::isMailSend() */
 		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey, $sendTimePublish,
 				$settingPluginKey)) {
-			$sendTime = $this->__getSendTimePublish($model);
-			$this->saveQueue($model, array($sendTime));
+			$this->saveQueue($model, array($sendTimePublish));
 		}
 
 		return true;
@@ -429,6 +428,7 @@ class MailQueueBehavior extends ModelBehavior {
 					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 				}
 
+				// --- 追加のユーザ達に配信
 				// ルームIDをクリア
 				$mailQueueUser['MailQueueUser']['room_id'] = null;
 
@@ -439,7 +439,6 @@ class MailQueueBehavior extends ModelBehavior {
 				// 登録者と追加ユーザ達の重複登録を排除
 				$addUserIds = array_unique($addUserIds);
 
-				// 追加のユーザ達に配信
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
 			}
