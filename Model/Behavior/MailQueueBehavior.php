@@ -280,27 +280,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 登録ユーザID ゲット
- *
- * @param Model $model モデル
- * @return string 登録ユーザID
- */
-	private function __getCreatedUserId(Model $model) {
-		// コンテンツコメント承認時に利用, update時は created_user がセットされないので、findする
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
-		if ($createdUserId === null) {
-			// コンテンツコメント承認時に利用
-			$data = $model->find('first', array(
-				'recursive' => -1,
-				'conditions' => array('id' => $model->data[$model->alias]['id']),
-				'callbacks' => false,
-			));
-			$createdUserId = $data[$model->alias]['created_user'];
-		}
-		return $createdUserId;
-	}
-
-/**
  * キュー保存
  *
  * @param Model $model モデル
@@ -417,7 +396,10 @@ class MailQueueBehavior extends ModelBehavior {
 					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 					// ルーム配信で送らないユーザID セット
 					$notSendRoomUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS];
+					// 重複登録を排除
 					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
+					// 空要素を排除
+					$notSendRoomUserIds = Hash::filter($notSendRoomUserIds);
 					$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
 					$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
 				}
@@ -433,11 +415,13 @@ class MailQueueBehavior extends ModelBehavior {
 				$mailQueueUser['MailQueueUser']['room_id'] = null;
 
 				// 登録者にも配信
-				$createdUserId = $this->__getCreatedUserId($model);
+				$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 				$addUserIds[] = $createdUserId;
 				// 登録者と追加ユーザ達の重複登録を排除
 				$addUserIds = array_unique($addUserIds);
+				// 空要素を排除
+				$addUserIds = Hash::filter($addUserIds);
 
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
@@ -456,11 +440,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @throws InternalErrorException
  */
 	private function __addMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
-		$createdUserId = $this->__getCreatedUserId($model);
-		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなしなので送らない。
-		if (empty($createdUserId)) {
-			return;
-		}
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
@@ -506,7 +486,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$useWorkflow = $this->__getUseWorkflow($model);
-		$createdUserId = $this->__getCreatedUserId($model);
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 
 		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
 		if (! $model->isSendMailQueueNotice($useWorkflow, $createdUserId)) {

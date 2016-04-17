@@ -147,9 +147,16 @@ class IsMailSendBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		// --- コンテンツコメント
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// 登録日時
 			$created = Hash::get($model->data, $model->alias . '.created');
+			$isCommentApproveAction = Hash::get($this->settings, $model->alias . '.isCommentApproveAction');
+
 			if (isset($created)) {
 				// 新規登録
+				return false;
+			}
+			if ($isCommentApproveAction) {
+				// 承認時
 				return false;
 			}
 			return true;
@@ -286,10 +293,16 @@ class IsMailSendBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isSendMailQueueNotice(Model $model, $useWorkflow, $createdUserId) {
+		// 投稿ユーザIDなしは、通知メール送らない
+		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなし
+		if (empty($createdUserId)) {
+			return false;
+		}
+
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
-			// 承認しないなら、承認完了通知メール送らない
+			// 承認しないなら、通知メール送らない
 			//$useWorkflow = $this->__getUseWorkflow($model);
 			if (! $useWorkflow) {
 				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
@@ -298,7 +311,7 @@ class IsMailSendBehavior extends ModelBehavior {
 
 		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメント
-			// コメント承認しないなら、承認完了通知メール送らない
+			// コメント承認しないなら、通知メール送らない
 			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
 			$useCommentApproval = Hash::get($model->data, $key);
 			if (! $useCommentApproval) {
@@ -309,7 +322,7 @@ class IsMailSendBehavior extends ModelBehavior {
 
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
 
-		// 投稿者がルーム内の承認者だったら、承認完了通知メール送らない
+		// 投稿者がルーム内の承認者だったら、通知メール送らない
 		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
 		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($permissionKey);
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');

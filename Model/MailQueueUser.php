@@ -253,6 +253,9 @@ class MailQueueUser extends MailsAppModel {
  * @throws InternalErrorException
  */
 	public function addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey, $pluginKey = null) {
+		if (empty($createdUserId)) {
+			return;
+		}
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}
