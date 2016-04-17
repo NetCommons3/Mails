@@ -558,11 +558,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// メール生文の作成
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$mailAssignTag->initPlugin($languageId, $pluginName);
-		if (isset($fixedPhraseType)) {
-			$mailAssignTag->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin);
-		} else {
-			$mailAssignTag->setMailFixedPhrasePlugin($mailSettingPlugin);
-		}
+		$mailAssignTag->setMailFixedPhrase($languageId, $fixedPhraseType, $mailSettingPlugin);
 
 		// --- 埋め込みタグ
 		$mailAssignTag->setXUrl($contentKey);
@@ -585,9 +581,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// - 追加の埋め込みタグ セット
 		// 既にセットされているタグであっても、上書きされる
-		foreach ($this->settings[$model->alias]['addEmbedTagsValues'] as $embedTag => $value) {
-			$mailAssignTag->assignTag($embedTag, $value);
-		}
+		$mailAssignTag->assignTags($this->settings[$model->alias]['addEmbedTagsValues']);
 
 		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
 		$mailAssignTag->assignTagReplace();

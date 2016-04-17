@@ -150,6 +150,24 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
+ * サイト設定 セット
+ *
+ * @param int $languageId 言語ID
+ * @param string $fixedPhraseType 定型文の種類
+ * @param array $mailSettingPlugin プラグイン側のメール設定データ
+ * @return void
+ */
+	public function setMailFixedPhrase($languageId,
+										$fixedPhraseType = null,
+										$mailSettingPlugin = null) {
+		if (isset($fixedPhraseType)) {
+			$this->setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin);
+		} else {
+			$this->setMailFixedPhrasePlugin($mailSettingPlugin);
+		}
+	}
+
+/**
  * プラグインの定型文 セット
  *
  * @param array $mailSettingPlugin メール設定データ
