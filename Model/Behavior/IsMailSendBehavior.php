@@ -56,7 +56,7 @@ class IsMailSendBehavior extends ModelBehavior {
 								$contentKey = null,
 								$sendTimePublish = null,
 								$settingPluginKey = null) {
-		if (! $this->__isMailSendCommon($model, $typeKey, $settingPluginKey)) {
+		if (! $this->isMailSendCommon($model, $typeKey, $settingPluginKey)) {
 			return false;
 		}
 
@@ -103,7 +103,7 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
-		if (! $this->__isMailSendCommon($model, $typeKey, $settingPluginKey)) {
+		if (! $this->isMailSendCommon($model, $typeKey, $settingPluginKey)) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
@@ -206,7 +206,7 @@ class IsMailSendBehavior extends ModelBehavior {
  * @param string $settingPluginKey 設定を取得するプラグインキー
  * @return bool
  */
-	private function __isMailSendCommon(Model $model,
+	public function isMailSendCommon(Model $model,
 										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
 										$settingPluginKey = null) {
 		if ($settingPluginKey === null) {
