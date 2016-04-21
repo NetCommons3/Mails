@@ -247,14 +247,15 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 改行対応
  *
- * @return void
+ * @param string $body 本文
+ * @return string|array
  */
-	public function brReplace() {
+	public function brReplace($body) {
 		if (parent::emailFormat() == 'text') {
 			// text形式は配列にすると改行される
-			$this->body = explode("\n", $this->body);
+			return explode("\n", $body);
 		} else {
-			$this->body = str_replace("\n", '<br />', $this->body);
+			return str_replace("\n", '<br />', $body);
 		}
 	}
 
@@ -276,7 +277,7 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		// 改行対応
-		$this->brReplace();
+		$this->body = $this->brReplace($this->body);
 
 		// --- 3パターン対応
 		$roomId = Hash::get($mailQueueUser, 'room_id');
@@ -378,7 +379,7 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メールを直送信
+ * メールを直送信 - 埋め込みタグ変換なし
  *
  * @return bool 成功 or 失敗
  */
@@ -392,15 +393,39 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 		}
 
-		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-		//$this->assignTagReplace();
-		$this->mailAssignTag->assignTagReplace();
-
 		// 改行対応
-		$this->brReplace();
+		$this->body = $this->brReplace($this->body);
 
 		parent::subject($this->subject);
 		$messages = parent::send($this->body);
+		return $messages;
+	}
+
+/**
+ * メールを直送信 - 埋め込みタグ変換あり
+ *
+ * @return bool 成功 or 失敗
+ */
+	public function sendMailDirectTag() {
+		if (empty($this->siteSetting)) {
+			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
+		$this->mailAssignTag->assignTagReplace();
+		$body = $this->mailAssignTag->fixedPhraseBody;
+
+		if ($body == '') {
+			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// 改行対応
+		$body = $this->brReplace($body);
+
+		parent::subject($this->mailAssignTag->fixedPhraseSubject);
+		$messages = parent::send($body);
 		return $messages;
 	}
 }
