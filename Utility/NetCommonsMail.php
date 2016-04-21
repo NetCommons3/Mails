@@ -388,6 +388,9 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 		}
 
+		$this->mailAssignTag->setfixedPhraseBody($this->body);
+		$this->mailAssignTag->setFixedPhraseSubject($this->subject);
+
 		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
 		$this->mailAssignTag->assignTagReplace();
 		$this->body = $this->mailAssignTag->fixedPhraseBody;
