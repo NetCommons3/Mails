@@ -380,21 +380,18 @@ class NetCommonsMail extends CakeEmail {
 /**
  * メールを直送信
  *
- * @param bool $useTagReplace 埋め込みタグ変換使う
  * @return bool 成功 or 失敗
  */
-	public function sendMailDirect($useTagReplace) {
+	public function sendMailDirect() {
 		if (empty($this->siteSetting)) {
 			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
-		if ($useTagReplace) {
-			// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-			$this->mailAssignTag->assignTagReplace();
-			$this->body = $this->mailAssignTag->fixedPhraseBody;
-			$this->subject = $this->mailAssignTag->fixedPhraseSubject;
-		}
+		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
+		$this->mailAssignTag->assignTagReplace();
+		$this->body = $this->mailAssignTag->fixedPhraseBody;
+		$this->subject = $this->mailAssignTag->fixedPhraseSubject;
 
 		if ($this->body == '') {
 			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
