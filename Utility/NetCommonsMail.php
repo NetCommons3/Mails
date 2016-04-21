@@ -247,15 +247,14 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 改行対応
  *
- * @param string $body 本文
- * @return string|array
+ * @return void
  */
-	public function brReplace($body) {
+	public function brReplace() {
 		if (parent::emailFormat() == 'text') {
 			// text形式は配列にすると改行される
-			return explode("\n", $body);
+			$this->body = explode("\n", $this->body);
 		} else {
-			return str_replace("\n", '<br />', $body);
+			$this->body = str_replace("\n", '<br />', $this->body);
 		}
 	}
 
@@ -277,7 +276,7 @@ class NetCommonsMail extends CakeEmail {
 		}
 
 		// 改行対応
-		$this->body = $this->brReplace($this->body);
+		$this->brReplace();
 
 		// --- 3パターン対応
 		$roomId = Hash::get($mailQueueUser, 'room_id');
@@ -379,53 +378,34 @@ class NetCommonsMail extends CakeEmail {
 	}
 
 /**
- * メールを直送信 - 埋め込みタグ変換なし
+ * メールを直送信
  *
+ * @param bool $useTagReplace 埋め込みタグ変換使う
  * @return bool 成功 or 失敗
  */
-	public function sendMailDirect() {
+	public function sendMailDirect($useTagReplace) {
 		if (empty($this->siteSetting)) {
 			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
+
+		if ($useTagReplace) {
+			// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
+			$this->mailAssignTag->assignTagReplace();
+			$this->body = $this->mailAssignTag->fixedPhraseBody;
+			$this->subject = $this->mailAssignTag->fixedPhraseSubject;
+		}
+
 		if ($this->body == '') {
 			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
 		// 改行対応
-		$this->body = $this->brReplace($this->body);
+		$this->brReplace();
 
 		parent::subject($this->subject);
 		$messages = parent::send($this->body);
-		return $messages;
-	}
-
-/**
- * メールを直送信 - 埋め込みタグ変換あり
- *
- * @return bool 成功 or 失敗
- */
-	public function sendMailDirectTag() {
-		if (empty($this->siteSetting)) {
-			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-
-		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
-		$this->mailAssignTag->assignTagReplace();
-		$body = $this->mailAssignTag->fixedPhraseBody;
-
-		if ($body == '') {
-			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-
-		// 改行対応
-		$body = $this->brReplace($body);
-
-		parent::subject($this->mailAssignTag->fixedPhraseSubject);
-		$messages = parent::send($body);
 		return $messages;
 	}
 }
