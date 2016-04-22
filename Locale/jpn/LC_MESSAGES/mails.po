@@ -51,16 +51,13 @@ msgstr ""
 "\n"
 "{X-BODY}\n"
 "\n"
-"{X-WORKFLOW_COMMENT}\n"
-"\n"
 "この登録内容を確認するには下記のリンクをクリックして下さい。\n"
 "{X-URL}"
 
 msgid "MailSetting.mail_fixed_phrase_body.popover"
 msgstr ""
 "{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル"
-"<br />{X-USER} : 登録者<br />{X-TO_DATE} : 登録日時<br />{X-BODY} : 内容<br />{X-URL} : 登録内容のURL<br />{X-WORKFLOW_COMMENT} : 担当者へ"
-"のコメント"
+"<br />{X-USER} : 登録者<br />{X-TO_DATE} : 登録日時<br />{X-BODY} : 内容<br />{X-URL} : 登録内容のURL"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:47
 msgid "Use the mail notification function"
