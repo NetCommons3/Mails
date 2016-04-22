@@ -159,7 +159,8 @@ class MailSendShell extends AppShell {
 
 				// --- ルーム単位でメールするユーザID達
 				$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-				$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'), $roomId, $blockKey);
+				$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'),
+					$roomId, $blockKey);
 
 				$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
 				$conditions = array(

@@ -103,7 +103,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array();
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME] = Current::read('Plugin.Name');
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME] =
+			Current::read('Plugin.Name');
 
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings);
 
@@ -216,7 +217,8 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __getSendTimePublish(Model $model) {
 		// DBに項目があり期限付き公開の時のみ、公開日時を取得する（ブログを想定）。その後、未来日メール送られる
-		if ($model->hasField(['public_type', 'publish_start']) && $model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
+		if ($model->hasField(['public_type', 'publish_start']) &&
+			$model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
 			return $model->data[$model->alias]['publish_start'];
 		}
 		return null;
@@ -287,7 +289,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $typeKey メールの種類
  * @return bool
  */
-	public function saveQueue(Model $model, $sendTimes = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+	public function saveQueue(Model $model, $sendTimes = null,
+								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		$status = Hash::get($model->data, $model->alias . '.status');
@@ -319,7 +322,8 @@ class MailQueueBehavior extends ModelBehavior {
 			$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
 
 			// ユーザIDに配信(即時)、メールアドレスに配信(即時) - メールキューSave
-			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses, $typeKey);
+			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses,
+				$typeKey);
 
 			// ルーム内の承認者達に配信
 			$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
@@ -341,7 +345,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @return int メールキューID
  * @throws InternalErrorException
  */
-	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null, $toAddresses = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null,
+										$toAddresses = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		if ($sendTimes === null) {
 			$sendTimes[] = $this->__getSaveSendTime();
 		}
@@ -395,7 +400,8 @@ class MailQueueBehavior extends ModelBehavior {
 				if ($mailQueue['MailQueue']['send_time'] <= $now) {
 					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 					// ルーム配信で送らないユーザID セット
-					$notSendRoomUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS];
+					$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+					$notSendRoomUserIds = $this->settings[$model->alias][$notSendRoomUserIdsKey];
 					// 重複登録を排除
 					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
 					// 空要素を排除
@@ -446,11 +452,13 @@ class MailQueueBehavior extends ModelBehavior {
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 
 		/** @see MailQueueUser::addMailQueueUserInCreatedUser() */
-		$model->MailQueueUser->addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey, $pluginKey);
+		$model->MailQueueUser->addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey,
+			$pluginKey);
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS][] = $createdUserId;
+		$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$this->settings[$model->alias][$notSendRoomUserIdsKey][] = $createdUserId;
 	}
 
 /**
@@ -467,11 +475,14 @@ class MailQueueBehavior extends ModelBehavior {
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
 
 		/** @see MailQueueUser::addMailQueueUserInRoomAuthorizers() */
-		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey, $permissionKey);
+		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId,
+			$contentKey, $pluginKey, $permissionKey);
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array_merge($this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS], $notSendRoomUserIds);
+		$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$this->settings[$model->alias][$notSendRoomUserIdsKey] =
+			array_merge($this->settings[$model->alias][$notSendRoomUserIdsKey], $notSendRoomUserIds);
 	}
 
 /**
@@ -484,7 +495,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @return void
  * @throws InternalErrorException
  */
-	private function __saveQueueNoticeMail(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+	private function __saveQueueNoticeMail(Model $model, $languageId,
+											$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$useWorkflow = $this->__getUseWorkflow($model);
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 
@@ -524,10 +536,12 @@ class MailQueueBehavior extends ModelBehavior {
  * @return array メールキューデータ
  * @throws InternalErrorException
  */
-	private function __createMailQueue(Model $model, $languageId, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
+	private function __createMailQueue(Model $model, $languageId,
+										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
 		$settingPluginKey = $this->__getSettingPluginKey($model);
 		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
+		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey,
+			$settingPluginKey);
 
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		$contentKey = $this->__getContentKey($model);

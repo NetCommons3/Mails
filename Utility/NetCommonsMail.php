@@ -267,11 +267,13 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function sendQueueMail($mailQueueUser, $mailQueueLanguageId) {
 		if (empty($this->siteSetting)) {
-			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			$logMessage = 'SiteSetting Data is empty.';
+			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 		if ($this->body == '') {
-			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			$logMessage = 'Mail body is empty.';
+			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -283,7 +285,8 @@ class NetCommonsMail extends CakeEmail {
 		$userId = Hash::get($mailQueueUser, 'user_id');
 		$toAddress = Hash::get($mailQueueUser, 'to_address');
 		if ($roomId === null && $userId === null && $toAddress === null) {
-			LogError('Mail delivery destination is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			$logMessage = 'Mail delivery destination is empty.';
+			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -292,7 +295,8 @@ class NetCommonsMail extends CakeEmail {
 			// --- ルーム単位でメール配信
 			$blockKey = $mailQueueUser['block_key'];
 			$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'), $roomId, $blockKey);
+			$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'),
+				$roomId, $blockKey);
 
 			$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
 			$conditions = array(
@@ -365,7 +369,8 @@ class NetCommonsMail extends CakeEmail {
 				}
 				if (empty($userEmail['email'])) {
 					$userId = Hash::get($user, $this->User->alias . '.id');
-					CakeLog::debug("Email is empty. userId=$userId [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+					$logMessage = "Email is empty. userId=$userId";
+					CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 					continue;
 				}
 				$this->setFrom($mailQueueLanguageId);
@@ -384,7 +389,8 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function sendMailDirect() {
 		if (empty($this->siteSetting)) {
-			LogError('SiteSetting Data is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			$logMessage = 'SiteSetting Data is empty.';
+			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 
@@ -394,7 +400,8 @@ class NetCommonsMail extends CakeEmail {
 		$this->subject = $this->mailAssignTag->fixedPhraseSubject;
 
 		if ($this->body == '') {
-			LogError('Mail body is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			$logMessage = 'Mail body is empty.';
+			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
 

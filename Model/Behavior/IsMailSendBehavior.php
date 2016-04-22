@@ -61,7 +61,8 @@ class IsMailSendBehavior extends ModelBehavior {
 		}
 
 		// 投稿メールOFFなら、メール送らない
-		$isMailSendPost = $this->settings[$model->alias][MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST];
+		$isMailSendPostKey = MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST;
+		$isMailSendPost = $this->settings[$model->alias][$isMailSendPostKey];
 		if (isset($isMailSendPost) && $isMailSendPost == '0') {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
@@ -189,7 +190,8 @@ class IsMailSendBehavior extends ModelBehavior {
 		// ・・公開中の記事（１つ前の記事のstatus=1）
 		// ・・編集した記事が公開（status=1）
 		// ※承認ONで公開中の記事を編集して、編集した記事が公開なのは、承認者だけ
-		if ($beforeStatus == WorkflowComponent::STATUS_PUBLISHED && $status == WorkflowComponent::STATUS_PUBLISHED) {
+		if ($beforeStatus == WorkflowComponent::STATUS_PUBLISHED &&
+			$status == WorkflowComponent::STATUS_PUBLISHED) {
 			// 公開の編集
 			return true;
 		}

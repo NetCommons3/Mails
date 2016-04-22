@@ -66,17 +66,22 @@ class MailSettingBehavior extends ModelBehavior {
 		]);
 
 		// キューの配信先 削除
-		if (! $model->MailQueueUser->deleteAll(array($model->MailQueueUser->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+		$conditions = array(
+			$model->MailQueueUser->alias . '.block_key' => $content[$model->alias]['key']
+		);
+		if (! $model->MailQueueUser->deleteAll($conditions, false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 
 		// キュー 削除
-		if (! $model->MailQueue->deleteAll(array($model->MailQueue->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+		$conditions = array($model->MailQueue->alias . '.block_key' => $content[$model->alias]['key']);
+		if (! $model->MailQueue->deleteAll($conditions, false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 
 		// メール設定 削除
-		if (! $model->MailSetting->deleteAll(array($model->MailSetting->alias . '.block_key' => $content[$model->alias]['key']), false)) {
+		$conditions = array($model->MailSetting->alias . '.block_key' => $content[$model->alias]['key']);
+		if (! $model->MailSetting->deleteAll($conditions, false)) {
 			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 		}
 

@@ -65,7 +65,8 @@ class MailSetting extends MailsAppModel {
 			'replay_to' => array(
 				'email' => array(
 					'rule' => array('email'),
-					'message' => sprintf(__d('mails', '%s, please enter by e-mail format'), __d('mails', 'E-mail address to receive a reply')),
+					'message' => sprintf(__d('mails', '%s, please enter by e-mail format'),
+						__d('mails', 'E-mail address to receive a reply')),
 					'allowEmpty' => true,
 				),
 			),
@@ -116,7 +117,8 @@ class MailSetting extends MailsAppModel {
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function getMailSettingPlugin($languageId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $pluginKey = null) {
+	public function getMailSettingPlugin($languageId = null,
+										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $pluginKey = null) {
 		$this->loadModels(array(
 			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
 		));
@@ -147,7 +149,8 @@ class MailSetting extends MailsAppModel {
 		$conditions['type_key'] = $typeKey;
 		$mailFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
 		if (! $mailFixedPhrase) {
-			$mailFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId, $typeKey);
+			$mailFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId,
+				$typeKey);
 		}
 
 		$result = Hash::merge($mailSetting, $mailFixedPhrase);

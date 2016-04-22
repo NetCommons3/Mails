@@ -225,7 +225,8 @@ class MailQueueUser extends MailsAppModel {
 
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
 		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
-		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey), DefaultRolePermission::TYPE_ROOM_ROLE);
+		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey),
+																DefaultRolePermission::TYPE_ROOM_ROLE);
 		foreach ($permissions['RoomRolePermission'][$permissionKey] as $key => $roomRolePermission) {
 			if (!$roomRolePermission['value']) {
 				unset($permissions['RoomRolePermission'][$permissionKey][$key]);
@@ -252,7 +253,8 @@ class MailQueueUser extends MailsAppModel {
  * @return void
  * @throws InternalErrorException
  */
-	public function addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey, $pluginKey = null) {
+	public function addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey,
+													$pluginKey = null) {
 		if (empty($createdUserId)) {
 			return;
 		}
@@ -289,7 +291,8 @@ class MailQueueUser extends MailsAppModel {
  * @return array ユーザID
  * @throws InternalErrorException
  */
-	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null, $permissionKey = 'content_publishable') {
+	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null,
+														$permissionKey = 'content_publishable') {
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}

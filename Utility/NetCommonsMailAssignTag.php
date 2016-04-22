@@ -191,9 +191,12 @@ class NetCommonsMailAssignTag {
  * @param array $mailSettingPlugin プラグイン側のメール設定データ
  * @return void
  */
-	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType, $mailSettingPlugin = null) {
-		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'], $languageId . '.value');
-		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'], $languageId . '.value');
+	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType,
+													$mailSettingPlugin = null) {
+		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'],
+			$languageId . '.value');
+		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'],
+			$languageId . '.value');
 
 		// 定型文
 		$this->setFixedPhraseSubject($subject);
@@ -203,7 +206,8 @@ class NetCommonsMailAssignTag {
 			return;
 		}
 
-		$pluginSubject = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_subject');
+		$pluginSubject = Hash::get($mailSettingPlugin,
+			'MailSettingFixedPhrase.mail_fixed_phrase_subject');
 		$pluginBody = Hash::get($mailSettingPlugin, 'MailSettingFixedPhrase.mail_fixed_phrase_body');
 		$this->assignTag('X-PLUGIN_MAIL_SUBJECT', $pluginSubject);
 		$this->assignTag('X-PLUGIN_MAIL_BODY', $pluginBody);
@@ -273,13 +277,16 @@ class NetCommonsMailAssignTag {
 	public function assignTagReplace() {
 		// 承認系メールのタグは先に置換
 		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
-			$this->fixedPhraseBody = str_replace('{X-PLUGIN_MAIL_BODY}', $this->assignTags['X-PLUGIN_MAIL_BODY'], $this->fixedPhraseBody);
-			$this->fixedPhraseSubject = str_replace('{X-PLUGIN_MAIL_SUBJECT}', $this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->fixedPhraseSubject);
+			$this->fixedPhraseBody = str_replace('{X-PLUGIN_MAIL_BODY}',
+				$this->assignTags['X-PLUGIN_MAIL_BODY'], $this->fixedPhraseBody);
+			$this->fixedPhraseSubject = str_replace('{X-PLUGIN_MAIL_SUBJECT}',
+				$this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->fixedPhraseSubject);
 			unset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY']);
 		}
 
 		// メール本文の共通ヘッダー文、署名追加
-		$this->fixedPhraseBody = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->fixedPhraseBody . "\n" . $this->assignTags['X-SIGNATURE'];
+		$this->fixedPhraseBody = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->fixedPhraseBody .
+			"\n" . $this->assignTags['X-SIGNATURE'];
 		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
 		// html or text
@@ -288,16 +295,20 @@ class NetCommonsMailAssignTag {
 		// URL
 		if (isset($this->assignTags['X-URL'])) {
 			if ($messageType == 'text') {
-				$this->fixedPhraseBody = str_replace('{X-URL}', $this->assignTags['X-URL'], $this->fixedPhraseBody);
+				$this->fixedPhraseBody = str_replace('{X-URL}', $this->assignTags['X-URL'],
+					$this->fixedPhraseBody);
 			} else {
-				$this->fixedPhraseBody = str_replace('{X-URL}', '<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>', $this->fixedPhraseBody);
+				$this->fixedPhraseBody = str_replace('{X-URL}',
+					'<a href=\'' . $this->assignTags['X-URL'] . '\'>' . $this->assignTags['X-URL'] . '</a>',
+					$this->fixedPhraseBody);
 			}
 			unset($this->assignTags['X-URL']);
 		}
 
 		// 本文
 		if (isset($this->assignTags['X-BODY'])) {
-			$this->fixedPhraseBody = str_replace('{X-BODY}', h($this->assignTags['X-BODY']), $this->fixedPhraseBody);
+			$this->fixedPhraseBody = str_replace('{X-BODY}', h($this->assignTags['X-BODY']),
+				$this->fixedPhraseBody);
 			unset($this->assignTags['X-BODY']);
 		}
 

@@ -95,7 +95,8 @@ class MailSettingsController extends AppController {
 			$mailSettingPlugin = $this->MailSetting->getMailSettingPlugin();
 			$this->request->data['MailSetting'] = $mailSettingPlugin['MailSetting'];
 			$this->request->data['MailSettingFixedPhrase'] = $mailSettingPlugin['MailSettingFixedPhrase'];
-			$this->request->data['BlockRolePermission'] = $this->viewVars['permissions']['BlockRolePermissions'];
+			$this->request->data['BlockRolePermission'] =
+				$this->viewVars['permissions']['BlockRolePermissions'];
 			$this->request->data['Frame'] = Current::read('Frame');
 		}
 	}

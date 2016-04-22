@@ -28,14 +28,16 @@ class MailsHtmlHelper extends AppHelper {
 	public function help($content = '', $placement = 'bottom') {
 		$html = '';
 
-		$content = __d('mails', 'Each of the embedded keywords, will be sent is converted to the corresponding content. <br />') . $content;
+		$content = __d('mails', 'Each of the embedded keywords, will be sent is converted ' .
+				'to the corresponding content. <br />') . $content;
 
 		$html .= __d('mails', 'Can use an embedded keyword in the subject line and body') . ' ';
 		$html .= '<a href="" data-toggle="popover" data-placement="' . $placement . '"' .
 					' title="' . __d('mails', 'Embedded keyword?') . '"' . ' data-content="' . $content . '">';
 		$html .= '<span class="glyphicon glyphicon-question-sign"></span>';
 		$html .= '</a>';
-		$html .= '<script type="text/javascript">$(function () { $(\'[data-toggle="popover"]\').popover({html: true}) });</script>';
+		$html .= '<script type="text/javascript">' .
+			'$(function () { $(\'[data-toggle="popover"]\').popover({html: true}) });</script>';
 
 		return $html;
 	}

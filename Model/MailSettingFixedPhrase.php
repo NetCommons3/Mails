@@ -84,7 +84,8 @@ class MailSettingFixedPhrase extends MailsAppModel {
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
-	public function createMailSettingFixedPhrase($languageId = null, $typeKey = self::DEFAULT_TYPE, $pluginKey = null) {
+	public function createMailSettingFixedPhrase($languageId = null, $typeKey = self::DEFAULT_TYPE,
+													$pluginKey = null) {
 		if ($languageId === null) {
 			$languageId = Current::read('Language.id');
 		}
@@ -108,10 +109,12 @@ class MailSettingFixedPhrase extends MailsAppModel {
 
 		//初期データセット
 		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject']) {
-			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject'] = __d('mails', 'MailSetting.mail_fixed_phrase_subject');
+			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject'] =
+				__d('mails', 'MailSetting.mail_fixed_phrase_subject');
 		}
 		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_body']) {
-			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_body'] = __d('mails', 'MailSetting.mail_fixed_phrase_body');
+			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_body'] =
+				__d('mails', 'MailSetting.mail_fixed_phrase_body');
 		}
 		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created');
 		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created_user');
