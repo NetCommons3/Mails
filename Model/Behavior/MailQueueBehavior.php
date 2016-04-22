@@ -400,8 +400,8 @@ class MailQueueBehavior extends ModelBehavior {
 				if ($mailQueue['MailQueue']['send_time'] <= $now) {
 					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 					// ルーム配信で送らないユーザID セット
-					$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-					$notSendRoomUserIds = $this->settings[$model->alias][$notSendRoomUserIdsKey];
+					$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+					$notSendRoomUserIds = $this->settings[$model->alias][$key];
 					// 重複登録を排除
 					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
 					// 空要素を排除
@@ -457,8 +457,8 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$this->settings[$model->alias][$notSendRoomUserIdsKey][] = $createdUserId;
+		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$this->settings[$model->alias][$key][] = $createdUserId;
 	}
 
 /**
@@ -480,9 +480,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$notSendRoomUserIdsKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$this->settings[$model->alias][$notSendRoomUserIdsKey] =
-			array_merge($this->settings[$model->alias][$notSendRoomUserIdsKey], $notSendRoomUserIds);
+		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$this->settings[$model->alias][$key] =
+			array_merge($this->settings[$model->alias][$key], $notSendRoomUserIds);
 	}
 
 /**
