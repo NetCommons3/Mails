@@ -21,6 +21,7 @@ App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
  * @property SiteSetting $SiteSetting
  * @property RoomsLanguage $RoomsLanguage
  * @property Workflow $Workflow
+ * @property User $User
  */
 class NetCommonsMailAssignTag {
 
@@ -67,6 +68,7 @@ class NetCommonsMailAssignTag {
 	public function __construct() {
 		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
+		$this->User = ClassRegistry::init('Users.User');
 	}
 
 /**
@@ -130,7 +132,6 @@ class NetCommonsMailAssignTag {
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
 		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
 		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
-		$this->assignTag('X-USER', htmlspecialchars(Current::read('User.handlename')));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
@@ -315,6 +316,18 @@ class NetCommonsMailAssignTag {
 		// http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap
 		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなる
 		$this->fixedPhraseBody = CakeText::wrap($this->fixedPhraseBody, $this::MAX_LINE_LENGTH);
+	}
+
+/**
+ * 埋め込みタグ{X-USER} セット
+ *
+ * @param int $createdUserId 登録者ID
+ * @return void
+ */
+	public function setXUser($createdUserId) {
+		$user = $this->User->findById($createdUserId);
+		$handlename = Hash::get($user, 'User.handlename');
+		$this->assignTag('X-USER', $handlename);
 	}
 
 /**

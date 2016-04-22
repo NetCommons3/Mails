@@ -543,6 +543,9 @@ class MailQueueBehavior extends ModelBehavior {
 		// --- 埋め込みタグ
 		$mailAssignTag->setXUrl($contentKey);
 
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		$mailAssignTag->setXUser($createdUserId);
+
 		// ワークフロー
 		$useWorkflowBehavior = $model->Behaviors->loaded('Workflow.Workflow');
 		$mailAssignTag->setXWorkflowComment($model->data, $fixedPhraseType, $useWorkflowBehavior);
