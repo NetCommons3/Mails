@@ -9,6 +9,12 @@ sudo: required
 
 env:
   - NETCOMMONS_VERSION=master DB=mysql
+global:
+  - secure: "VqrepFPi85LHwjDu7DykhhvAugv/UHGQZ1CwN4nAWrYby5dBLFNBVDPCIwaqnCmku9IQAuv51ode7ef4DgWbCEnQfulJn+g8v7Are29hjD9ZeMsC3gqB8/bGgM4dAcVM+pSYhL/Icak5xQPdj1G/RQzfRnJTIFJ8RmBUJMgbr3xE1z7h4LexOy4qZtbQFC39CZvVN7WBJ+yUGflW9ZUHkSC++R04qz31q9JoZrOEcYMN5BHukcSGXLNG5SPk2Fd3t2q0CpuoQ+W+RBg68HpOxPI4xziqtDORSEUaDhlDvwOnsIZQfo0bRCnCK2vwExomZG1S5xWKa9GG59cRqnAZKpkpw/HzJv+bD99x+6A9d5Q+89rLYSD+YdJDBX7QUDJ8DXkWUBk1bQuZAf0vZ/VOOw4sM9RCSKrWnx2YZDUG4sbcrjhY8YVg6XuPrD+eYFMfRzdjhsVdx+ac0A2tP1Ah9CxcbpUt8bbswNBcev7Hks/VcT412c2ZAyHdQKKIzoVMBTvwLgnK+iSERfFHOrtdHP/iLtyralleUgrEqkmmRARTWxpBY+Ysb8uiK3F0LDimVlnoJ2huzwdTi4yS6bV2VpnZ8PFN/rK6R5t0yxJOBrGN8HmzPpGngFCJqHkiqCxwttU3VXmbhoVWZfWGctGIVihCAaHJoGUbBbfRDny7g84="
+  - GIT_COMMITTER_NAME=akagane99
+  - GIT_COMMITTER_EMAIL=akagane99@gmail.com
+  - GIT_AUTHOR_NAME=akagane99
+  - GIT_AUTHOR_EMAIL=akagane99@gmail.com
 
 before_script:
   - export NETCOMMONS_BUILD_DIR=`dirname $TRAVIS_BUILD_DIR`/NetCommons3
