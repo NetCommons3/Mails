@@ -63,7 +63,7 @@ class NetCommonsMail extends CakeEmail {
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
-		$this->User = ClassRegistry::init('Users.user');
+		$this->User = ClassRegistry::init('Users.User');
 
 		$this->mailAssignTag = new NetCommonsMailAssignTag();
 	}
@@ -349,16 +349,16 @@ class NetCommonsMail extends CakeEmail {
  */
 	private function __sendUserEmails($users, $mailQueueLanguageId) {
 		$messages = null;
+
 		foreach ($users as $user) {
-			// shell直だと モデル名 user, コントローラーからexec呼出だと Userだった。aliasで取得
 			$userEmails = array(
 				array(
-					'email' => Hash::get($user, $this->User->alias . '.email'),
-					'is_email_reception' => Hash::get($user, $this->User->alias . '.is_email_reception'),
+					'email' => Hash::get($user, 'User.email'),
+					'is_email_reception' => Hash::get($user, 'User.is_email_reception'),
 				),
 				array(
-					'email' => Hash::get($user, $this->User->alias . '.moblie_mail'),
-					'is_email_reception' => Hash::get($user, $this->User->alias . '.is_moblie_mail_reception'),
+					'email' => Hash::get($user, 'User.moblie_mail'),
+					'is_email_reception' => Hash::get($user, 'User.is_moblie_mail_reception'),
 				),
 			);
 
@@ -368,7 +368,7 @@ class NetCommonsMail extends CakeEmail {
 					continue;
 				}
 				if (empty($userEmail['email'])) {
-					$userId = Hash::get($user, $this->User->alias . '.id');
+					$userId = Hash::get($user, 'User.id');
 					$logMessage = "Email is empty. userId=$userId";
 					CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 					continue;
