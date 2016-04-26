@@ -77,14 +77,18 @@ class MailSendShell extends AppShell {
 	public function send() {
 		$now = NetCommonsTime::getNowDatetime();
 
-		// キュー取得
-		/** @link http://www.cpa-lab.com/tech/081 */
-		$mailQueues = $this->MailQueue->find('all', array(
-			'recursive' => 1,
-			'conditions' => array(
-				'MailQueue.send_time <=' => $now,
-			)
-		));
+		// キュー取得 - 行ロック
+		// http://k-1blog.com/development/program/post-7407/
+		// http://d.hatena.ne.jp/fat47/20140212/1392171784
+		$sql = "SELECT * FROM " .
+			"mail_queues MailQueue, " .
+			"mail_queue_users MailQueueUser " .
+			"WHERE " .
+			"MailQueue.id = MailQueueUser.mail_queue_id " .
+			"AND MailQueue.send_time <= ? " .
+			"FOR UPDATE ";
+		$mailQueues = $this->MailQueue->query($sql, array($now));
+
 		if (empty($mailQueues)) {
 			//CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
@@ -112,75 +116,32 @@ class MailSendShell extends AppShell {
 			return;
 		}
 
-		// ルーム配信時、同じメールは１通だけ送るようにする
-		$mailQueues = $this->__deleteDuplicateMailForRoom($mailQueues);
+		$beforeId = $mailQueues[0]['MailQueue']['id'];
 
 		foreach ($mailQueues as $mailQueue) {
-			foreach ($mailQueue['MailQueueUser'] as $mailQueueUser) {
-				$mail = new NetCommonsMail();
-				$mail->initShell($siteSetting, $mailQueue);
-
-				//送信しない（デバッグ用）
-				//				$config = $mail->config();
-				//				$config['transport'] = 'Debug';
-				//				$mail->config($config);
-				//				$messages = $mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
-				//				CakeLog::debug(print_r($messages, true));
-
-				$mail->sendQueueMail($mailQueueUser, $mailQueue['MailQueue']['language_id']);
-
-				// 送信後にキュー削除
-				$this->MailQueueUser->deleteMailQueueUser($mailQueueUser['id']);
+			// idが変わったら、MailQueue削除
+			if ($beforeId != $mailQueue['MailQueue']['id']) {
+				$this->MailQueue->delete($beforeId);
 			}
-			$this->MailQueue->deleteMailQueue($mailQueue['MailQueue']['id']);
+
+			$mail = new NetCommonsMail();
+			$mail->initShell($siteSetting, $mailQueue);
+
+			//送信しない（デバッグ用）
+			//			$config = $mail->config();
+			//			$config['transport'] = 'Debug';
+			//			$mail->config($config);
+			//			$messages = $mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+			//			CakeLog::debug(print_r($messages, true));
+
+			$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+
+			// 送信後にMailQueueUser削除
+			$this->MailQueueUser->delete($mailQueue['MailQueueUser']['id']);
+			$beforeId = $mailQueue['MailQueue']['id'];
 		}
-	}
 
-/**
- * ルーム配信時、同じメールは１通だけ送るようにする
- *
- * @param array $mailQueues メールキュー
- * @return array メールキュー
- */
-	private function __deleteDuplicateMailForRoom($mailQueues) {
-		foreach ($mailQueues as &$mailQueue) {
-			$roomIds = Hash::extract($mailQueue['MailQueueUser'], '{n}.room_id');
-			$roomIds = array_filter($roomIds);
-			$userIds = Hash::extract($mailQueue['MailQueueUser'], '{n}.user_id');
-			$userIds = array_filter($userIds);
-
-			// ルーム配信時、同じメールは１通だけ送るようにする
-			// 複数件でルームIDあり
-			// ルームIDあり & ユーザIDあり
-			if (!empty($roomIds) && !empty($userIds)) {
-				$key = key($roomIds);
-				$roomId = $roomIds[$key];
-				$blockKey = $mailQueue['MailQueueUser'][$key]['block_key'];
-
-				// --- ルーム単位でメールするユーザID達
-				$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-				$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'),
-					$roomId, $blockKey);
-
-				$roleKeys = array_keys($permissions['BlockRolePermissions']['mail_content_receivable']);
-				$conditions = array(
-					'Room.id' => $roomId,
-					'RolesRoom.role_key' => $roleKeys,
-				);
-				$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
-				$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.roles_room_id');
-
-				foreach ($userIds as $key => $userId) {
-					// ルーム配信に含まれる
-					if (in_array($userId, $rolesRoomsUserIds)) {
-						// ルーム配信とユーザID重複のため、キューユーザ削除
-						$this->MailQueueUser->deleteMailQueueUser($mailQueue['MailQueueUser'][$key]['id']);
-
-						unset($mailQueue['MailQueueUser'][$key]);
-					}
-				}
-			}
-		}
-		return $mailQueues;
+		// 後始末 - MailQueue削除
+		$this->MailQueue->delete($beforeId);
 	}
 }

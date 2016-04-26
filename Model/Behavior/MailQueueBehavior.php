@@ -428,6 +428,15 @@ class MailQueueBehavior extends ModelBehavior {
 				$addUserIds = array_unique($addUserIds);
 				// 空要素を排除
 				$addUserIds = Hash::filter($addUserIds);
+				// 送らないユーザIDを排除
+				if (isset($notSendRoomUserIds)) {
+					$notSendRoomUserIds = explode('|', $notSendRoomUserIds);
+					foreach ($notSendRoomUserIds as $notSendRoomUserId) {
+						if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
+							unset($addUserIds[$key]);
+						}
+					}
+				}
 
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
