@@ -297,4 +297,91 @@ class MailQueueUser extends MailsAppModel {
 
 		return $notSendRoomUserIds;
 	}
+
+/**
+ * ルーム配信で、キューの配信先データ登録
+ *
+ * @param array $mailQueueUser received post data
+ * @param string $sendTime メール送信日時
+ * @param array $notSendRoomUserIds ルーム配信で送らないユーザID
+ * @param array $addUserIds 一部だけ変更するフィールドの値(配列)
+ * @return void
+ * @throws InternalErrorException
+ */
+	public function addMailQueueUserInRoom($mailQueueUser, $sendTime, $notSendRoomUserIds,
+											$addUserIds) {
+		// --- ルーム配信
+		$roomId = Current::read('Room.id');
+		$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
+
+		// ルーム配信で送らないユーザID
+		$notSendRoomUserIds = $this->__getNotSendRoomUserIds($sendTime, $notSendRoomUserIds);
+		$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
+
+		$mailQueueUser = $this->create($mailQueueUser);
+		/** @see MailQueueUser::saveMailQueueUser() */
+		if (! $this->saveMailQueueUser($mailQueueUser)) {
+			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+		}
+
+		// --- 追加のユーザ達に配信
+		// ルームIDをクリア
+		$mailQueueUser['MailQueueUser']['room_id'] = null;
+
+		// 追加のユーザ達
+		$addUserIds = $this->__getAddUserIds($addUserIds, $notSendRoomUserIds);
+
+		$this->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
+	}
+
+/**
+ * ルーム配信で送らないユーザID ゲット
+ *
+ * @param string $sendTime メール送信日時
+ * @param array $notSendRoomUserIds ルーム配信で送らないユーザID
+ * @return string ルーム配信で送らないユーザID
+ */
+	private function __getNotSendRoomUserIds($sendTime, $notSendRoomUserIds) {
+		// 未来日送信は2通（承認完了とルーム配信）送るため、送らないユーザIDをセットしない
+		$now = NetCommonsTime::getNowDatetime();
+		if ($sendTime > $now) {
+			return null;
+		}
+
+		// 重複登録を排除
+		$notSendRoomUserIds = array_unique($notSendRoomUserIds);
+		// 空要素を排除
+		$notSendRoomUserIds = Hash::filter($notSendRoomUserIds);
+		$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
+
+		return $notSendRoomUserIds;
+	}
+
+/**
+ * 追加で配信するのユーザID ゲット
+ *
+ * @param array $addUserIds 追加で配信するのユーザID
+ * @param array $notSendUserIds 送らないユーザID
+ * @return string 追加で配信するのユーザID
+ */
+	private function __getAddUserIds($addUserIds, $notSendUserIds) {
+		// 登録者と追加ユーザ達の重複登録を排除
+		$addUserIds = array_unique($addUserIds);
+		// 空要素を排除
+		$addUserIds = Hash::filter($addUserIds);
+
+		if ($notSendUserIds === null) {
+			return $addUserIds;
+		}
+
+		// 送らないユーザIDを排除
+		$notSendUserIds = explode('|', $notSendUserIds);
+		foreach ($notSendUserIds as $notSendRoomUserId) {
+			if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
+				unset($addUserIds[$key]);
+			}
+		}
+
+		return $addUserIds;
+	}
 }

@@ -270,6 +270,20 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
+ * 埋め込みタグをデータから参照して追加
+ *
+ * @param array $tags タグ配列
+ * @param array $data タグ配列
+ * @return void
+ */
+	public function assignTagDatas($tags, $data) {
+		foreach ($tags as $tag => $dataKey) {
+			$dataValue = Hash::get($data, $dataKey);
+			$this->assignTag($tag, $dataValue);
+		}
+	}
+
+/**
  * 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
  *
  * @return array タグ

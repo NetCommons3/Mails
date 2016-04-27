@@ -246,10 +246,8 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __getUseWorkflow(Model $model) {
 		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
 		$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
-		if ($key === null) {
-			// 暫定対応
-			$useWorkflow = 1;
-		} else {
+		$useWorkflow = 1;
+		if (isset($key)) {
 			$useWorkflow = Hash::get($model->data, $key);
 		}
 		return $useWorkflow;
@@ -279,66 +277,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		// 通常
 		return Current::read('Plugin.key');
-	}
-
-/**
- * ルーム配信で送らないユーザID ゲット
- *
- * @param Model $model モデル
- * @param array $sendTime メール送信日時
- * @return string ルーム配信で送らないユーザID
- */
-	private function __getNotSendRoomUserIds(Model $model, $sendTime) {
-		// 未来日送信は2通（承認完了とルーム配信）送るため、送らないユーザIDをセットしない
-		$now = NetCommonsTime::getNowDatetime();
-		if ($sendTime > $now) {
-			return null;
-		}
-
-		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
-		// ルーム配信で送らないユーザID セット
-		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$notSendRoomUserIds = $this->settings[$model->alias][$key];
-		// 重複登録を排除
-		$notSendRoomUserIds = array_unique($notSendRoomUserIds);
-		// 空要素を排除
-		$notSendRoomUserIds = Hash::filter($notSendRoomUserIds);
-		$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
-
-		return $notSendRoomUserIds;
-	}
-
-/**
- * 追加のユーザ達 ゲット
- *
- * @param Model $model モデル
- * @param array $sendTime メール送信日時
- * @return string ルーム配信で送らないユーザID
- */
-	private function __getAddUserIds(Model $model, $sendTime) {
-		// 登録者にも配信
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
-		$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-		$addUserIds[] = $createdUserId;
-		// 登録者と追加ユーザ達の重複登録を排除
-		$addUserIds = array_unique($addUserIds);
-		// 空要素を排除
-		$addUserIds = Hash::filter($addUserIds);
-
-		$notSendRoomUserIds = $this->__getNotSendRoomUserIds($model, $sendTime);
-		if ($notSendRoomUserIds === null) {
-			return $addUserIds;
-		}
-
-		// 送らないユーザIDを排除
-		$notSendRoomUserIds = explode('|', $notSendRoomUserIds);
-		foreach ($notSendRoomUserIds as $notSendRoomUserId) {
-			if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
-				unset($addUserIds[$key]);
-			}
-		}
-
-		return $addUserIds;
 	}
 
 /**
@@ -452,28 +390,18 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} else {
 				// --- ルーム配信
-				$roomId = Current::read('Room.id');
-				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
-
 				// ルーム配信で送らないユーザID
-				$notSendRoomUserIds = $this->__getNotSendRoomUserIds($model, $mailQueue['MailQueue']['send_time']);
-				$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
+				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+				$notSendRoomUserIds = $this->settings[$model->alias][$key];
 
-				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
-				/** @see MailQueueUser::saveMailQueueUser() */
-				if (! $model->MailQueueUser->saveMailQueueUser($mailQueueUser)) {
-					throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-				}
+				// 登録者にも配信
+				$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+				$addUserIds[] = $createdUserId;
 
-				// --- 追加のユーザ達に配信
-				// ルームIDをクリア
-				$mailQueueUser['MailQueueUser']['room_id'] = null;
-
-				// 追加のユーザ達
-				$addUserIds = $this->__getAddUserIds($model, $mailQueue['MailQueue']['send_time']);
-
-				/** @see MailQueueUser::addMailQueueUsers() */
-				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
+				/** @see MailQueueUser::addMailQueueUserInRoom() */
+				$model->MailQueueUser->addMailQueueUserInRoom($mailQueueUser,
+					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $addUserIds);
 			}
 		}
 
@@ -614,10 +542,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag->setXTags($model->data, $workflowType, $useTagBehavior);
 
 		// 定型文の埋め込みタグをセット
-		foreach ($this->settings[$model->alias]['embedTags'] as $embedTag => $dataKey) {
-			$dataValue = Hash::get($model->data, $dataKey);
-			$mailAssignTag->assignTag($embedTag, $dataValue);
-		}
+		$mailAssignTag->assignTagDatas($this->settings[$model->alias]['embedTags'], $model->data);
 
 		// - 追加の埋め込みタグ セット
 		// 既にセットされているタグであっても、上書きされる
