@@ -282,6 +282,66 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * ルーム配信で送らないユーザID ゲット
+ *
+ * @param Model $model モデル
+ * @param array $sendTime メール送信日時
+ * @return string ルーム配信で送らないユーザID
+ */
+	private function __getNotSendRoomUserIds(Model $model, $sendTime) {
+		// 未来日送信は2通（承認完了とルーム配信）送るため、送らないユーザIDをセットしない
+		$now = NetCommonsTime::getNowDatetime();
+		if ($sendTime > $now) {
+			return null;
+		}
+
+		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+		// ルーム配信で送らないユーザID セット
+		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$notSendRoomUserIds = $this->settings[$model->alias][$key];
+		// 重複登録を排除
+		$notSendRoomUserIds = array_unique($notSendRoomUserIds);
+		// 空要素を排除
+		$notSendRoomUserIds = Hash::filter($notSendRoomUserIds);
+		$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
+
+		return $notSendRoomUserIds;
+	}
+
+/**
+ * 追加のユーザ達 ゲット
+ *
+ * @param Model $model モデル
+ * @param array $sendTime メール送信日時
+ * @return string ルーム配信で送らないユーザID
+ */
+	private function __getAddUserIds(Model $model, $sendTime) {
+		// 登録者にも配信
+		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+		$addUserIds[] = $createdUserId;
+		// 登録者と追加ユーザ達の重複登録を排除
+		$addUserIds = array_unique($addUserIds);
+		// 空要素を排除
+		$addUserIds = Hash::filter($addUserIds);
+
+		$notSendRoomUserIds = $this->__getNotSendRoomUserIds($model, $sendTime);
+		if ($notSendRoomUserIds === null) {
+			return $addUserIds;
+		}
+
+		// 送らないユーザIDを排除
+		$notSendRoomUserIds = explode('|', $notSendRoomUserIds);
+		foreach ($notSendRoomUserIds as $notSendRoomUserId) {
+			if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
+				unset($addUserIds[$key]);
+			}
+		}
+
+		return $addUserIds;
+	}
+
+/**
  * キュー保存
  *
  * @param Model $model モデル
@@ -395,20 +455,9 @@ class MailQueueBehavior extends ModelBehavior {
 				$roomId = Current::read('Room.id');
 				$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
 
-				// 未来日送信は2通（承認完了とルーム配信）送るため、送らないユーザIDをセットしない
-				$now = NetCommonsTime::getNowDatetime();
-				if ($mailQueue['MailQueue']['send_time'] <= $now) {
-					// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
-					// ルーム配信で送らないユーザID セット
-					$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-					$notSendRoomUserIds = $this->settings[$model->alias][$key];
-					// 重複登録を排除
-					$notSendRoomUserIds = array_unique($notSendRoomUserIds);
-					// 空要素を排除
-					$notSendRoomUserIds = Hash::filter($notSendRoomUserIds);
-					$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
-					$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
-				}
+				// ルーム配信で送らないユーザID
+				$notSendRoomUserIds = $this->__getNotSendRoomUserIds($model, $mailQueue['MailQueue']['send_time']);
+				$mailQueueUser['MailQueueUser']['not_send_room_user_ids'] = $notSendRoomUserIds;
 
 				$mailQueueUser = $model->MailQueueUser->create($mailQueueUser);
 				/** @see MailQueueUser::saveMailQueueUser() */
@@ -420,23 +469,8 @@ class MailQueueBehavior extends ModelBehavior {
 				// ルームIDをクリア
 				$mailQueueUser['MailQueueUser']['room_id'] = null;
 
-				// 登録者にも配信
-				$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
-				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-				$addUserIds[] = $createdUserId;
-				// 登録者と追加ユーザ達の重複登録を排除
-				$addUserIds = array_unique($addUserIds);
-				// 空要素を排除
-				$addUserIds = Hash::filter($addUserIds);
-				// 送らないユーザIDを排除
-				if (isset($notSendRoomUserIds)) {
-					$notSendRoomUserIds = explode('|', $notSendRoomUserIds);
-					foreach ($notSendRoomUserIds as $notSendRoomUserId) {
-						if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
-							unset($addUserIds[$key]);
-						}
-					}
-				}
+				// 追加のユーザ達
+				$addUserIds = $this->__getAddUserIds($model, $mailQueue['MailQueue']['send_time']);
 
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
