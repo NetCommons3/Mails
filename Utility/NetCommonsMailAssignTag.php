@@ -323,23 +323,6 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
- * オリジナルタグのセット用マジックメソッド
- *
- * @param string $method メソッド
- * @param array $params パラメータ
- * @return mixed
- */
-	public function __call($method, $params) {
-		$callAssignTagFunc = ['setXTags', 'setXUrl', 'setXUser', 'setXWorkflowComment', 'setXRoom'];
-		if (in_array($method, $callAssignTagFunc, true)) {
-			$ExtentionTag = new NetCommonsExtentionTag();
-			$params = call_user_func_array(array($ExtentionTag, 'g' . substr($method, 1)), $params);
-			$method = 'assignTag';
-		}
-		return call_user_func_array(array($this, $method), $params);
-	}
-
-/**
  * SiteSettingの定型文の種類 ゲット
  *
  * @param string $status 承認ステータス
@@ -363,6 +346,23 @@ class NetCommonsMailAssignTag {
 			return self::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL;
 		}
 		return null;
+	}
+
+/**
+ * オリジナルタグのセット用マジックメソッド
+ *
+ * @param string $method メソッド
+ * @param array $params パラメータ
+ * @return mixed
+ */
+	public function __call($method, $params) {
+		$callAssignTagFunc = ['setXTags', 'setXUrl', 'setXUser', 'setXWorkflowComment', 'setXRoom'];
+		if (in_array($method, $callAssignTagFunc, true)) {
+			$ExtentionTag = new NetCommonsExtentionTag();
+			$params = call_user_func_array(array($ExtentionTag, 'g' . substr($method, 1)), $params);
+			$method = 'assignTag';
+		}
+		return call_user_func_array(array($this, $method), $params);
 	}
 
 }
