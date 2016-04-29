@@ -85,6 +85,7 @@ class NetCommonsMailAssignTag {
 			'Mail.from_name',
 			'Mail.messageType',
 			'Mail.transport',
+			'App.site_name',
 			'Workflow.approval_mail_subject',
 			'Workflow.approval_mail_body',
 			'Workflow.disapproval_mail_subject',

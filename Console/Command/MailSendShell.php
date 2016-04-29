@@ -98,6 +98,7 @@ class MailSendShell extends AppShell {
 			'Mail.smtp.port',
 			'Mail.smtp.user',
 			'Mail.smtp.pass',
+			'App.site_name',
 		));
 		$from = SiteSettingUtil::read('Mail.from');
 
