@@ -87,7 +87,7 @@ class NetCommonsMail extends CakeEmail {
 			'Mail.smtp.port',
 			'Mail.smtp.user',
 			'Mail.smtp.pass',
-		), false);
+		));
 		$this->__initConfig();
 		//$this->__setTags($languageId, $pluginName);
 		$this->mailAssignTag->initTags($languageId, $pluginName);

@@ -94,7 +94,7 @@ class NetCommonsMailAssignTag {
 			'Workflow.approval_completion_mail_body',
 			'Mail.body_header',
 			'Mail.signature',
-		), false);
+		));
 
 		$this->initTags($languageId, $pluginName);
 	}

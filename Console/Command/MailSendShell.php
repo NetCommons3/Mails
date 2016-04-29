@@ -98,7 +98,7 @@ class MailSendShell extends AppShell {
 			'Mail.smtp.port',
 			'Mail.smtp.user',
 			'Mail.smtp.pass',
-		), false);
+		));
 		$from = SiteSettingUtil::read('Mail.from');
 
 		// Fromが空ならメール未設定のため、メール送らない
