@@ -81,23 +81,20 @@ class NetCommonsMailAssignTag {
  */
 	public function initPlugin($languageId, $pluginName = null) {
 		// SiteSettingからメール設定を取得する
-		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-				'Mail.from_name',
-				'Mail.messageType',
-				'Mail.transport',
-				'App.site_name',
-				'Workflow.approval_mail_subject',
-				'Workflow.approval_mail_body',
-				'Workflow.disapproval_mail_subject',
-				'Workflow.disapproval_mail_body',
-				'Workflow.approval_completion_mail_subject',
-				'Workflow.approval_completion_mail_body',
-				'Mail.body_header',
-				'Mail.signature',
-			)
-		));
+		SiteSettingUtil::setup(array(
+			'Mail.from',
+			'Mail.from_name',
+			'Mail.messageType',
+			'Mail.transport',
+			'Workflow.approval_mail_subject',
+			'Workflow.approval_mail_body',
+			'Workflow.disapproval_mail_subject',
+			'Workflow.disapproval_mail_body',
+			'Workflow.approval_completion_mail_subject',
+			'Workflow.approval_completion_mail_body',
+			'Mail.body_header',
+			'Mail.signature',
+		), false);
 
 		$this->initTags($languageId, $pluginName);
 	}
@@ -113,11 +110,11 @@ class NetCommonsMailAssignTag {
 		if ($pluginName === null) {
 			$pluginName = Current::read('Plugin.name');
 		}
-		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
-		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
-		$siteName = Hash::get($this->siteSetting['App.site_name'], $languageId . '.value');
-		$bodyHeader = Hash::get($this->siteSetting['Mail.body_header'], $languageId . '.value');
-		$signature = Hash::get($this->siteSetting['Mail.signature'], $languageId . '.value');
+		$from = SiteSettingUtil::read('Mail.from');
+		$fromName = SiteSettingUtil::read('Mail.from_name', null, $languageId);
+		$siteName = SiteSettingUtil::read('App.site_name', null, $languageId);
+		$bodyHeader = SiteSettingUtil::read('Mail.body_header', null, $languageId);
+		$signature = SiteSettingUtil::read('Mail.signature', null, $languageId);
 
 		$netCommonsTime = new NetCommonsTime();
 		$siteimezone = $netCommonsTime->getSiteTimezone();
@@ -193,10 +190,10 @@ class NetCommonsMailAssignTag {
  */
 	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType,
 													$mailSettingPlugin = null) {
-		$subject = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_subject'],
-			$languageId . '.value');
-		$body = Hash::get($this->siteSetting['Workflow.' . $fixedPhraseType . '_mail_body'],
-			$languageId . '.value');
+		$subject = SiteSettingUtil::read('Workflow.' . $fixedPhraseType . '_mail_subject',
+			null, $languageId);
+		$body = SiteSettingUtil::read('Workflow.' . $fixedPhraseType . '_mail_body',
+			null, $languageId);
 
 		// 定型文
 		$this->setFixedPhraseSubject($subject);
@@ -304,7 +301,7 @@ class NetCommonsMailAssignTag {
 		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
 		// html or text
-		$messageType = Hash::get($this->siteSetting['Mail.messageType'], '0.value');
+		$messageType = SiteSettingUtil::read('Mail.messageType');
 
 		// URL
 		if (isset($this->assignTags['X-URL'])) {
