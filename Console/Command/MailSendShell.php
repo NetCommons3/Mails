@@ -54,15 +54,9 @@ class MailSendShell extends AppShell {
  */
 	public function main() {
 		// 初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応
-		$siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.use_cron',
-			)
-		));
-		$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
+		$useCron = SiteSettingUtil::read('Mail.use_cron', false);
 		if (! $useCron) {
-			$this->SiteSetting->id = $siteSetting['Mail.use_cron'][0]['id'];
-			$this->SiteSetting->saveField('value', 1);
+			$this->SiteSetting->saveSiteSettingByKey('Mail.use_cron', 1);
 		}
 
 		// メール送信
@@ -95,20 +89,18 @@ class MailSendShell extends AppShell {
 		}
 
 		// SiteSettingからメール設定を取得する
-		$siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-				'Mail.from_name',
-				'Mail.messageType',
-				'Mail.transport',
-				'Mail.smtp.host',
-				'Mail.smtp.port',
-				'Mail.smtp.user',
-				'Mail.smtp.pass',
-				'App.site_name',
-			)
+		SiteSettingUtil::setup(array(
+			'Mail.from',
+			'Mail.from_name',
+			'Mail.messageType',
+			'Mail.transport',
+			'Mail.smtp.host',
+			'Mail.smtp.port',
+			'Mail.smtp.user',
+			'Mail.smtp.pass',
+			'App.site_name',
 		));
-		$from = Hash::get($siteSetting['Mail.from'], '0.value');
+		$from = SiteSettingUtil::read('Mail.from');
 
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
@@ -125,7 +117,7 @@ class MailSendShell extends AppShell {
 			}
 
 			$mail = new NetCommonsMail();
-			$mail->initShell($siteSetting, $mailQueue);
+			$mail->initShell($mailQueue);
 
 			//送信しない（デバッグ用）
 			//			$config = $mail->config();

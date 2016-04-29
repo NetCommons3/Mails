@@ -59,7 +59,6 @@ class NetCommonsMail extends CakeEmail {
 	public function __construct($config = null) {
 		parent::__construct($config);
 
-		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->MailSetting = ClassRegistry::init('Mails.MailSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->RolesRoomsUser = ClassRegistry::init('Rooms.RolesRoomsUser');
@@ -79,19 +78,16 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function initPlugin($languageId, $pluginName = null) {
 		// SiteSettingからメール設定を取得する
-		$this->siteSetting = $this->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array(
-				'Mail.from',
-				'Mail.from_name',
-				'Mail.messageType',
-				'Mail.transport',
-				'Mail.smtp.host',
-				'Mail.smtp.port',
-				'Mail.smtp.user',
-				'Mail.smtp.pass',
-			)
+		SiteSettingUtil::setup(array(
+			'Mail.from',
+			'Mail.from_name',
+			'Mail.messageType',
+			'Mail.transport',
+			'Mail.smtp.host',
+			'Mail.smtp.port',
+			'Mail.smtp.user',
+			'Mail.smtp.pass',
 		));
-
 		$this->__initConfig();
 		//$this->__setTags($languageId, $pluginName);
 		$this->mailAssignTag->initTags($languageId, $pluginName);
@@ -100,12 +96,10 @@ class NetCommonsMail extends CakeEmail {
 /**
  * 初期設定 Shell用
  *
- * @param array $siteSetting サイト設定データ
  * @param array $mailQueue メールキューデータ
  * @return void
  */
-	public function initShell($siteSetting, $mailQueue) {
-		$this->siteSetting = $siteSetting;
+	public function initShell($mailQueue) {
 		$this->__initConfig();
 		$this->__setMailSettingQueue($mailQueue);
 	}
@@ -117,14 +111,14 @@ class NetCommonsMail extends CakeEmail {
  */
 	private function __initConfig() {
 		$config = array();
-		$transport = Hash::get($this->siteSetting['Mail.transport'], '0.value');
+		$transport = SiteSettingUtil::read('Mail.transport');
 
 		// SMTP, SMTPAuth
 		if ($transport == SiteSetting::MAIL_TRANSPORT_SMTP) {
-			$smtpHost = Hash::get($this->siteSetting['Mail.smtp.host'], '0.value');
-			$smtpPort = Hash::get($this->siteSetting['Mail.smtp.port'], '0.value');
-			$smtpUser = Hash::get($this->siteSetting['Mail.smtp.user'], '0.value');
-			$smtpPass = Hash::get($this->siteSetting['Mail.smtp.pass'], '0.value');
+			$smtpHost = SiteSettingUtil::read('Mail.smtp.host');
+			$smtpPort = SiteSettingUtil::read('Mail.smtp.port');
+			$smtpUser = SiteSettingUtil::read('Mail.smtp.user');
+			$smtpPass = SiteSettingUtil::read('Mail.smtp.pass');
 
 			$config['transport'] = 'Smtp';
 			$config['host'] = $smtpHost;
@@ -145,7 +139,7 @@ class NetCommonsMail extends CakeEmail {
 		parent::config($config);
 
 		// html or text
-		$messageType = Hash::get($this->siteSetting['Mail.messageType'], '0.value');
+		$messageType = SiteSettingUtil::read('Mail.messageType');
 		parent::emailFormat($messageType);
 	}
 
@@ -156,8 +150,8 @@ class NetCommonsMail extends CakeEmail {
  * @return void
  */
 	public function setFrom($languageId) {
-		$from = Hash::get($this->siteSetting['Mail.from'], '0.value');
-		$fromName = Hash::get($this->siteSetting['Mail.from_name'], $languageId . '.value');
+		$from = SiteSettingUtil::read('Mail.from');
+		$fromName = SiteSettingUtil::read('Mail.from_name', null, $languageId);
 		parent::from($from, $fromName);
 		// 通称envelope-fromセット(正式名reverse-path RFC 5321)
 		parent::sender($from, $fromName);
@@ -266,11 +260,6 @@ class NetCommonsMail extends CakeEmail {
  * @return bool|string|array false:エラー|送信メール文|送信メール文配列
  */
 	public function sendQueueMail($mailQueueUser, $mailQueueLanguageId) {
-		if (empty($this->siteSetting)) {
-			$logMessage = 'SiteSetting Data is empty.';
-			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
 		if ($this->body == '') {
 			$logMessage = 'Mail body is empty.';
 			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
@@ -388,12 +377,6 @@ class NetCommonsMail extends CakeEmail {
  * @return bool 成功 or 失敗
  */
 	public function sendMailDirect() {
-		if (empty($this->siteSetting)) {
-			$logMessage = 'SiteSetting Data is empty.';
-			LogError($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-
 		// 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
 		$this->mailAssignTag->assignTagReplace();
 		$this->body = $this->mailAssignTag->fixedPhraseBody;

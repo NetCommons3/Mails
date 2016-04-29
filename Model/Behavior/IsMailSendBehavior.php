@@ -215,10 +215,7 @@ class IsMailSendBehavior extends ModelBehavior {
 			$settingPluginKey = Current::read('Plugin.key');
 		}
 
-		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array('Mail.from')
-		));
-		$from = Hash::get($siteSetting['Mail.from'], '0.value');
+		$from = SiteSettingUtil::read('Mail.from');
 
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
@@ -261,11 +258,7 @@ class IsMailSendBehavior extends ModelBehavior {
 		}
 
 		// SiteSettingからメール設定を取得する
-		$siteSetting = $model->SiteSetting->getSiteSettingForEdit(array(
-			'SiteSetting.key' => array('Mail.use_cron')
-		));
-
-		$useCron = Hash::get($siteSetting['Mail.use_cron'], '0.value');
+		$useCron = SiteSettingUtil::read('Mail.use_cron');
 		$now = NetCommonsTime::getNowDatetime();
 
 		// クーロンが使えなくて未来日なら、未来日メールなので送らない
