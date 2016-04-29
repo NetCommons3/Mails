@@ -66,7 +66,6 @@ class NetCommonsMailAssignTag {
  * Constructor
  */
 	public function __construct() {
-		$this->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
 		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
 		$this->User = ClassRegistry::init('Users.User');
 	}
