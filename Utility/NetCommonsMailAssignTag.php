@@ -63,14 +63,6 @@ class NetCommonsMailAssignTag {
 	public $siteSetting = null;
 
 /**
- * Constructor
- */
-	public function __construct() {
-		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
-		$this->User = ClassRegistry::init('Users.User');
-	}
-
-/**
  * 初期設定 プラグイン用
  *
  * @param int $languageId 言語ID
@@ -134,17 +126,7 @@ class NetCommonsMailAssignTag {
 		$this->assignTag('X-SIGNATURE', $signature);
 
 		// X-ROOMタグ
-		$roomId = Current::read('Room.id');
-		$roomsLanguage = $this->RoomsLanguage->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'room_id' => $roomId,
-				'language_id' => $languageId,
-			),
-			'callbacks' => false,
-		));
-		$roomName = Hash::get($roomsLanguage, 'RoomsLanguage.name');
-		$this->assignTag('X-ROOM', htmlspecialchars($roomName));
+		$this->setXRoom($languageId);
 	}
 
 /**
@@ -341,84 +323,20 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
- * 埋め込みタグ{X-USER} セット
+ * オリジナルタグのセット用マジックメソッド
  *
- * @param int $createdUserId 登録者ID
- * @return void
+ * @param string $method メソッド
+ * @param array $params パラメータ
+ * @return mixed
  */
-	public function setXUser($createdUserId) {
-		$user = $this->User->findById($createdUserId);
-		$handlename = Hash::get($user, 'User.handlename');
-		$this->assignTag('X-USER', $handlename);
-	}
-
-/**
- * 埋め込みタグ{X-URL} セット
- *
- * @param string $contentKey コンテンツキー
- * @return void
- */
-	public function setXUrl($contentKey) {
-		// fullpassのURL
-		$url = NetCommonsUrl::actionUrl(array(
-			'controller' => Current::read('Plugin.key'),
-			'action' => 'view',
-			'block_id' => Current::read('Block.id'),
-			'frame_id' => Current::read('Frame.id'),
-			'key' => $contentKey
-		));
-		$url = NetCommonsUrl::url($url, true);
-		$this->assignTag('X-URL', $url);
-	}
-
-/**
- * 埋め込みタグ{X-WORKFLOW_COMMENT} セット
- *
- * @param array $data saveしたデータ
- * @param string $fixedPhraseType コンテンツキー
- * @param int $useWorkflowBehavior ワークフロービヘイビアを使う
- * @return void
- */
-	public function setXWorkflowComment($data, $fixedPhraseType, $useWorkflowBehavior) {
-		$this->assignTag('X-WORKFLOW_COMMENT', '');
-		if (!$useWorkflowBehavior) {
-			return;
+	public function __call($method, $params) {
+		$callAssignTagFunc = ['setXTags', 'setXUrl', 'setXUser', 'setXWorkflowComment', 'setXRoom'];
+		if (in_array($method, $callAssignTagFunc, true)) {
+			$ExtentionTag = new NetCommonsExtentionTag();
+			$params = call_user_func_array(array($ExtentionTag, 'g' . substr($method, 1)), $params);
+			$method = 'assignTag';
 		}
-
-		if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
-			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
-			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
-
-			$workflowComment = Hash::get($data, 'WorkflowComment.comment');
-			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
-			$workflowComment = $commentLabel . ":\n" . $workflowComment;
-			$this->assignTag('X-WORKFLOW_COMMENT', $workflowComment);
-		}
-	}
-
-/**
- * 埋め込みタグ{X-TAGS}の値 セット
- *
- * @param array $data saveしたデータ
- * @param string $workflowType ワークフロータイプ
- * @param int $useTagBehavior タグビヘイビアを使う
- * @return void
- */
-	public function setXTags($data, $workflowType, $useTagBehavior) {
-		$this->assignTag('X-TAGS', '');
-		if (!$useTagBehavior) {
-			return;
-		}
-
-		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
-				$workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-
-			$tags = Hash::extract($data, 'Tag.{n}.name');
-			$tags = implode(',', $tags);
-			$tagLabel = __d('blogs', 'tag');
-			$tags = $tagLabel . ':' . $tags;
-			$this->assignTag('X-TAGS', $tags);
-		}
+		return call_user_func_array(array($this, $method), $params);
 	}
 
 /**
@@ -446,4 +364,131 @@ class NetCommonsMailAssignTag {
 		}
 		return null;
 	}
+
+}
+
+
+/**
+ * NetCommonsメール 埋め込みタグ Utility
+ *
+ * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
+ * @package NetCommons\Mails\Utility
+ */
+class NetCommonsExtentionTag {
+
+/**
+ * Constructor
+ */
+	public function __construct() {
+		$this->RoomsLanguage = ClassRegistry::init('Rooms.RoomsLanguage');
+		$this->User = ClassRegistry::init('Users.User');
+	}
+
+/**
+ * 埋め込みタグ{X-USER}にセットする値 を取得
+ *
+ * @param int $createdUserId 登録者ID
+ * @return array
+ */
+	public function getXUser($createdUserId) {
+		$user = $this->User->findById($createdUserId);
+		$handlename = Hash::get($user, 'User.handlename');
+		return array('X-USER', $handlename);
+	}
+
+/**
+ * 埋め込みタグ{X-URL}にセットする値 を取得
+ *
+ * @param string $contentKey コンテンツキー
+ * @return array
+ */
+	public function getXUrl($contentKey) {
+		// fullpassのURL
+		$url = NetCommonsUrl::actionUrl(array(
+			'controller' => Current::read('Plugin.key'),
+			'action' => 'view',
+			'block_id' => Current::read('Block.id'),
+			'frame_id' => Current::read('Frame.id'),
+			'key' => $contentKey
+		));
+		$url = NetCommonsUrl::url($url, true);
+		return array('X-URL', $url);
+	}
+
+/**
+ * 埋め込みタグ{X-WORKFLOW_COMMENT}にセットする値 を取得
+ *
+ * @param array $data saveしたデータ
+ * @param string $fixedPhraseType コンテンツキー
+ * @param int $useWorkflowBehavior ワークフロービヘイビアを使う
+ * @return array
+ */
+	public function getXWorkflowComment($data, $fixedPhraseType, $useWorkflowBehavior) {
+		$result = array('X-WORKFLOW_COMMENT', '');
+		if (!$useWorkflowBehavior) {
+			return $result;
+		}
+
+		if ($fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL ||
+			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_DISAPPROVAL ||
+			$fixedPhraseType == NetCommonsMailAssignTag::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION) {
+
+			$workflowComment = Hash::get($data, 'WorkflowComment.comment');
+			$commentLabel = __d('net_commons', 'Comments to the person in charge.');
+			$workflowComment = $commentLabel . ":\n" . $workflowComment;
+			$result = array('X-WORKFLOW_COMMENT', $workflowComment);
+		}
+
+		return $result;
+	}
+
+/**
+ * 埋め込みタグ{X-TAGS}にセットする値 を取得
+ *
+ * @param array $data saveしたデータ
+ * @param string $workflowType ワークフロータイプ
+ * @param int $useTagBehavior タグビヘイビアを使う
+ * @return array
+ */
+	public function getXTags($data, $workflowType, $useTagBehavior) {
+		$result = array('X-TAGS', '');
+		if (!$useTagBehavior) {
+			return $result;
+		}
+
+		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
+				$workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+
+			$tags = Hash::extract($data, 'Tag.{n}.name');
+			$tags = implode(',', $tags);
+			$tagLabel = __d('blogs', 'tag');
+			$tags = $tagLabel . ':' . $tags;
+			$result = array('X-TAGS', $tags);
+		}
+
+		return $result;
+	}
+
+/**
+ * 埋め込みタグ{X-ROOM}にセットする値 を取得
+ *
+ * @param int $languageId 言語ID
+ * @return array
+ */
+	public function getXRoom($languageId) {
+		$roomId = Current::read('Room.id');
+		$roomsLanguage = $this->RoomsLanguage->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'room_id' => $roomId,
+				'language_id' => $languageId,
+			),
+			'callbacks' => false,
+		));
+		$roomName = Hash::get($roomsLanguage, 'RoomsLanguage.name');
+		$value = h($roomName);
+
+		return array('X-ROOM', $value);
+	}
+
 }
