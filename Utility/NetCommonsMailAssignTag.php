@@ -116,11 +116,11 @@ class NetCommonsMailAssignTag {
 		$siteNow = $date->format('Y/m/d H:i:s');
 
 		$this->assignTag('X-FROM_EMAIL', $from);
-		$this->assignTag('X-FROM_NAME', htmlspecialchars($fromName));
-		$this->assignTag('X-SITE_NAME', htmlspecialchars($siteName));
+		$this->assignTag('X-FROM_NAME', h($fromName));
+		$this->assignTag('X-SITE_NAME', h($siteName));
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
-		$this->assignTag('X-PLUGIN_NAME', htmlspecialchars($pluginName));
-		$this->assignTag('X-BLOCK_NAME', htmlspecialchars(Current::read('Block.name')));
+		$this->assignTag('X-PLUGIN_NAME', h($pluginName));
+		$this->assignTag('X-BLOCK_NAME', h(Current::read('Block.name')));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
