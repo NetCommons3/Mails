@@ -69,6 +69,8 @@ class MailSendShell extends AppShell {
  * @return void
  */
 	public function send() {
+		$isDebug = Hash::get($this->args, 0);
+		//$isDebug = 1;
 		$now = NetCommonsTime::getNowDatetime();
 
 		// キュー取得 - 行ロック
@@ -113,27 +115,42 @@ class MailSendShell extends AppShell {
 		foreach ($mailQueues as $mailQueue) {
 			// idが変わったら、MailQueue削除
 			if ($beforeId != $mailQueue['MailQueue']['id']) {
-				$this->MailQueue->delete($beforeId);
+				$this->__delete($this->MailQueue, $beforeId, $isDebug);
 			}
 
 			$mail = new NetCommonsMail();
 			$mail->initShell($mailQueue);
 
-			//送信しない（デバッグ用）
-			//			$config = $mail->config();
-			//			$config['transport'] = 'Debug';
-			//			$mail->config($config);
-			//			$messages = $mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-			//			CakeLog::debug(print_r($messages, true));
+			if ($isDebug) {
+				//送信しない（デバッグ用）
+				$config = $mail->config();
+				$config['transport'] = 'Debug';
+				$mail->config($config);
+			}
 
 			$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
 
 			// 送信後にMailQueueUser削除
-			$this->MailQueueUser->delete($mailQueue['MailQueueUser']['id']);
+			$this->__delete($this->MailQueueUser, $mailQueue['MailQueueUser']['id'], $isDebug);
 			$beforeId = $mailQueue['MailQueue']['id'];
 		}
 
 		// 後始末 - MailQueue削除
-		$this->MailQueue->delete($beforeId);
+		$this->__delete($this->MailQueue, $beforeId, $isDebug);
+	}
+
+/**
+ * 削除
+ *
+ * @param Model $model モデル
+ * @param int $id ID
+ * @param int $isDebug デバッグONフラグ
+ * @return void
+ */
+	private function __delete($model, $id, $isDebug) {
+		if ($isDebug) {
+			return;
+		}
+		$model->delete($id);
 	}
 }
