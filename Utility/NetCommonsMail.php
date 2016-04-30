@@ -388,6 +388,9 @@ class NetCommonsMail extends CakeEmail {
 			return false;
 		}
 
+		// メール本文の共通ヘッダー文、署名追加
+		$this->body = $this->mailAssignTag->addHeaderAndSignature($this->body);
+
 		// 改行対応
 		$this->brReplace();
 

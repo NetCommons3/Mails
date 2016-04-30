@@ -551,6 +551,10 @@ class MailQueueBehavior extends ModelBehavior {
 		// 埋め込みタグ変換：メール定型文の埋め込みタグを変換して、メール生文にする
 		$mailAssignTag->assignTagReplace();
 
+		// メール本文の共通ヘッダー文、署名追加
+		$mailAssignTag->fixedPhraseBody =
+			$mailAssignTag->addHeaderAndSignature($mailAssignTag->fixedPhraseBody);
+
 		$mailQueue['MailQueue'] = array(
 			'language_id' => $languageId,
 			'plugin_key' => $pluginKey,

@@ -277,11 +277,6 @@ class NetCommonsMailAssignTag {
 			unset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY']);
 		}
 
-		// メール本文の共通ヘッダー文、署名追加
-		$this->fixedPhraseBody = $this->assignTags['X-BODY_HEADER'] . "\n" . $this->fixedPhraseBody .
-			"\n" . $this->assignTags['X-SIGNATURE'];
-		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
-
 		// html or text
 		$messageType = SiteSettingUtil::read('Mail.messageType');
 
@@ -314,12 +309,43 @@ class NetCommonsMailAssignTag {
 			$this->fixedPhraseSubject = str_replace('{' . $key . '}', h($value), $this->fixedPhraseSubject);
 		}
 
-		$this->fixedPhraseBody = str_replace("\r\n", "\n", $this->fixedPhraseBody);
-		$this->fixedPhraseBody = str_replace("\r", "\n", $this->fixedPhraseBody);
-		// テキストのブロックを決められた幅で折り返す
+		// 改行処理 と テキストのブロックを決められた幅で折り返す
+		$this->fixedPhraseBody = $this->__textBrAndWrap($this->fixedPhraseBody);
+	}
+
+/**
+ * 改行処理 と テキストのブロックを決められた幅で折り返す
+ *
+ * @param string $text 文字列
+ * @return string 文字列
+ */
+	private function __textBrAndWrap($text) {
+		$text = str_replace(array("\r\n", "\r"), "\n", $text);
+		// テキストのブロックを決められた幅で折り返す(各行末空白も自動削除する)
 		// http://book.cakephp.org/2.0/ja/core-utility-libraries/string.html#CakeText::wrap
-		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなる
-		$this->fixedPhraseBody = CakeText::wrap($this->fixedPhraseBody, $this::MAX_LINE_LENGTH);
+		$text = CakeText::wrap($text, $this::MAX_LINE_LENGTH);
+		return $text;
+	}
+
+/**
+ * メール本文の共通ヘッダー文、署名追加
+ *
+ * @param string $body 本文
+ * @return string 本文
+ */
+	public function addHeaderAndSignature($body) {
+		// 改行処理 と テキストのブロックを決められた幅で折り返す
+		$bodyHeader = $this->__textBrAndWrap($this->assignTags['X-BODY_HEADER']);
+		$signature = $this->__textBrAndWrap($this->assignTags['X-SIGNATURE']);
+
+		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなるので対応
+		$signature = str_replace("--\n", "-- \n", $signature);
+
+		// メール本文の共通ヘッダー文、署名追加
+		$body = $bodyHeader . "\n" . $body . "\n" . $signature;
+		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
+
+		return $body;
 	}
 
 /**
