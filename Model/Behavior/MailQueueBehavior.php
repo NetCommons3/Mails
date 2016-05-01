@@ -391,7 +391,8 @@ class MailQueueBehavior extends ModelBehavior {
 			} else {
 				// --- ルーム配信
 				// 登録者に配信
-				$this->__addMailQueueUserInCreatedUser($model, $mailQueueUser['MailQueueUser']['mail_queue_id']);
+				$this->__addMailQueueUserInCreatedUser($model,
+					$mailQueueUser['MailQueueUser']['mail_queue_id']);
 
 				// ルーム配信で送らないユーザID
 				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
