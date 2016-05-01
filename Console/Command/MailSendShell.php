@@ -126,8 +126,9 @@ class MailSendShell extends AppShell {
 				$config = $mail->config();
 				$config['transport'] = 'Debug';
 				$mail->config($config);
-				$messages = $mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-				CakeLog::debug(print_r($messages, true));
+				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+				//$messages = $mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+				//CakeLog::debug(print_r($messages, true));
 			} else {
 				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
 			}
