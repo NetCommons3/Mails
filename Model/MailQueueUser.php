@@ -177,7 +177,7 @@ class MailQueueUser extends MailsAppModel {
 
 /**
  * ルーム内で該当パーミッションありのユーザ ゲット
- * - MailQueueUser に 複数saveするために必要
+ * - MailQueueUser に 承認者達をsaveするために必要
  *
  * @param string $permissionKey パーミッションキー
  * @param string $roomId ルームID
