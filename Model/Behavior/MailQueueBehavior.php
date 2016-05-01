@@ -99,7 +99,7 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = null;
+		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = array();
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array();
@@ -390,15 +390,16 @@ class MailQueueBehavior extends ModelBehavior {
 
 			} else {
 				// --- ルーム配信
+				// 登録者に配信
+				$this->__addMailQueueUserInCreatedUser($model, $mailQueueUser['MailQueueUser']['mail_queue_id']);
+
 				// ルーム配信で送らないユーザID
 				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 				$notSendRoomUserIds = $this->settings[$model->alias][$key];
-
-				// 登録者にも配信
-				$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+				// 追加で配信するユーザ
 				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-				$addUserIds[] = $createdUserId;
 
+				// ルーム配信
 				/** @see MailQueueUser::addMailQueueUserInRoom() */
 				$model->MailQueueUser->addMailQueueUserInRoom($mailQueueUser,
 					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $addUserIds);
@@ -419,6 +420,13 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __addMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 
+		// ルーム配信で送らないユーザID にセット済みであれば、既に登録者に配信セット済みのため、セットしない
+		$notSendKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$notSendRoomUserIds = $this->settings[$model->alias][$notSendKey];
+		if (in_array($createdUserId, $notSendRoomUserIds)) {
+			return;
+		}
+
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 
@@ -428,8 +436,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$this->settings[$model->alias][$key][] = $createdUserId;
+		$this->settings[$model->alias][$notSendKey][] = $createdUserId;
 	}
 
 /**
