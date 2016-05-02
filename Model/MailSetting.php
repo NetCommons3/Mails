@@ -82,10 +82,6 @@ class MailSetting extends MailsAppModel {
  * @return array メール設定データ配列
  */
 	public function createMailSetting($pluginKey = null) {
-		$this->loadModels(array(
-			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
-		));
-
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}
