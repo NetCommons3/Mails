@@ -141,7 +141,7 @@ class MailSetting extends MailsAppModel {
 		);
 		$mailSetting = $this->getMailSetting($conditions);
 		if (! $mailSetting) {
-			$mailSetting = $this->createMailSetting($languageId, $typeKey);
+			$mailSetting = $this->createMailSetting($pluginKey);
 		}
 
 		// $blockKey, $typeKeyでSELECT する
