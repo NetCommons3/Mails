@@ -1,11 +1,8 @@
 <?php
 /**
  * Element of mail edit form
- *   - $action: Action for delete request.
+ *   - $editForms: 編集フォーム設定
  *   - $cancelUrl: Cancel url.
- *   - $mailTypeKey: メールの種類
- *   - $mailBodyPopoverMessage: メール定型文ポップオーバー内の説明文（HTML可）
- *   - $useNoticeAuthority: 通知する権限を使うか
  *   - $useReplayTo: 返信を受けるメールアドレスを使うか
  *   - $options: Options array for Form->create()
  *
@@ -43,6 +40,9 @@
 ?>
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
 
 	<div class="panel panel-default">
 		<div class="panel-body">
@@ -70,10 +70,6 @@
 				<?php endif; ?>
 
 				<?php foreach ($editForms as $editForm) : ?>
-
-					<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?><?php /* 多重対応予定 */ ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.id'); ?><?php /* 多重対応予定 */ ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.language_id', array('value' => Current::read('Language.id'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
@@ -85,7 +81,7 @@
 							<?php echo $editForm['panelHeading']; ?>
 						</div>
 						<div class="panel-body">
-							<?php if ($useNoticeAuthority): ?>
+							<?php if ($editForm['useNoticeAuthority']): ?>
 								<?php echo $this->element('Blocks.block_permission_setting', array(
 									'settingPermissions' => array(
 										$editForm['permission'] => __d('mails', 'Notification to the authority'),
