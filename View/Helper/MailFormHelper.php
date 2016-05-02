@@ -50,10 +50,7 @@ class MailFormHelper extends AppHelper {
  *       'mailBodyPopoverMessage' => __d('videos', 'MailSetting.mail_fixed_phrase_body.popover'),
  *     ),
  *     array(
- *       'mailTypeKey' => MailSettingFixedPhrase::ANSWER_TYPE,
- *       'panelHeading' => __d('mails', '回答メール'),
- *       'mailBodyPopoverMessage' => __d('videos', '回答メールのpopover'),
- *       'permission' => 'mail_answer_receivable',
+ *       'mailBodyPopoverMessage' => __d('videos', 'MailSetting.mail_fixed_phrase_body.popover'),
  *     ),
  *   ),
  *   NetCommonsUrl::backToIndexUrl('default_setting_action')
@@ -75,14 +72,34 @@ class MailFormHelper extends AppHelper {
 			$options['url'] = $action;
 		}
 
-		$editForms = Hash::merge(array(
-			array(
-				'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
-				'panelHeading' => __d('mails', '投稿メール'),
-				'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
-				'permission' => 'mail_content_receivable',
-			),
-		), $editForms);
+		if (count($editForms) == 2) {
+			// $editForms 2件は、回答メールありと推定
+			$editForms = Hash::merge(array(
+				array(
+					'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+					'panelHeading' => __d('mails', '投稿メール'),
+					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
+					'permission' => 'mail_content_receivable',
+				),
+				array(
+					'mailTypeKey' => MailSettingFixedPhrase::ANSWER_TYPE,
+					'panelHeading' => __d('mails', '回答メール'),
+					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
+					'permission' => 'mail_answer_receivable',
+				),
+			), $editForms);
+
+		} else {
+			// 通常
+			$editForms = Hash::merge(array(
+				array(
+					'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+					'panelHeading' => __d('mails', '投稿メール'),
+					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
+					'permission' => 'mail_content_receivable',
+				),
+			), $editForms);
+		}
 
 		$output .= $this->_View->element('Mails.edit_form', array(
 			'editForms' => $editForms,
