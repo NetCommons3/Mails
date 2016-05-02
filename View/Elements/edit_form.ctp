@@ -54,6 +54,20 @@
 					)); ?>
 					<div class="help-block"><?php echo __d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'); ?></div>
 				</div>
+			</div>
+
+			<div class="col-xs-11 col-xs-offset-1">
+
+				<?php if ($useReplayTo): ?>
+					<div class="form-group">
+						<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
+							'type' => 'text',
+							'label' => __d('mails', 'E-mail address to receive a reply'),
+							'div' => '',
+						)); ?>
+						<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
+					</div>
+				<?php endif; ?>
 
 				<?php foreach ($editForms as $editForm) : ?>
 
@@ -77,17 +91,6 @@
 										$editForm['permission'] => __d('mails', 'Notification to the authority'),
 									),
 								)); ?>
-							<?php endif; ?>
-
-							<?php if ($useReplayTo): ?>
-								<div class="form-group">
-									<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
-										'type' => 'text',
-										'label' => __d('mails', 'E-mail address to receive a reply'),
-										'div' => '',
-									)); ?>
-									<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
-								</div>
 							<?php endif; ?>
 
 							<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_subject', array(
