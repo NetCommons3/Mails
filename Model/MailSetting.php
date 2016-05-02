@@ -244,7 +244,8 @@ class MailSetting extends MailsAppModel {
 			}
 
 			// 複数レコード保存
-			if (! $mailFixedPhrase = $this->MailSettingFixedPhrase->saveMany($data['MailSettingFixedPhrase'], array('validate' => false))) {
+			if (! $mailFixedPhrase = $this->MailSettingFixedPhrase->saveMany($data['MailSettingFixedPhrase'],
+					array('validate' => false))) {
 				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
 			}
 
