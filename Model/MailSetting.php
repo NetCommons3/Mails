@@ -109,7 +109,7 @@ class MailSetting extends MailsAppModel {
  * プラグインのメール設定(定型文等) 取得
  *
  * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
+ * @param string|array $typeKey メールの種類(default)|メールの種類(複数)
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
@@ -143,10 +143,25 @@ class MailSetting extends MailsAppModel {
 		// $blockKey, $typeKeyでSELECT する
 		$conditions['language_id'] = $languageId;
 		$conditions['type_key'] = $typeKey;
-		$mailFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
-		if (! $mailFixedPhrase) {
-			$mailFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId,
-				$typeKey);
+
+		if (gettype($typeKey) == 'string') {
+			// 通常
+			$mailFixedPhrase = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions);
+			if (! $mailFixedPhrase) {
+				$mailFixedPhrase = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId,
+					$typeKey);
+			}
+		} elseif (gettype($typeKey) == 'array') {
+			// メール設定画面 複数メール定型文対応
+			$fixedPhrases = $this->MailSettingFixedPhrase->getMailSettingFixedPhrase($conditions, 'all');
+			if (! $fixedPhrases) {
+				foreach ($typeKey as $type) {
+					$fixedPhrases[] = $this->MailSettingFixedPhrase->createMailSettingFixedPhrase($languageId,
+						$type);
+				}
+			}
+			$mailFixedPhrase['MailSettingFixedPhrase'] = Hash::combine($fixedPhrases,
+				'{n}.MailSettingFixedPhrase.type_key', '{n}.MailSettingFixedPhrase');
 		}
 
 		$result = Hash::merge($mailSetting, $mailFixedPhrase);
@@ -185,7 +200,6 @@ class MailSetting extends MailsAppModel {
  */
 	public function getMailSetting($conditions) {
 		$mailSetting = $this->find('first', array(
-			//'recursive' => -1,
 			'recursive' => 0,
 			'conditions' => $conditions,
 		));
@@ -193,19 +207,25 @@ class MailSetting extends MailsAppModel {
 	}
 
 /**
- * メール設定 保存
+ * メール設定 and メール定型文 保存
  *
  * @param array $data received post data
  * @return mixed On success Model::$data if its not empty or true, false on failure
  * @throws InternalErrorException
  */
-	public function saveMailSetting($data) {
+	public function saveMailSettingAndFixedPhrase($data) {
+		$this->loadModels(array(
+			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
+		));
+
 		//トランザクションBegin
 		$this->begin();
 
-		//バリデーション
+		//バリデーション - 両方チェックしてからif判定
 		$this->set($data);
-		if (! $this->validates()) {
+		$check = $this->validates();
+		$checkMany = $this->MailSettingFixedPhrase->validateMany($data['MailSettingFixedPhrase']);
+		if (! $check || ! $checkMany) {
 			return false;
 		}
 
@@ -223,6 +243,11 @@ class MailSetting extends MailsAppModel {
 				$this->deleteQueue($blockKey, 'block_key');
 			}
 
+			// 複数レコード保存
+			if (! $mailFixedPhrase = $this->MailSettingFixedPhrase->saveMany($data['MailSettingFixedPhrase'], array('validate' => false))) {
+				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			}
+
 			//トランザクションCommit
 			$this->commit();
 
@@ -231,6 +256,7 @@ class MailSetting extends MailsAppModel {
 			$this->rollback($ex);
 		}
 
-		return $mailSetting;
+		$result = Hash::merge($mailSetting, $mailFixedPhrase);
+		return $result;
 	}
 }

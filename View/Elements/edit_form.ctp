@@ -69,12 +69,13 @@
 					</div>
 				<?php endif; ?>
 
-				<?php foreach ($editForms as $editForm) : ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.id'); ?><?php /* 多重対応予定 */ ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.language_id', array('value' => Current::read('Language.id'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.block_key', array('value' => Current::read('Block.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.type_key', array('value' => $editForm['mailTypeKey'])); ?>
+				<?php foreach ($editForms as $index => $editForm) : ?>
+					<?php $mailSettingFixedPhrase = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey']); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.id', array('value' => $mailSettingFixedPhrase['id'])); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.language_id', array('value' => Current::read('Language.id'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.block_key', array('value' => Current::read('Block.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.type_key', array('value' => $editForm['mailTypeKey'])); ?>
 
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -89,17 +90,19 @@
 								)); ?>
 							<?php endif; ?>
 
-							<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_subject', array(
+							<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
 								'type' => 'text',
 								'label' => __d('mails', 'Subject'),
 								'required' => true,
+								'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
 							)); ?>
 
 							<div class="form-group">
-								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_body', array(
+								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
 									'type' => 'textarea',
 									'label' => __d('mails', 'Body'),
 									'required' => true,
+									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
 									'div' => '',
 								)); ?>
 								<div class="help-block">

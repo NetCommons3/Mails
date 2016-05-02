@@ -31,6 +31,7 @@ App::uses('AppController', 'Controller');
  * @author Shohei Nakajima <nakajimashouhei@gmail.com>
  * @package NetCommons\Mails\Controller
  * @property MailSetting $MailSetting
+ * @property MailSettingsComponent $MailSettings
  * @property MailSettingFixedPhrase $MailSettingFixedPhrase
  */
 class MailSettingsController extends AppController {
@@ -75,16 +76,11 @@ class MailSettingsController extends AppController {
  */
 	public function edit() {
 		if ($this->request->is('post') || $this->request->is('put')) {
-			$mailSetting = $this->MailSetting->saveMailSetting($this->request->data);
-
-			$data['MailSettingFixedPhrase'] = $this->request->data['MailSettingFixedPhrase'];
-			$data['MailSettingFixedPhrase']['mail_setting_id'] = $mailSetting['MailSetting']['id'];
-			$mailFixedPhrase = $this->MailSettingFixedPhrase->saveMailSettingFixedPhrase($data);
-
-			if ($mailSetting && $mailFixedPhrase) {
-				$this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
-				return;
+			$result = $this->MailSetting->saveMailSettingAndFixedPhrase($this->request->data);
+			if ($result) {
+				return $this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
 			}
+			/** @see NetCommonsComponent::handleValidationError() */
 			$this->NetCommons->handleValidationError($this->MailSetting->validationErrors);
 			$this->NetCommons->handleValidationError($this->MailSettingFixedPhrase->validationErrors);
 			$this->request->data['BlockRolePermission'] = Hash::merge(
@@ -92,7 +88,7 @@ class MailSettingsController extends AppController {
 				$this->request->data['BlockRolePermission']
 			);
 		} else {
-			$mailSettingPlugin = $this->MailSetting->getMailSettingPlugin();
+			$mailSettingPlugin = $this->viewVars['mailSettingPlugin'];
 			$this->request->data['MailSetting'] = $mailSettingPlugin['MailSetting'];
 			$this->request->data['MailSettingFixedPhrase'] = $mailSettingPlugin['MailSettingFixedPhrase'];
 			$this->request->data['BlockRolePermission'] =

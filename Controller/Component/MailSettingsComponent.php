@@ -11,6 +11,7 @@
  */
 
 App::uses('Component', 'Controller');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 
 /**
  * MailSettings Component
@@ -33,9 +34,45 @@ class MailSettingsComponent extends Component {
  * ```
  * デフォルト：array('mail_content_receivable')
  *
+ * ##### Controller::beforeFilter() で複数指定
+ * ```
+ * 	public function beforeFilter() {
+ * 		parent::beforeFilter();
+ * 		$this->MailSettings->permission = array('mail_content_receivable', 'mail_answer_receivable');
+ * 	}
+ * ```
+ *
  * @var array
  */
-	public $permission = array('mail_content_receivable', 'mail_answer_receivable');
+	public $permission = array('mail_content_receivable');
+
+/**
+ * メールの種類
+ *
+ * #### サンプルコード
+ * ##### Controller
+ * ```
+ * public $components = array(
+ *	'Mails.MailSettings' => array(
+ * 		'typeKey' => array(
+ * 			MailSettingFixedPhrase::DEFAULT_TYPE,
+ *		)
+ *	)
+ * ```
+ * デフォルト：array(MailSettingFixedPhrase::DEFAULT_TYPE)
+ *
+ * ##### Controller::beforeFilter() で複数指定
+ * ```
+ * 	public function beforeFilter() {
+ * 		parent::beforeFilter();
+ * 		$this->MailSettings->typeKeys =
+ * 			array(MailSettingFixedPhrase::DEFAULT_TYPE, MailSettingFixedPhrase::ANSWER_TYPE);
+ * 	}
+ * ```
+ *
+ * @var array
+ */
+	public $typeKeys = array(MailSettingFixedPhrase::DEFAULT_TYPE);
 
 /**
  * Called after the Controller::beforeFilter() and before the controller action
@@ -48,5 +85,11 @@ class MailSettingsComponent extends Component {
 		$permissions = $controller->Workflow->getBlockRolePermissions($this->permission);
 		$controller->set('permissions', $permissions);
 		$controller->set('roles', $controller->viewVars['permissions']['Roles']);
+
+		if ($controller->request->is('get')) {
+			/** @see MailSetting::getMailSettingPlugin() */
+			$mailSettingPlugin = $controller->MailSetting->getMailSettingPlugin(null, $this->typeKeys);
+			$controller->set('mailSettingPlugin', $mailSettingPlugin);
+		}
 	}
 }

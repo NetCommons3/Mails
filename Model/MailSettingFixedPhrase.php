@@ -128,48 +128,14 @@ class MailSettingFixedPhrase extends MailsAppModel {
  * メール設定-定型文 取得
  *
  * @param array $conditions 検索条件
+ * @param string $type Type of find operation (all / first / count / neighbors / list / threaded)
  * @return array メール設定データ配列
  */
-	public function getMailSettingFixedPhrase($conditions) {
-		$mailSetting = $this->find('first', array(
-			//'recursive' => -1,
+	public function getMailSettingFixedPhrase($conditions, $type = 'first') {
+		$mailSetting = $this->find($type, array(
 			'recursive' => 0,
 			'conditions' => $conditions,
 		));
 		return $mailSetting;
-	}
-
-/**
- * メール設定-定型文 保存
- *
- * @param array $data received post data
- * @return mixed On success Model::$data if its not empty or true, false on failure
- * @throws InternalErrorException
- */
-	public function saveMailSettingFixedPhrase($data) {
-		//トランザクションBegin
-		$this->begin();
-
-		//バリデーション
-		$this->set($data);
-		if (! $this->validates()) {
-			return false;
-		}
-
-		try {
-			// 保存
-			if (! $mailFixedPhrase = $this->save(null, false)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
-			}
-
-			//トランザクションCommit
-			$this->commit();
-
-		} catch (Exception $ex) {
-			//トランザクションRollback
-			$this->rollback($ex);
-		}
-
-		return $mailFixedPhrase;
 	}
 }
