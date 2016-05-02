@@ -20,11 +20,11 @@ App::uses('MailsAppModel', 'Mails.Model');
 class MailSettingFixedPhrase extends MailsAppModel {
 
 /**
- * typeのデフォルト値
- *
- * @var int
+ * @var string typeのデフォルト値
+ * @var string 回答タイプ
  */
-	const DEFAULT_TYPE = 'contents';
+	const DEFAULT_TYPE = 'contents',
+		ANSWER_TYPE = 'answer';
 
 /**
  * Validation rules

@@ -35,7 +35,7 @@ class MailSettingsComponent extends Component {
  *
  * @var array
  */
-	public $permission = array('mail_content_receivable');
+	public $permission = array('mail_content_receivable', 'mail_answer_receivable');
 
 /**
  * Called after the Controller::beforeFilter() and before the controller action

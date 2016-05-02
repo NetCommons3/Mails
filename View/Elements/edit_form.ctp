@@ -26,26 +26,23 @@ if (isset($action)) {
 if (! isset($cancelUrl)) {
 	$cancelUrl = null;
 }
-if (! isset($mailTypeKey)) {
-	$mailTypeKey = MailSettingFixedPhrase::DEFAULT_TYPE;
-}
 if (! isset($useNoticeAuthority)) {
 	$useNoticeAuthority = 1;
 }
 if (! isset($useReplayTo)) {
 	$useReplayTo = 1;
 }
+$editForms = Hash::merge(array(
+	array(
+		'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+		'panelHeading' => __d('mails', '投稿メール'),
+		'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
+		'permission' => 'mail_content_receivable',
+	),
+), $editForms);
 ?>
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.id'); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.language_id', array('value' => Current::read('Language.id'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.block_key', array('value' => Current::read('Block.key'))); ?>
-	<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.type_key', array('value' => $mailTypeKey)); ?>
 
 	<div class="panel panel-default">
 		<div class="panel-body">
@@ -55,64 +52,66 @@ if (! isset($useReplayTo)) {
 						'type' => 'checkbox',
 						'label' => __d('mails', 'Use the mail notification function'),
 					)); ?>
-					<p class="help-block"><?php echo __d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'); ?></p>
+					<div class="help-block"><?php echo __d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'); ?></div>
 				</div>
-			</div>
 
-			<div class="col-xs-11 col-xs-offset-1">
-				<?php if ($useNoticeAuthority): ?>
-					<?php echo $this->element('Blocks.block_permission_setting', array(
-						'settingPermissions' => array(
-							'mail_content_receivable' => __d('mails', 'Notification to the authority'),
-						),
-					)); ?>
-				<?php endif; ?>
+				<?php foreach ($editForms as $editForm) : ?>
 
-				<?php if ($useReplayTo): ?>
-					<div class="form-group">
-						<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
-							'type' => 'text',
-							'label' => __d('mails', 'E-mail address to receive a reply'),
-							'div' => '',
-						)); ?>
-						<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
+					<?php echo $this->NetCommonsForm->hidden('MailSetting.id'); ?><?php /* 多重対応予定 */ ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSetting.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSetting.block_key', array('value' => Current::read('Block.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.id'); ?><?php /* 多重対応予定 */ ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.language_id', array('value' => Current::read('Language.id'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.block_key', array('value' => Current::read('Block.key'))); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.type_key', array('value' => $editForm['mailTypeKey'])); ?>
+
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<?php echo $editForm['panelHeading']; ?>
+						</div>
+						<div class="panel-body">
+							<?php if ($useNoticeAuthority): ?>
+								<?php echo $this->element('Blocks.block_permission_setting', array(
+									'settingPermissions' => array(
+										$editForm['permission'] => __d('mails', 'Notification to the authority'),
+									),
+								)); ?>
+							<?php endif; ?>
+
+							<?php if ($useReplayTo): ?>
+								<div class="form-group">
+									<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
+										'type' => 'text',
+										'label' => __d('mails', 'E-mail address to receive a reply'),
+										'div' => '',
+									)); ?>
+									<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
+								</div>
+							<?php endif; ?>
+
+							<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_subject', array(
+								'type' => 'text',
+								'label' => __d('mails', 'Subject'),
+								'required' => true,
+							)); ?>
+
+							<div class="form-group">
+								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_body', array(
+									'type' => 'textarea',
+									'label' => __d('mails', 'Body'),
+									'required' => true,
+									'div' => '',
+								)); ?>
+								<div class="help-block">
+									<?php /* popover説明 */ ?>
+									<?php echo $this->MailsHtml->help($editForm['mailBodyPopoverMessage']); ?>
+								</div>
+							</div>
+						</div>
 					</div>
-				<?php endif; ?>
+				<?php endforeach; ?>
 
-				<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_subject', array(
-					'type' => 'text',
-					'label' => __d('mails', 'Subject'),
-					'required' => true,
-				)); ?>
-
-				<div class="form-group">
-					<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.mail_fixed_phrase_body', array(
-						'type' => 'textarea',
-						'label' => __d('mails', 'Body'),
-						'required' => true,
-						'div' => '',
-					)); ?>
-					<p class="help-block">
-						<?php echo __d('mails', 'Can use an embedded keyword in the subject line and body'); ?>
-						<?php /* popover説明 */ ?>
-						<?php $popoverHtmlId = 'nc-mail-body-' . Current::read('Frame.id'); ?>
-						<a tabindex="0"
-						   id="<?php echo $popoverHtmlId; ?>"
-						   data-toggle="popover"
-						   data-placement="bottom"
-						   title="<?php echo __d('mails', 'Embedded keyword?'); ?>"
-						   data-content="<?php echo __d('mails', 'Each of the embedded keywords, will be sent is converted to the corresponding content. <br />') . $mailBodyPopoverMessage; ?>">
-							<span class="glyphicon glyphicon-question-sign"></span>
-						</a>
-						<script>
-							$(function() {
-								$('#<?php echo $popoverHtmlId; ?>').popover({
-									html: true
-								});
-							});
-						</script>
-					</p>
-				</div>
 			</div>
 		</div>
 
