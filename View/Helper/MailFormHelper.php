@@ -90,14 +90,14 @@ class MailFormHelper extends AppHelper {
 			$editForms = Hash::merge(array(
 				array(
 					'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
-					'panelHeading' => __d('mails', '投稿メール'),
+					'panelHeading' => __d('mails', 'Posting mail'),
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_content_receivable',
 					'useNoticeAuthority' => 1,
 				),
 				array(
 					'mailTypeKey' => MailSettingFixedPhrase::ANSWER_TYPE,
-					'panelHeading' => __d('mails', '回答メール'),
+					'panelHeading' => __d('mails', 'Answer mail'),
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_answer_receivable',
 					'useNoticeAuthority' => 1,
@@ -109,7 +109,7 @@ class MailFormHelper extends AppHelper {
 			$editForms = Hash::merge(array(
 				array(
 					'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
-					'panelHeading' => __d('mails', '投稿メール'),
+					'panelHeading' => __d('mails', 'Posting mail'),
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_content_receivable',
 				),

@@ -76,3 +76,8 @@ msgstr ""
 msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
 msgstr ""
 
+msgid "Posting mail"
+msgstr ""
+
+msgid "Answer mail"
+msgstr ""
