@@ -21,6 +21,12 @@ class MailsHtmlHelper extends AppHelper {
 /**
  * ヘルプの表示
  *
+ * #### Sample code
+ * ##### template file(ctp file) - 通常パターン
+ * ```
+ * <?php echo $this->MailsHtml->help($editForm['mailBodyPopoverMessage']); ?>
+ * ```
+ *
  * @param string $content メッセージ内容(オリジナルタグの内容)
  * @param string $placement ポジション
  * @return string ヘルプHTML出力
