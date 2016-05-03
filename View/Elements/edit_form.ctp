@@ -3,8 +3,7 @@
  * Element of mail edit form
  *   - $editForms: 編集フォーム設定
  *   - $cancelUrl: Cancel url.
- *   - $useReplayTo: 返信を受けるメールアドレスを使う
- *   - $useNoticeAuthority: 通知する権限を使う
+ *   - $useReplayTo: 返信を受けるメールアドレスを使うか
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -83,7 +82,7 @@
 							<?php echo $editForm['panelHeading']; ?>
 						</div>
 						<div class="panel-body">
-							<?php if ($useNoticeAuthority): ?>
+							<?php if ($editForm['useNoticeAuthority']): ?>
 								<?php echo $this->element('Blocks.block_permission_setting', array(
 									'settingPermissions' => array(
 										$editForm['permission'] => __d('mails', 'Notification to the authority'),
