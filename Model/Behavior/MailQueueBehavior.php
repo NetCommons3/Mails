@@ -84,19 +84,6 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
 		}
-		if (!isset($this->settings[$model->alias]['keyField'])) {
-			$this->settings[$model->alias]['keyField'] = 'key';
-		}
-		if (!isset($this->settings[$model->alias]['pluginKey'])) {
-			$this->settings[$model->alias]['pluginKey'] = Current::read('Plugin.key');
-		}
-		if (!isset($this->settings[$model->alias]['reminder'])) {
-			$this->settings[$model->alias]['reminder']['sendTimes'] = null;
-			$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
-		}
-		if (!isset($this->settings[$model->alias]['publishablePermissionKey'])) {
-			$this->settings[$model->alias]['publishablePermissionKey'] = 'content_publishable';
-		}
 		// メール定型文の種類
 		if (!isset($this->settings[$model->alias]['typeKey'])) {
 			if ($this->settings[$model->alias]['workflowType'] == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
@@ -107,8 +94,13 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::DEFAULT_TYPE;
 			}
 		}
+		$this->__noSetSetting($model, 'keyField', 'key');
+		$this->__noSetSetting($model, 'pluginKey', Current::read('Plugin.key'));
+		$this->__noSetSetting($model, 'publishablePermissionKey', 'content_publishable');
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
+		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
+		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = array();
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
@@ -196,6 +188,20 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function setSetting(Model $model, $settingKey, $settingValue) {
 		$this->settings[$model->alias][$settingKey] = $settingValue;
+	}
+
+/**
+ * 設定ないsettingにセット
+ *
+ * @param Model $model モデル
+ * @param string $settingKey セッティングのキー
+ * @param string|array $settingValue セッティングの値
+ * @return void
+ */
+	private function __noSetSetting(Model $model, $settingKey, $settingValue) {
+		if (!isset($this->settings[$model->alias][$settingKey])) {
+			$this->settings[$model->alias][$settingKey] = $settingValue;
+		}
 	}
 
 /**
