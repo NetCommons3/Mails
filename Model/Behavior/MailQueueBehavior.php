@@ -97,6 +97,16 @@ class MailQueueBehavior extends ModelBehavior {
 		if (!isset($this->settings[$model->alias]['publishablePermissionKey'])) {
 			$this->settings[$model->alias]['publishablePermissionKey'] = 'content_publishable';
 		}
+		// メール定型文の種類
+		if (!isset($this->settings[$model->alias]['typeKey'])) {
+			if ($this->settings[$model->alias]['workflowType'] == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
+				// 回答タイプ
+				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::ANSWER_TYPE;
+			} else {
+				// 通常
+				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::DEFAULT_TYPE;
+			}
+		}
 
 		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
 		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = array();
@@ -135,11 +145,13 @@ class MailQueueBehavior extends ModelBehavior {
 		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
 		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
 
+		$typeKey = $this->settings[$model->alias]['typeKey'];
+
 		// --- リマインダー
 		/** @see IsMailSendBehavior::isMailSendReminder() */
 		if ($model->isMailSendReminder()) {
 			$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
-			$this->saveQueue($model, $sendTimeReminders);
+			$this->saveQueue($model, $sendTimeReminders, $typeKey);
 		}
 
 		$sendTimePublish = $this->__getSendTimePublish($model);
@@ -149,7 +161,7 @@ class MailQueueBehavior extends ModelBehavior {
 		/** @see IsMailSendBehavior::isMailSend() */
 		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey, $sendTimePublish,
 				$settingPluginKey)) {
-			$this->saveQueue($model, array($sendTimePublish));
+			$this->saveQueue($model, array($sendTimePublish), $typeKey);
 		}
 
 		return true;
@@ -280,6 +292,22 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * ルーム配信で送るパーミッション ゲット
+ *
+ * @param string $typeKey メール定型文の種類
+ * @return string コンテンツキー
+ */
+	private function __getSendRoomPermission($typeKey) {
+		if ($typeKey == MailSettingFixedPhrase::ANSWER_TYPE) {
+			// 回答タイプ
+			return 'mail_answer_receivable';
+		} else {
+			// 通常
+			return 'mail_content_receivable';
+		}
+	}
+
+/**
  * キュー保存
  *
  * @param Model $model モデル
@@ -291,7 +319,7 @@ class MailQueueBehavior extends ModelBehavior {
 								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		$status = Hash::get($model->data, $model->alias . '.status');
+		$roomId = Current::read('Room.id');
 
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW ||
 			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -302,16 +330,17 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
 			// --- 公開
+			$status = Hash::get($model->data, $model->alias . '.status');
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// 投稿メール - ルーム配信
-				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
+				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $roomId, $typeKey);
 			}
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
 			// --- ワークフローの機能自体、使ってないプラグインの処理
 			// --- 公開
 			// 投稿メール - ルーム配信
-			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $typeKey);
+			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $roomId, $typeKey);
 
 		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// --- 回答
@@ -319,12 +348,9 @@ class MailQueueBehavior extends ModelBehavior {
 			$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 			$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
 
-			// ユーザIDに配信(即時)、メールアドレスに配信(即時) - メールキューSave
-			$mailQueueId = $this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses,
+			// ユーザIDに配信、メールアドレスに配信、ルーム配信 - メールキューSave
+			$this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses, $roomId,
 				$typeKey);
-
-			// ルーム内の承認者達に配信
-			$this->__addMailQueueUserInRoomAuthorizers($model, $mailQueueId);
 		}
 
 		return true;
@@ -339,12 +365,13 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $sendTimes メール送信日時 配列
  * @param array $userIds 送信ユーザID 配列
  * @param array $toAddresses 送信先メールアドレス 配列
+ * @param int $roomId ルームID
  * @param string $typeKey メールの種類
- * @return int メールキューID
+ * @return void
  * @throws InternalErrorException
  */
 	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null,
-										$toAddresses = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+										$toAddresses = null, $roomId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		if ($sendTimes === null) {
 			$sendTimes[] = $this->__getSaveSendTime();
 		}
@@ -362,6 +389,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'user_id' => null,
 			'room_id' => null,
 			'to_address' => null,
+			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
 		);
 
@@ -378,17 +406,18 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
-			if (isset($userIds)) {
+			if (!empty($userIds)) {
 				// --- ユーザIDに配信
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'user_id', $userIds);
-
-			} elseif (isset($toAddresses)) {
+			}
+			if (!empty($toAddresses)) {
 				// --- メールアドレスに配信
 				/** @see MailQueueUser::addMailQueueUsers() */
 				$model->MailQueueUser->addMailQueueUsers($mailQueueUser, 'to_address', $toAddresses);
 
-			} else {
+			}
+			if (!empty($roomId)) {
 				// --- ルーム配信
 				// 登録者に配信
 				$this->__addMailQueueUserInCreatedUser($model,
@@ -397,17 +426,20 @@ class MailQueueBehavior extends ModelBehavior {
 				// ルーム配信で送らないユーザID
 				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 				$notSendRoomUserIds = $this->settings[$model->alias][$key];
+				$notSendRoomUserIds = Hash::merge($notSendRoomUserIds, $userIds);
 				// 追加で配信するユーザ
 				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+				// ルーム配信で送るパーミッション
+				$sendRoomPermission = $this->__getSendRoomPermission($typeKey);
 
 				// ルーム配信
 				/** @see MailQueueUser::addMailQueueUserInRoom() */
-				$model->MailQueueUser->addMailQueueUserInRoom($mailQueueUser,
-					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $addUserIds);
+				$model->MailQueueUser->addMailQueueUserInRoom($roomId, $mailQueueUser,
+					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $addUserIds, $sendRoomPermission);
 			}
 		}
 
-		return $mailQueueResult['MailQueue']['id'];
+		//return $mailQueueResult['MailQueue']['id'];
 	}
 
 /**
@@ -461,7 +493,7 @@ class MailQueueBehavior extends ModelBehavior {
 		// ルーム配信で送らないユーザID セット
 		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 		$this->settings[$model->alias][$key] =
-			array_merge($this->settings[$model->alias][$key], $notSendRoomUserIds);
+			Hash::merge($this->settings[$model->alias][$key], $notSendRoomUserIds);
 	}
 
 /**

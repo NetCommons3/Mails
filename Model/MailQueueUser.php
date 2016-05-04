@@ -240,6 +240,7 @@ class MailQueueUser extends MailsAppModel {
 			'user_id' => $createdUserId,
 			'room_id' => null,
 			'to_address' => null,
+			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
 		);
 
@@ -275,6 +276,7 @@ class MailQueueUser extends MailsAppModel {
 			'user_id' => null,
 			'room_id' => null,
 			'to_address' => null,
+			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
 		);
 
@@ -301,18 +303,21 @@ class MailQueueUser extends MailsAppModel {
 /**
  * ルーム配信で、キューの配信先データ登録
  *
+ * @param int $roomId ルームID
  * @param array $mailQueueUser received post data
  * @param string $sendTime メール送信日時
  * @param array $notSendRoomUserIds ルーム配信で送らないユーザID
- * @param array $addUserIds 一部だけ変更するフィールドの値(配列)
+ * @param array $addUserIds 追加のユーザ達
+ * @param string $sendRoomPermission ルーム配信で送るパーミッション
  * @return void
  * @throws InternalErrorException
  */
-	public function addMailQueueUserInRoom($mailQueueUser, $sendTime, $notSendRoomUserIds,
-											$addUserIds) {
+	public function addMailQueueUserInRoom($roomId, $mailQueueUser, $sendTime, $notSendRoomUserIds,
+											$addUserIds, $sendRoomPermission = 'mail_content_receivable') {
 		// --- ルーム配信
-		$roomId = Current::read('Room.id');
+		//$roomId = Current::read('Room.id');
 		$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
+		$mailQueueUser['MailQueueUser']['send_room_permission'] = $sendRoomPermission;
 
 		// ルーム配信で送らないユーザID
 		$notSendRoomUserIds = $this->__getNotSendRoomUserIds($sendTime, $notSendRoomUserIds);
