@@ -112,6 +112,7 @@ class MailFormHelper extends AppHelper {
 					'panelHeading' => __d('mails', 'Posting mail'),
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_content_receivable',
+					'useNoticeAuthority' => 1,
 				),
 			), $editForms);
 		}
