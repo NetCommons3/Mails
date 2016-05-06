@@ -28,12 +28,14 @@ class MailQueueBehavior extends ModelBehavior {
  * @var string ワークフロー
  * @var string コンテンツコメント
  * @var string 回答（アンケート、登録フォーム等）
+ * @var string グループのみ（回覧板、カレンダー(プライベート予定のグループ共有)）
  */
 	const
 		MAIL_QUEUE_WORKFLOW_TYPE_NONE = 'none',
 		MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW = 'workflow',
 		MAIL_QUEUE_WORKFLOW_TYPE_COMMENT = 'contentComment',
-		MAIL_QUEUE_WORKFLOW_TYPE_ANSWER = 'answer';
+		MAIL_QUEUE_WORKFLOW_TYPE_ANSWER = 'answer',
+		MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY = 'groupOnly';
 
 /**
  * セッティングの種類(setSettingで利用)
@@ -43,13 +45,15 @@ class MailQueueBehavior extends ModelBehavior {
  * @var string 投稿メールのON, OFF（回覧板、カレンダー等を想定）
  * @var string ルーム配信で送らないユーザID
  * @var string プラグイン名
+ * @var string 承認機能の種類
  */
 	const
 		MAIL_QUEUE_SETTING_USER_IDS = 'userIds',
 		MAIL_QUEUE_SETTING_TO_ADDRESSES = 'toAddresses',
 		MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST = 'isMailSendPost',
 		MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS = 'notSendRoomUserIds',
-		MAIL_QUEUE_SETTING_PLUGIN_NAME = 'pluginName';
+		MAIL_QUEUE_SETTING_PLUGIN_NAME = 'pluginName',
+		MAIL_QUEUE_SETTING_WORKFLOW_TYPE = 'workflowType';
 
 /**
  * setup
@@ -74,19 +78,20 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function setup(Model $model, $settings = array()) {
 		$this->settings[$model->alias] = $settings;
+		$workflowTypeKey = self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE;
 
 		// --- 設定ないパラメータの処理
-		if (!isset($this->settings[$model->alias]['workflowType'])) {
+		if (!isset($this->settings[$model->alias][$workflowTypeKey])) {
 			// --- ワークフローのstatusによって送信内容を変える
 			if ($model->Behaviors->loaded('Workflow.Workflow')) {
-				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
+				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
 			} else {
-				$this->settings[$model->alias]['workflowType'] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
+				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
 		}
 		// メール定型文の種類
 		if (!isset($this->settings[$model->alias]['typeKey'])) {
-			if ($this->settings[$model->alias]['workflowType'] == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
+			if ($this->settings[$model->alias][$workflowTypeKey] == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 				// 回答タイプ
 				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::ANSWER_TYPE;
 			} else {
@@ -357,6 +362,13 @@ class MailQueueBehavior extends ModelBehavior {
 			// ユーザIDに配信、メールアドレスに配信、ルーム配信 - メールキューSave
 			$this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses, $roomId,
 				$typeKey);
+
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
+			// --- グループ送信のみ
+			$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+
+			// ユーザIDに配信 - メールキューSave
+			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, null, null, $typeKey);
 		}
 
 		return true;
