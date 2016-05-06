@@ -80,7 +80,7 @@ class MailSettingFixedPhrase extends MailsAppModel {
  * メール設定-定型文 データ新規作成
  *
  * @param int $languageId 言語ID
- * @param string $typeKey メールの種類
+ * @param string $typeKey メール定型文の種類
  * @param string $pluginKey プラグインキー
  * @return array メール設定データ配列
  */
@@ -105,17 +105,13 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.id');
 		} else {
 			$mailFixedPhrase = $this->create();
+			$mailFixedPhrase[$this->alias]['type_key'] = $typeKey;
 		}
 
 		//初期データセット
-		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject']) {
-			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_subject'] =
-				__d('mails', 'MailSetting.mail_fixed_phrase_subject');
-		}
-		if (! $mailFixedPhrase[$this->alias]['mail_fixed_phrase_body']) {
-			$mailFixedPhrase[$this->alias]['mail_fixed_phrase_body'] =
-				__d('mails', 'MailSetting.mail_fixed_phrase_body');
-		}
+		$this->__noSetData('mail_fixed_phrase_subject', $mailFixedPhrase, $typeKey);
+		$this->__noSetData('mail_fixed_phrase_body', $mailFixedPhrase, $typeKey);
+
 		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created');
 		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.created_user');
 		$mailFixedPhrase = Hash::remove($mailFixedPhrase, '{s}.modified');
@@ -137,5 +133,27 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			'conditions' => $conditions,
 		));
 		return $mailSetting;
+	}
+
+/**
+ * Dataにセットされてなかったら、セット
+ *
+ * @param string $key 配列のキー
+ * @param array &$mailFixedPhrase メール設定データ配列
+ * @param string $typeKey メール定型文の種類
+ * @return void
+ */
+	private function __noSetData($key, &$mailFixedPhrase, $typeKey = self::DEFAULT_TYPE) {
+		if ($mailFixedPhrase[$this->alias][$key]) {
+			return;
+		}
+
+		if ($typeKey == self::DEFAULT_TYPE) {
+			$mailFixedPhrase[$this->alias][$key] = __d('mails', 'MailSetting.' . $key);
+		} elseif ($typeKey == self::ANSWER_TYPE) {
+			$mailFixedPhrase[$this->alias][$key] = __d('mails', 'MailSetting.' . $key . '.answer');
+		} else {
+			$mailFixedPhrase[$this->alias][$key] = '';
+		}
 	}
 }

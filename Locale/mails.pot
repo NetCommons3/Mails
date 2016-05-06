@@ -48,6 +48,15 @@ msgstr ""
 msgid "MailSetting.mail_fixed_phrase_body.popover"
 msgstr ""
 
+msgid "MailSetting.mail_fixed_phrase_subject.answer"
+msgstr ""
+
+msgid "MailSetting.mail_fixed_phrase_body.answer"
+msgstr ""
+
+msgid "MailSetting.mail_fixed_phrase_body.popover.answer"
+msgstr ""
+
 #: Plugin/Mails/View/Elements/edit_form.ctp:47
 msgid "Use the mail notification function"
 msgstr ""
