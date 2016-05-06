@@ -70,8 +70,11 @@
 				<?php endif; ?>
 
 				<?php foreach ($editForms as $index => $editForm) : ?>
-					<?php $mailSettingFixedPhrase = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey']); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.id', array('value' => $mailSettingFixedPhrase['id'])); ?>
+					<?php
+					$mailSettingFixedPhrase = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey']);
+					$id = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey'] . '.id');
+					?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.id', array('value' => $id)); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.language_id', array('value' => Current::read('Language.id'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.block_key', array('value' => Current::read('Block.key'))); ?>
