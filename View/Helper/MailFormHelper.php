@@ -98,7 +98,7 @@ class MailFormHelper extends AppHelper {
 				array(
 					'mailTypeKey' => MailSettingFixedPhrase::ANSWER_TYPE,
 					'panelHeading' => __d('mails', 'Answer mail'),
-					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
+					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover.answer'),
 					'permission' => 'mail_answer_receivable',
 					'useNoticeAuthority' => 1,
 				),
