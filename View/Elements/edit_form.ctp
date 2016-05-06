@@ -13,30 +13,6 @@
  * @license http://www.netcommons.org/license.txt NetCommons License
  * @copyright Copyright 2014, NetCommons Project
  */
-
-//if (! isset($options)) {
-//	$options = array();
-//}
-//if (isset($action)) {
-//	$options['url'] = $action;
-//}
-//if (! isset($cancelUrl)) {
-//	$cancelUrl = null;
-//}
-//if (! isset($useNoticeAuthority)) {
-//	$useNoticeAuthority = 1;
-//}
-//if (! isset($useReplayTo)) {
-//	$useReplayTo = 1;
-//}
-//$editForms = Hash::merge(array(
-//	array(
-//		'mailTypeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
-//		'panelHeading' => __d('mails', '投稿メール'),
-//		'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
-//		'permission' => 'mail_content_receivable',
-//	),
-//), $editForms);
 ?>
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
