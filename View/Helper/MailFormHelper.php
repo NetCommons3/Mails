@@ -9,6 +9,7 @@
  */
 
 App::uses('AppHelper', 'View/Helper');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 
 /**
  * MailFormHelper
