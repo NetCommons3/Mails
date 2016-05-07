@@ -86,7 +86,7 @@
 								)); ?>
 								<div class="help-block">
 									<?php /* popover説明 */ ?>
-									<?php echo $this->MailsHtml->help($editForm['mailBodyPopoverMessage']); ?>
+									<?php echo $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']); ?>
 								</div>
 							</div>
 						</div>

@@ -19,15 +19,6 @@ App::uses('MailSettingFixedPhrase', 'Mails.Model');
 class MailFormHelper extends AppHelper {
 
 /**
- * Other helpers used by FormHelper
- *
- * @var array
- */
-	public $helpers = array(
-		'Mails.MailsHtml',
-	);
-
-/**
  * コメント一覧表示＆コメント登録
  *
  * #### Sample code
