@@ -100,7 +100,7 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 
 		//チェック
 		//debug($result);
-		$this->assertEmpty($result);
+		$this->assertFalse($result);
 	}
 
 }
