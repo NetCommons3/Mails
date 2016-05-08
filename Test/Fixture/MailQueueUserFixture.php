@@ -53,17 +53,68 @@ class MailQueueUserFixture extends CakeTestFixture {
  * @var array
  */
 	public $records = array(
+		// user_id送信パターン
 		array(
 			'id' => 1,
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
-			'block_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_1',
 			'content_key' => 'Lorem ipsum dolor sit amet',
 			'mail_queue_id' => 1,
 			'user_id' => 1,
+			'room_id' => null,
+			'to_address' => null,
+			'send_room_permission' => null,
+			'not_send_room_user_ids' => null,
+			'created_user' => 1,
+			'created' => '2016-03-22 12:23:24',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:23:24'
+		),
+		// メールアドレス送信パターン
+		array(
+			'id' => 2,
+			'plugin_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_1',
+			'content_key' => 'Lorem ipsum dolor sit amet',
+			'mail_queue_id' => 1,
+			'user_id' => null,
+			'room_id' => null,
+			'to_address' => 'to@dummp.com',
+			'send_room_permission' => null,
+			'not_send_room_user_ids' => null,
+			'created_user' => 1,
+			'created' => '2016-03-22 12:23:24',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:23:24'
+		),
+		// room_id送信パターン
+		array(
+			'id' => 3,
+			'plugin_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_1',
+			'content_key' => 'Lorem ipsum dolor sit amet',
+			'mail_queue_id' => 1,
+			'user_id' => null,
 			'room_id' => 1,
-			'to_address' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
-			'send_room_permission' => 'Lorem ipsum dolor sit amet',
-			'not_send_room_user_ids' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+			'to_address' => null,
+			'send_room_permission' => 'mail_content_receivable',
+			'not_send_room_user_ids' => '1|2',
+			'created_user' => 1,
+			'created' => '2016-03-22 12:23:24',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:23:24'
+		),
+		array(
+			'id' => 4,
+			'plugin_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_1',
+			'content_key' => 'Lorem ipsum dolor sit amet',
+			'mail_queue_id' => 1,
+			'user_id' => null,
+			'room_id' => 1,
+			'to_address' => null,
+			'send_room_permission' => 'mail_answer_receivable',
+			'not_send_room_user_ids' => '1|2',
 			'created_user' => 1,
 			'created' => '2016-03-22 12:23:24',
 			'modified_user' => 1,
