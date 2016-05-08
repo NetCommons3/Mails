@@ -9,6 +9,8 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
+App::uses('Shell', 'Console');
+App::uses('AppShell', 'Console/Command');
 App::uses('NetCommonsMail', 'Mails.Utility');
 App::uses('NetCommonsTime', 'NetCommons.Utility');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
@@ -53,10 +55,17 @@ class MailSendShell extends AppShell {
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#id2
  */
 	public function main() {
+		// SiteSettingからメール設定を取得する
+		SiteSettingUtil::setup(array(
+			'Mail.use_cron',
+		));
+
 		// 初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応
 		$useCron = SiteSettingUtil::read('Mail.use_cron', false);
 		if (! $useCron) {
-			$this->SiteSetting->saveSiteSettingByKey('Mail.use_cron', 1);
+			$data = $this->SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.use_cron'));
+			$data['SiteSetting']['Mail.use_cron'][0]['value'] = 1;
+			$this->SiteSetting->saveSiteSetting($data);
 		}
 
 		// メール送信
