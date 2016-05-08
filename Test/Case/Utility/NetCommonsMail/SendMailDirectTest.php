@@ -57,6 +57,9 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 		$config = $this->mail->config();
 		$config['transport'] = 'Debug';
 		$this->mail->config($config);
+
+		$this->mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
+		$this->mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
 	}
 
 /**
@@ -70,8 +73,6 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 		$this->mail->to('to@dummpy.com');
 
 		$this->mail->mailAssignTag->setFixedPhraseBody("本文１\r\n本文２\r\n本文３\r\n");
-		$this->mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
-		$this->mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
 
 		//テスト実施
 		$result = $this->mail->sendMailDirect();
@@ -92,8 +93,6 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 		$this->mail->to('to@dummpy.com');
 
 		//$mail->mailAssignTag->setFixedPhraseBody("本文１\r\n本文２\r\n本文３\r\n");
-		$this->mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
-		$this->mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
 
 		//テスト実施
 		$result = $this->mail->sendMailDirect();
