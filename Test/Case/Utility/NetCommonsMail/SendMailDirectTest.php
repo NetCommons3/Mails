@@ -37,27 +37,44 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 	public $plugin = 'mails';
 
 /**
+ * メール
+ *
+ * @var object
+ */
+	public $mail = null;
+
+/**
+ * setUp method
+ *
+ * @return void
+ */
+	public function setUp() {
+		parent::setUp();
+
+		$this->mail = new NetCommonsMail();
+
+		//送信しない（デバッグ用）
+		$config = $this->mail->config();
+		$config['transport'] = 'Debug';
+		$this->mail->config($config);
+	}
+
+/**
  * sendMailDirect()のテスト
  *
  * @return void
  */
 	public function testSendMailDirect() {
 		//データ生成
-		$mail = new NetCommonsMail();
-		$mail->from('from@dummpy.com');
-		$mail->to('to@dummpy.com');
+		$this->mail->from('from@dummpy.com');
+		$this->mail->to('to@dummpy.com');
 
-		//送信しない（デバッグ用）
-		$config = $mail->config();
-		$config['transport'] = 'Debug';
-		$mail->config($config);
-
-		$mail->mailAssignTag->setFixedPhraseBody("本文１\r\n本文２\r\n本文３\r\n");
-		$mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
-		$mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
+		$this->mail->mailAssignTag->setFixedPhraseBody("本文１\r\n本文２\r\n本文３\r\n");
+		$this->mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
+		$this->mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
 
 		//テスト実施
-		$result = $mail->sendMailDirect();
+		$result = $this->mail->sendMailDirect();
 
 		//チェック
 		//debug($result);
@@ -71,21 +88,15 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
  */
 	public function testSendMailDirectBodyEmpty() {
 		//データ生成
-		$mail = new NetCommonsMail();
-		$mail->from('from@dummpy.com');
-		$mail->to('to@dummpy.com');
-
-		//送信しない（デバッグ用）
-		$config = $mail->config();
-		$config['transport'] = 'Debug';
-		$mail->config($config);
+		$this->mail->from('from@dummpy.com');
+		$this->mail->to('to@dummpy.com');
 
 		//$mail->mailAssignTag->setFixedPhraseBody("本文１\r\n本文２\r\n本文３\r\n");
-		$mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
-		$mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
+		$this->mail->mailAssignTag->assignTag('X-BODY_HEADER', '本文ヘッダー文');
+		$this->mail->mailAssignTag->assignTag('X-SIGNATURE', '署名');
 
 		//テスト実施
-		$result = $mail->sendMailDirect();
+		$result = $this->mail->sendMailDirect();
 
 		//チェック
 		//debug($result);
