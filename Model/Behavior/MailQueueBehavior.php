@@ -89,7 +89,7 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * #### サンプルコード
  * ##### Model
- * ```
+ * ```php
  * public $actsAs = array(
  *	'Mails.MailQueue' => array(
  *		'embedTags' => array(
@@ -202,7 +202,7 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * #### サンプルコード
  * ##### Model
- * ```
+ * ```php
  *	public function saveVideo($data) {
  *		$this->begin();
  *
@@ -261,7 +261,7 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * #### サンプルコード
  * ##### Model
- * ```
+ * ```php
  *	public function saveVideo($data) {
  *		$this->begin();
  *
