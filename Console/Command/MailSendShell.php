@@ -63,7 +63,7 @@ class MailSendShell extends AppShell {
 		// 初回のみ、システム管理の「クーロンを使いますフラグ」をONにする対応
 		$useCron = SiteSettingUtil::read('Mail.use_cron', false);
 		if (! $useCron) {
-			$data = $this->SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.use_cron'));
+			$data['SiteSetting'] = $this->SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.use_cron'));
 			$data['SiteSetting']['Mail.use_cron'][0]['value'] = 1;
 			$this->SiteSetting->saveSiteSetting($data);
 		}
