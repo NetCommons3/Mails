@@ -244,7 +244,17 @@ class MailQueueBehavior extends ModelBehavior {
 			$model->data[$model->alias]['public_type'] == WorkflowBehavior::PUBLIC_TYPE_LIMITED) {
 			return $model->data[$model->alias]['publish_start'];
 		}
-		return null;
+
+		$publishStartField = Hash::get($this->settings, $model->alias . '.publishStartField');
+		if (is_null($publishStartField)) {
+			return null;
+		}
+		if (!$model->hasField($publishStartField)) {
+			return null;
+		}
+
+		// DBに指定の項目があったら公開日時を取得する（アンケートを想定）。その後、未来日メール送られる
+		return $model->data[$model->alias][$publishStartField];
 	}
 
 /**
@@ -254,7 +264,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @return date 送信日時
  */
 	private function __getSaveSendTime($sendTime = null) {
-		if ($sendTime === null) {
+		if (empty($sendTime)) {
 			$sendTime = NetCommonsTime::getNowDatetime();
 		}
 		return $sendTime;
