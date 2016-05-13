@@ -133,7 +133,8 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		$this->_defaultSettings['pluginKey'] = Current::read('Plugin.key');
 		$this->_defaultSettings[self::MAIL_QUEUE_SETTING_PLUGIN_NAME] = Current::read('Plugin.Name');
-		$this->settings[$model->alias] = Hash::merge($this->_defaultSettings, $this->settings[$model->alias]);
+		$this->settings[$model->alias] =
+			Hash::merge($this->_defaultSettings, $this->settings[$model->alias]);
 
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings);
 
