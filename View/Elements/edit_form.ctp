@@ -28,7 +28,7 @@
 						'type' => 'checkbox',
 						'label' => __d('mails', 'Use the mail notification function'),
 					)); ?>
-					<div class="help-block"><?php echo __d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'); ?></div>
+					<?php echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future')); ?>
 				</div>
 			</div>
 
@@ -40,8 +40,8 @@
 							'type' => 'text',
 							'label' => __d('mails', 'E-mail address to receive a reply'),
 							'div' => '',
+							'help' => __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'),
 						)); ?>
-						<p class="help-block"><?php echo __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'); ?></p>
 					</div>
 				<?php endif; ?>
 
@@ -84,10 +84,11 @@
 									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
 									'div' => '',
 								)); ?>
-								<div class="help-block">
-									<?php /* popover説明 */ ?>
-									<?php echo $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']); ?>
-								</div>
+								<?php
+								// popover説明
+								$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
+								echo $this->NetCommonsForm->help($mailHelp);
+								?>
 							</div>
 						</div>
 					</div>
