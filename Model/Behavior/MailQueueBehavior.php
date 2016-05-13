@@ -56,6 +56,35 @@ class MailQueueBehavior extends ModelBehavior {
 		MAIL_QUEUE_SETTING_WORKFLOW_TYPE = 'workflowType';
 
 /**
+ * ビヘイビアの初期設定
+ *
+ * @var array
+ */
+	protected $_defaultSettings = array(
+		'embedTags' => array(
+			'X-SUBJECT' => null,
+			'X-BODY' => null,
+		),
+		'addEmbedTagsValues' => array(),
+		'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+		'keyField' => 'key',
+		'publishablePermissionKey' => 'content_publishable',
+		'useWorkflow' => null,
+		'publishStartField' => null,
+		'pluginKey' => null,
+		'reminder' => array(
+			'sendTimes' => null,
+			'useReminder' => 0,
+		),
+		self::MAIL_QUEUE_SETTING_PLUGIN_NAME => null,
+		self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE => self::MAIL_QUEUE_WORKFLOW_TYPE_NONE,
+		self::MAIL_QUEUE_SETTING_USER_IDS => array(),
+		self::MAIL_QUEUE_SETTING_TO_ADDRESSES => null,
+		self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST => null,
+		self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS => array(),
+	);
+
+/**
  * setup
  *
  * #### サンプルコード
@@ -71,6 +100,14 @@ class MailQueueBehavior extends ModelBehavior {
  * ```
  * 注意事項：ワークフロー利用時はWorkflow.Workflowより下に記述
  *
+ * ##### Model - アンケート回答、登録フォーム回答時は、下記も指定
+ * ```
+ * public $actsAs = array(
+ *	'Mails.MailQueue' => array(
+ * 		'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
+ *	),
+ * ```
+ *
  * @param Model $model モデル
  * @param array $settings 設定値
  * @return void
@@ -85,8 +122,6 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフローのstatusによって送信内容を変える
 			if ($model->Behaviors->loaded('Workflow.Workflow')) {
 				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
-			} else {
-				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
 		}
 		// メール定型文の種類
@@ -94,24 +129,11 @@ class MailQueueBehavior extends ModelBehavior {
 			if ($this->settings[$model->alias][$workflowTypeKey] == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 				// 回答タイプ
 				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::ANSWER_TYPE;
-			} else {
-				// 通常
-				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::DEFAULT_TYPE;
 			}
 		}
-		$this->__noSetSetting($model, 'keyField', 'key');
-		$this->__noSetSetting($model, 'pluginKey', Current::read('Plugin.key'));
-		$this->__noSetSetting($model, 'publishablePermissionKey', 'content_publishable');
-
-		$this->settings[$model->alias]['addEmbedTagsValues'] = array();
-		$this->settings[$model->alias]['reminder']['sendTimes'] = null;
-		$this->settings[$model->alias]['reminder']['useReminder'] = 0; // リマインダー使わない
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS] = array();
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES] = null;
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST] = null;
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS] = array();
-		$this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME] =
-			Current::read('Plugin.Name');
+		$this->_defaultSettings['pluginKey'] = Current::read('Plugin.key');
+		$this->_defaultSettings[self::MAIL_QUEUE_SETTING_PLUGIN_NAME] = Current::read('Plugin.Name');
+		$this->settings[$model->alias] = Hash::merge($this->_defaultSettings, $this->settings[$model->alias]);
 
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings);
 
@@ -196,20 +218,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * 設定ないsettingにセット
- *
- * @param Model $model モデル
- * @param string $settingKey セッティングのキー
- * @param string|array $settingValue セッティングの値
- * @return void
- */
-	private function __noSetSetting(Model $model, $settingKey, $settingValue) {
-		if (!isset($this->settings[$model->alias][$settingKey])) {
-			$this->settings[$model->alias][$settingKey] = $settingValue;
-		}
-	}
-
-/**
  * リマインダー送信日時 セット
  *
  * @param Model $model モデル
@@ -247,9 +255,6 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$publishStartField = Hash::get($this->settings, $model->alias . '.publishStartField');
 		if (is_null($publishStartField)) {
-			return null;
-		}
-		if (!$model->hasField($publishStartField)) {
 			return null;
 		}
 
