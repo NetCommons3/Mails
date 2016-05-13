@@ -219,14 +219,7 @@ class NetCommonsMailAssignTag {
  * @param string $value 変換する値
  * @return array タグ
  */
-	public function assignTag($tag, $value = null) {
-		if (empty($tag)) {
-			return;
-		}
-		// $tagあり、$valueなしで、タグの値取得
-		if ($value === null) {
-			return Hash::get($this->assignTags, $tag);
-		}
+	public function assignTag($tag, $value) {
 		// タグの両端空白なくして、大文字に変換
 		$tag = strtoupper(trim($tag));
 
@@ -269,7 +262,8 @@ class NetCommonsMailAssignTag {
  */
 	public function assignTagReplace() {
 		// 承認系メールのタグは先に置換
-		if (isset($this->assignTags['X-PLUGIN_MAIL_SUBJECT'], $this->assignTags['X-PLUGIN_MAIL_BODY'])) {
+		if (array_key_exists('X-PLUGIN_MAIL_SUBJECT', $this->assignTags) &&
+			array_key_exists('X-PLUGIN_MAIL_BODY', $this->assignTags)) {
 			$this->fixedPhraseBody = str_replace('{X-PLUGIN_MAIL_BODY}',
 				$this->assignTags['X-PLUGIN_MAIL_BODY'], $this->fixedPhraseBody);
 			$this->fixedPhraseSubject = str_replace('{X-PLUGIN_MAIL_SUBJECT}',
@@ -281,7 +275,7 @@ class NetCommonsMailAssignTag {
 		$messageType = SiteSettingUtil::read('Mail.messageType');
 
 		// URL
-		if (isset($this->assignTags['X-URL'])) {
+		if (array_key_exists('X-URL', $this->assignTags)) {
 			if ($messageType == 'text') {
 				$this->fixedPhraseBody = str_replace('{X-URL}', $this->assignTags['X-URL'],
 					$this->fixedPhraseBody);
@@ -294,7 +288,7 @@ class NetCommonsMailAssignTag {
 		}
 
 		// 本文
-		if (isset($this->assignTags['X-BODY'])) {
+		if (array_key_exists('X-BODY', $this->assignTags)) {
 			$this->fixedPhraseBody = str_replace('{X-BODY}', h($this->assignTags['X-BODY']),
 				$this->fixedPhraseBody);
 			unset($this->assignTags['X-BODY']);
