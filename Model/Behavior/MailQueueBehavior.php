@@ -96,17 +96,13 @@ class MailQueueBehavior extends ModelBehavior {
  *			'X-SUBJECT' => 'Video.title',
  *			'X-BODY' => 'Video.description',
  *		),
+ * 		// アンケート回答、登録フォーム回答時は指定
+ * 		//'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
+ * 		// アンケートの未来公開日は指定
+ * 		//'publishStartField' => 'answer_start_period',
  *	),
  * ```
  * 注意事項：ワークフロー利用時はWorkflow.Workflowより下に記述
- *
- * ##### Model - アンケート回答、登録フォーム回答時は、下記も指定
- * ```
- * public $actsAs = array(
- *	'Mails.MailQueue' => array(
- * 		'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
- *	),
- * ```
  *
  * @param Model $model モデル
  * @param array $settings 設定値
@@ -204,6 +200,48 @@ class MailQueueBehavior extends ModelBehavior {
 /**
  * セッティング セット
  *
+ * #### サンプルコード
+ * ##### Model
+ * ```
+ *	public function saveVideo($data) {
+ *		$this->begin();
+ *
+ *		$this->set($data);
+ *		if (! $this->validates()) {
+ *			return false;
+ *		}
+ *
+ *		try {
+ *			// 試し：投稿メールのOFF セット(カレンダー、回覧板等)
+ *			//$this->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST, 0);
+ *			// 試し：メールアドレス セット(登録フォーム回答)
+ *			//			$toAddresses = array(
+ *			//				'test1@example.com',
+ *			//				'test2@example.com',
+ *			//			);
+ *			//			$this->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES, $toAddresses);
+ *			// 試し：ユーザID セット(アンケート設置者)、ユーザID複数でグループ配信（回覧板、カレンダー）
+ *			//			$userIds = array(
+ *			//				4,
+ *			//				5,
+ *			//			);
+ *			//			$this->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
+ *			// 試し：グループ配信のみ（回覧板、カレンダー(プライベート予定のグループ共有)）
+ *			//			$this->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+ *			//				MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY);
+ *
+ *			if (! $video = $this->save(null, false)) {
+ *				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+ *			}
+ *			$this->commit();
+ *
+ *		} catch (Exception $ex) {
+ *			$this->rollback($ex);
+ *		}
+ *		return $video;
+ *	}
+ * ```
+ *
  * @param Model $model モデル
  * @param string $settingKey セッティングのキー
  * @param string|array $settingValue セッティングの値
@@ -220,6 +258,39 @@ class MailQueueBehavior extends ModelBehavior {
 
 /**
  * リマインダー送信日時 セット
+ *
+ * #### サンプルコード
+ * ##### Model
+ * ```
+ *	public function saveVideo($data) {
+ *		$this->begin();
+ *
+ *		$this->set($data);
+ *		if (! $this->validates()) {
+ *			return false;
+ *		}
+ *
+ *		try {
+ *			// 試し：リマインダー(カレンダー等)
+ *			// 送信条件：site_settings['Mail.use_cron'] => 1
+ *			$netCommonsTime = new NetCommonsTime();
+ *			$sendTimes = array(
+ *				$netCommonsTime->toServerDatetime('2017-03-31 14:30:00'),
+ *				$netCommonsTime->toServerDatetime('2017-04-20 13:30:00'),
+ *			);
+ *			$this->setSendTimeReminder($sendTimes);
+ *
+ *			if (! $video = $this->save(null, false)) {
+ *				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+ *			}
+ *			$this->commit();
+ *
+ *		} catch (Exception $ex) {
+ *			$this->rollback($ex);
+ *		}
+ *		return $video;
+ *	}
+ * ```
  *
  * @param Model $model モデル
  * @param array $sendTimeReminders リマインダー送信日時 配列
