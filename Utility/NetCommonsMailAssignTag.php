@@ -16,6 +16,26 @@ App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
 /**
  * NetCommonsメール 埋め込みタグ Utility
  *
+ * #### 自動セットする埋め込みタグ
+ * | 埋め込みタグ            | 名   | 参照元 |
+ * | ----------------------- | ---- | ------ |
+ * | `X-FROM_EMAIL`          | 送信者メールアドレス | SiteSettingUtil::read('Mail.from'); |
+ * | `X-FROM_NAME`           | 送信者名 | SiteSettingUtil::read('Mail.from_name'); |
+ * | `X-SITE_NAME`           | サイト名 | SiteSettingUtil::read('App.site_name'); |
+ * | `X-SITE_URL`            | サイトURL | Router::fullbaseUrl()); |
+ * | `X-PLUGIN_NAME`         | プラグイン名 | Current::read('Plugin.name'); |
+ * | `X-BLOCK_NAME`          | ブロック名 | Current::read('Block.name'); |
+ * | `X-TO_DATE`             | 今日日付 'Y/m/d H:i:s' |  |
+ * | `X-BODY_HEADER`         | 本文ヘッダー | SiteSettingUtil::read('Mail.body_header'); |
+ * | `X-SIGNATURE`           | 署名 | SiteSettingUtil::read('Mail.signature'); |
+ * | `X-USER`                | ユーザ名(ハンドル) | NetCommonsMailAssignTag::getXUser() |
+ * | `X-ROOM`                | ルーム名 | NetCommonsMailAssignTag::getXRoom() |
+ * | `X-URL`                 | コンテンツURL | NetCommonsMailAssignTag::getXUrl() |
+ * | `X-TAGS`                | タグ(タグプラグイン) | NetCommonsMailAssignTag::getXTags() |
+ * | `X-WORKFLOW_COMMENT`    | 承認コメント | NetCommonsMailAssignTag::getXWorkflowComment() |
+ * | `X-PLUGIN_MAIL_SUBJECT` | プラグイン側で設定した件名(承認メール用) | NetCommonsMailAssignTag::setMailFixedPhraseSiteSetting() |
+ * | `X-PLUGIN_MAIL_BODY`    | プラグイン側で設定した本文(承認メール用) | NetCommonsMailAssignTag::setMailFixedPhraseSiteSetting() |
+ *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Utility
  * @property SiteSetting $SiteSetting
