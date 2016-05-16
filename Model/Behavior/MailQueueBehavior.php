@@ -77,7 +77,6 @@ class MailQueueBehavior extends ModelBehavior {
 			'useReminder' => 0,
 		),
 		self::MAIL_QUEUE_SETTING_PLUGIN_NAME => null,
-		self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE => self::MAIL_QUEUE_WORKFLOW_TYPE_NONE,
 		self::MAIL_QUEUE_SETTING_USER_IDS => array(),
 		self::MAIL_QUEUE_SETTING_TO_ADDRESSES => null,
 		self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST => null,
@@ -118,6 +117,8 @@ class MailQueueBehavior extends ModelBehavior {
 			// --- ワークフローのstatusによって送信内容を変える
 			if ($model->Behaviors->loaded('Workflow.Workflow')) {
 				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW;
+			} else {
+				$this->settings[$model->alias][$workflowTypeKey] = self::MAIL_QUEUE_WORKFLOW_TYPE_NONE;
 			}
 		}
 		// メール定型文の種類
