@@ -50,15 +50,94 @@ class MailSettingFixedPhraseFixture extends CakeTestFixture {
  * @var array
  */
 	public $records = array(
+		// contents - 英, 日
 		array(
 			'id' => 1,
 			'mail_setting_id' => 1,
 			'language_id' => 1,
-			'plugin_key' => 'Lorem ipsum dolor sit amet',
-			'block_key' => 'Lorem ipsum dolor sit amet',
-			'type_key' => 'Lorem ipsum dolor sit amet',
-			'mail_fixed_phrase_subject' => 'Lorem ipsum dolor sit amet',
-			'mail_fixed_phrase_body' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+			'plugin_key' => 'Dummy',
+			'block_key' => 'block_1',
+			'type_key' => 'contents',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME} to let you know because the content has
+been posted.
+Room name: {X-ROOM}
+Block Name: {X-BLOCK_NAME}
+Title: {X-SUBJECT}
+Posted: {X-USER}
+Post time: {X-TO_DATE}
+
+{X-BODY}
+
+Please click on the link below to check this post content.
+{X-URL}",
+			'created_user' => 1,
+			'created' => '2016-03-22 12:21:35',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:21:35'
+		),
+		array(
+			'id' => 2,
+			'mail_setting_id' => 1,
+			'language_id' => 2,
+			'plugin_key' => 'Dummy',
+			'block_key' => 'block_1',
+			'type_key' => 'contents',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME}にコンテンツが投稿されたのでお知らせします。
+ルーム名:{X-ROOM}
+ブロック名:{X-BLOCK_NAME}
+タイトル:{X-SUBJECT}
+投稿者:{X-USER}
+投稿日時:{X-TO_DATE}
+
+{X-BODY}
+
+この投稿内容を確認するには下記のリンクをクリックして下さい。
+{X-URL}",
+			'created_user' => 1,
+			'created' => '2016-03-22 12:21:35',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:21:35'
+		),
+		// answer - 英, 日
+		array(
+			'id' => 3,
+			'mail_setting_id' => 1,
+			'language_id' => 1,
+			'plugin_key' => 'Dummy',
+			'block_key' => 'block_1',
+			'type_key' => 'answer',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME} we've been responded to.
+Room name: {X-ROOM}
+Title: {X-SUBJECT}
+Respondents: {X-USER}
+Answer time: {X-TO_DATE}
+
+Answer to see the results click on the link below.
+{X-URL}",
+			'created_user' => 1,
+			'created' => '2016-03-22 12:21:35',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:21:35'
+		),
+		array(
+			'id' => 4,
+			'mail_setting_id' => 1,
+			'language_id' => 2,
+			'plugin_key' => 'Dummy',
+			'block_key' => 'block_1',
+			'type_key' => 'answer',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME}に回答されたのでお知らせします。
+ルーム名:{X-ROOM}
+タイトル:{X-SUBJECT}
+回答者:{X-USER}
+回答日時:{X-TO_DATE}
+
+回答結果を参照するには下記のリンクをクリックして下さい。
+{X-URL}",
 			'created_user' => 1,
 			'created' => '2016-03-22 12:21:35',
 			'modified_user' => 1,

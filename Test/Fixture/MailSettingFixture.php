@@ -48,10 +48,10 @@ class MailSettingFixture extends CakeTestFixture {
 	public $records = array(
 		array(
 			'id' => 1,
-			'plugin_key' => 'Lorem ipsum dolor sit amet',
-			'block_key' => 'Lorem ipsum dolor sit amet',
+			'plugin_key' => 'Dummy',
+			'block_key' => 'block_1',
 			'is_mail_send' => 1,
-			'replay_to' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+			'replay_to' => 'replay_to@test.com',
 			'created_user' => 1,
 			'created' => '2016-03-22 12:21:35',
 			'modified_user' => 1,

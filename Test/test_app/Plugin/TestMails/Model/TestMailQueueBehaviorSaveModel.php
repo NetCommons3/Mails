@@ -25,7 +25,14 @@ class TestMailQueueBehaviorSaveModel extends AppModel {
  * @var array
  */
 	public $actsAs = array(
-		'Mails.MailQueue'
+		'Mails.MailQueue' => array(
+			'embedTags' => array(
+				'X-SUBJECT' => 'TestMailQueueBehaviorSaveModel.title',
+				'X-BODY' => 'TestMailQueueBehaviorSaveModel.content',
+			),
+			// 暫定対応：メールで承認するフラグ取得用（今後設定不要になる見込み）
+			//'useWorkflow' => 'VideoBlockSetting.use_workflow',
+		),
 	);
 
 }

@@ -34,8 +34,30 @@ class SiteSettingForMailFixture extends SiteSettingFixture {
 			'language_id' => '0',
 			'key' => 'Mail.from',
 			'value' => 'from@dummy.com',
-			'label' => 'Mail.from',
-			'weight' => '1',
+		),
+		array(
+			'id' => '2',
+			'language_id' => '2',
+			'key' => 'Mail.from_name',
+			'value' => '管理者',
+		),
+		array(
+			'id' => '3',
+			'language_id' => '2',
+			'key' => 'Mail.body_header',
+			'value' => '※このメールに返信しても相手には届きませんのでご注意ください。',
+		),
+		array(
+			'id' => '4',
+			'language_id' => '2',
+			'key' => 'Mail.signature',
+			'value' => "-- \r\nPowered by NetCommons",
+		),
+		array(
+			'id' => '5',
+			'language_id' => '2',
+			'key' => 'App.site_name',
+			'value' => 'NetCommons3',
 		),
 	);
 
