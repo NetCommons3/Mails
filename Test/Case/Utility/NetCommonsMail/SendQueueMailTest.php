@@ -28,6 +28,7 @@ class MailsUtilityNetCommonsMailSendQueueMailTest extends NetCommonsCakeTestCase
  */
 	public $fixtures = array(
 		'plugin.mails.site_setting_for_mail',
+		'plugin.mails.user_for_mail',
 		'plugin.rooms.default_role_permission4test',
 		'plugin.rooms.room_role',
 		'plugin.rooms.room_role_permission4test',
