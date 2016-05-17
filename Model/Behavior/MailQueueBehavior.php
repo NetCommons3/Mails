@@ -508,7 +508,7 @@ class MailQueueBehavior extends ModelBehavior {
 			$mailQueue = $model->MailQueue->create($mailQueue);
 			/** @see MailQueue::saveMailQueue() */
 			if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-				throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+				throw new InternalErrorException('Failed ' . __METHOD__);
 			}
 			$mailQueueUser['MailQueueUser']['mail_queue_id'] = $mailQueueResult['MailQueue']['id'];
 
