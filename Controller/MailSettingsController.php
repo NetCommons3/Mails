@@ -70,6 +70,13 @@ class MailSettingsController extends AppController {
 	);
 
 /**
+ * 編集行為成功時の戻り先指定
+ *
+ * @var string
+ */
+	public $backUrl = null;
+
+/**
  * メール設定 登録,編集
  *
  * @return mixed
@@ -78,7 +85,11 @@ class MailSettingsController extends AppController {
 		if ($this->request->is('post') || $this->request->is('put')) {
 			$result = $this->MailSetting->saveMailSettingAndFixedPhrase($this->request->data);
 			if ($result) {
-				return $this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
+				if (! $this->backUrl) {
+					return $this->redirect(NetCommonsUrl::backToIndexUrl('default_setting_action'));
+				} else {
+					return $this->redirect($this->backUrl);
+				}
 			}
 			/** @see NetCommonsComponent::handleValidationError() */
 			$this->NetCommons->handleValidationError($this->MailSetting->validationErrors);
