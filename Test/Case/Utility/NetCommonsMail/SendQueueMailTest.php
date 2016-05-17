@@ -219,23 +219,5 @@ class MailsUtilityNetCommonsMailSendQueueMailTest extends NetCommonsCakeTestCase
 		$this->assertEquals('password', $config['password']);
 	}
 
-/**
- * brReplace()のテスト - htmlモードで改行が<br>に置換されている
- *
- * @return void
- */
-	public function testBrReplace() {
-		//データ生成
-		$str = "11111\n22222\n3333\n";
-
-		$this->mail->setBody($str);
-		$this->mail->emailFormat('html');
-
-		//テスト実施
-		$this->mail->brReplace();
-
-		//チェック
-		$this->assertTextContains('<br />', $this->mail->body);
-	}
 
 }
