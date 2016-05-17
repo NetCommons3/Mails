@@ -128,8 +128,7 @@ class NetCommonsMailAssignTag {
 		$bodyHeader = SiteSettingUtil::read('Mail.body_header', null, $languageId);
 		$signature = SiteSettingUtil::read('Mail.signature', null, $languageId);
 
-		$netCommonsTime = new NetCommonsTime();
-		$siteimezone = $netCommonsTime->getSiteTimezone();
+		$siteimezone = (new NetCommonsTime())->getSiteTimezone();
 		$now = NetCommonsTime::getNowDatetime();
 		$date = new DateTime($now);
 		$date->setTimezone(new DateTimeZone($siteimezone));
