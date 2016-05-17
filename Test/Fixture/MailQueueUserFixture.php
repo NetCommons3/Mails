@@ -120,6 +120,23 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'modified_user' => 1,
 			'modified' => '2016-03-22 12:23:24'
 		),
+		// 送信パターン全部null
+		array(
+			'id' => 5,
+			'plugin_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_1',
+			'content_key' => 'Lorem ipsum dolor sit amet',
+			'mail_queue_id' => 1,
+			'user_id' => null,
+			'room_id' => null,
+			'to_address' => null,
+			'send_room_permission' => null,
+			'not_send_room_user_ids' => null,
+			'created_user' => 1,
+			'created' => '2016-03-22 12:23:24',
+			'modified_user' => 1,
+			'modified' => '2016-03-22 12:23:24'
+		),
 	);
 
 }
