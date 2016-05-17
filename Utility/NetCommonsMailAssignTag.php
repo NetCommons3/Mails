@@ -12,6 +12,7 @@
 
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
+App::uses('NetCommonsUrl', 'NetCommons.Utility');
 
 /**
  * NetCommonsメール 埋め込みタグ Utility
