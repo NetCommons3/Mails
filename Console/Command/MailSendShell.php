@@ -98,6 +98,8 @@ class MailSendShell extends AppShell {
 		if (empty($mailQueues)) {
 			//CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
+			//			$this->out('MailQueue is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			//exit;
 		}
 
 		// SiteSettingからメール設定を取得する
@@ -118,6 +120,8 @@ class MailSendShell extends AppShell {
 		if (empty($from)) {
 			LogError('From Address is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return;
+			//			$this->out('<error>From Address is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')</error>');
+			//			exit;
 		}
 
 		$beforeId = $mailQueues[0]['MailQueue']['id'];

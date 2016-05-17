@@ -53,7 +53,7 @@ class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase
 
 		//チェック
 		//		$this->$shell->expects($this->at(0))->method('out')
-		//			->with('ここに出力内容を書く');
+		//			->with('<error>From Address is empty. [MailSendShell::send] /var/www/app/app/Plugin/Mails/Console/Command/MailSendShell.php (line 119)</error>');
 
 		//テスト実施
 		$this->$shell->send();
