@@ -529,14 +529,16 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 			if (!empty($roomId)) {
 				// --- ルーム配信
-				// 登録者に配信
-				$this->__addMailQueueUserInCreatedUser($model,
-					$mailQueueUser['MailQueueUser']['mail_queue_id']);
-
 				// ルーム配信で送らないユーザID
 				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 				$notSendRoomUserIds = $this->settings[$model->alias][$key];
 				$notSendRoomUserIds = Hash::merge($notSendRoomUserIds, $userIds);
+				$this->settings[$model->alias][$key] = $notSendRoomUserIds;
+
+				// 登録者に配信
+				$this->__addMailQueueUserInCreatedUser($model,
+					$mailQueueUser['MailQueueUser']['mail_queue_id']);
+
 				// ルーム配信で送るパーミッション
 				$sendRoomPermission = $this->__getSendRoomPermission($typeKey);
 
