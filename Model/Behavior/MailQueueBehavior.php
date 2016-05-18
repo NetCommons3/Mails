@@ -446,9 +446,10 @@ class MailQueueBehavior extends ModelBehavior {
 					$roomId, $typeKey);
 			}
 
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
-			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER ||
-			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
+		} else {
+			//$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
+			//$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER ||
+			//$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
 			// ・承認機能なし - 「公開」記事の内容を投稿メールでルーム配信
 			// ・回答メール配信(即時) - ユーザID、メールアドレス、ルームに即時配信
 			// ・グループ送信のみ - ユーザIDに配信
