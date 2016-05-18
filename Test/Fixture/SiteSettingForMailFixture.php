@@ -59,6 +59,12 @@ class SiteSettingForMailFixture extends SiteSettingFixture {
 			'key' => 'App.site_name',
 			'value' => 'NetCommons3',
 		),
+		array(
+			'id' => '6',
+			'language_id' => '0',
+			'key' => 'Mail.use_cron',
+			'value' => '1',
+		),
 	);
 
 }

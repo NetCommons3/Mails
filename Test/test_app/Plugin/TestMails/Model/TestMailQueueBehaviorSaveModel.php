@@ -25,6 +25,7 @@ class TestMailQueueBehaviorSaveModel extends AppModel {
  * @var array
  */
 	public $actsAs = array(
+		'Workflow.Workflow',			// 自動でis_active, is_latestセット
 		'Mails.MailQueue' => array(
 			'embedTags' => array(
 				'X-SUBJECT' => 'TestMailQueueBehaviorSaveModel.title',

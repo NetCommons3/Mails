@@ -11,6 +11,7 @@
 
 App::uses('NetCommonsModelTestCase', 'NetCommons.TestSuite');
 App::uses('TestMailQueueBehaviorSaveModelFixture', 'Mails.Test/Fixture');
+App::uses('NetCommonsTime', 'NetCommons.Utility');
 
 /**
  * MailQueueBehavior::save()のテスト
@@ -30,6 +31,9 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		'plugin.mails.mail_setting_fixed_phrase',
 		'plugin.mails.site_setting_for_mail',
 		'plugin.mails.test_mail_queue_behavior_save_model',
+		'plugin.rooms.default_role_permission4test',
+		'plugin.rooms.room_role',
+		'plugin.rooms.room_role_permission4test',
 		'plugin.user_attributes.user_role_setting4test',
 	);
 
@@ -74,11 +78,20 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 				->records[1],
 		);
 
+		// リマインダー セット
+		$netCommonsTime = new NetCommonsTime();
+		$sendTimeReminders = array(
+			$netCommonsTime->toServerDatetime('2027-03-31 14:30:00'),
+			$netCommonsTime->toServerDatetime('2027-04-20 13:30:00'),
+		);
+		/** @see MailQueueBehavior::setSendTimeReminder() */
+		$this->TestModel->setSendTimeReminder($sendTimeReminders);
+
 		//テスト実施
-		$this->TestModel->save($data);
+		$this->TestModel->save($data, false);
 
 		//チェック
-		$mailQueue = $this->MailQueue->find('all', array(
+		$mailQueue = $this->MailQueue->find('first', array(
 			'recursive' => -1,
 			'conditions' => array('plugin_key' => Current::read('Plugin.key'))
 		));
@@ -90,7 +103,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		//debug($mailQueueUsers);
 
 		// --- 件名には下記が含まれる
-		$mailSubject = $mailQueue[0]['MailQueue']['mail_subject'];
+		$mailSubject = $mailQueue['MailQueue']['mail_subject'];
 		$siteName = (new SiteSettingForMailFixture())->records[4];
 		// サイト名
 		$this->assertTextContains($siteName['value'], $mailSubject);
@@ -106,7 +119,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->assertTextNotContains('X-', $mailSubject);
 
 		// --- 本文には下記が含まれる
-		$mailBody = $mailQueue[0]['MailQueue']['mail_body'];
+		$mailBody = $mailQueue['MailQueue']['mail_body'];
 		$mailSignature = (new SiteSettingForMailFixture())->records[3];
 		$mailBodyHeader = (new SiteSettingForMailFixture())->records[2];
 		// 署名
@@ -142,9 +155,20 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 				$this->assertEmpty($mailQueueUser['MailQueueUser']['to_address']);
 				$this->assertEmpty($mailQueueUser['MailQueueUser']['user_id']);
 				$this->assertNotEmpty($mailQueueUser['MailQueueUser']['send_room_permission']);
-				$this->assertNotEmpty($mailQueueUser['MailQueueUser']['not_send_room_user_ids']);
+				//$this->assertNotEmpty($mailQueueUser['MailQueueUser']['not_send_room_user_ids']);
 			}
 		}
+
+		// リマインダー 登録チェック
+		$mailQueueReminders = $this->MailQueue->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'send_time' => $sendTimeReminders,
+			)
+		));
+		//debug($mailQueueReminders);
+		$this->assertCount(2, $mailQueueReminders);
 	}
 
 /**
@@ -161,7 +185,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		);
 
 		//テスト実施
-		$this->TestModel->save($data);
+		$this->TestModel->save($data, false);
 
 		//チェック
 		$this->MailQueue->find();
@@ -190,6 +214,6 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		);
 
 		//テスト実施
-		$this->TestModel->save($data);
+		$this->TestModel->save($data, false);
 	}
 }
