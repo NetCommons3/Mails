@@ -62,10 +62,6 @@ class MailQueueBehaviorSetSendTimeReminderTest extends NetCommonsModelTestCase {
 			$netCommonsTime->toServerDatetime('2027-04-20 13:30:00'),
 		);
 
-		foreach ($sendTimeReminders as &$sendTimeReminder) {
-			$sendTimeReminder = $netCommonsTime->toServerDatetime($sendTimeReminder);
-		}
-
 		//テスト実施
 		/** @see MailQueueBehavior::setSendTimeReminder() */
 		$result = $this->TestModel->setSendTimeReminder($sendTimeReminders);
@@ -88,10 +84,6 @@ class MailQueueBehaviorSetSendTimeReminderTest extends NetCommonsModelTestCase {
 			$netCommonsTime->toServerDatetime('2016-03-31 14:30:00'),
 			$netCommonsTime->toServerDatetime('2016-04-20 13:30:00'),
 		);
-
-		foreach ($sendTimeReminders as &$sendTimeReminder) {
-			$sendTimeReminder = $netCommonsTime->toServerDatetime($sendTimeReminder);
-		}
 
 		//テスト実施
 		/** @see MailQueueBehavior::setSendTimeReminder() */
