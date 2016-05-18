@@ -192,10 +192,11 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param string $embedTag 埋め込みタグ
  * @param string $value タグから置き換わる値
- * @return void
+ * @return array $this->settings(テスト用)
  */
 	public function setAddEmbedTagValue(Model $model, $embedTag, $value) {
 		$this->settings[$model->alias]['addEmbedTagsValues'][$embedTag] = $value;
+		return $this->settings;
 	}
 
 /**
@@ -246,7 +247,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param string $settingKey セッティングのキー
  * @param string|array $settingValue セッティングの値
- * @return void
+ * @return array $this->settings(テスト用)
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST
@@ -255,6 +256,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function setSetting(Model $model, $settingKey, $settingValue) {
 		$this->settings[$model->alias][$settingKey] = $settingValue;
+		return $this->settings;
 	}
 
 /**
@@ -295,7 +297,7 @@ class MailQueueBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param array $sendTimeReminders リマインダー送信日時 配列
- * @return void
+ * @return array $this->settings(テスト用)
  */
 	public function setSendTimeReminder(Model $model, $sendTimeReminders) {
 		$now = NetCommonsTime::getNowDatetime();
@@ -306,11 +308,12 @@ class MailQueueBehavior extends ModelBehavior {
 			}
 		}
 		if (empty($sendTimeReminders)) {
-			return;
+			return null;
 		}
 
 		$this->settings[$model->alias]['reminder']['sendTimes'] = $sendTimeReminders;
 		$this->settings[$model->alias]['reminder']['useReminder'] = 1;
+		return $this->settings;
 	}
 
 /**
