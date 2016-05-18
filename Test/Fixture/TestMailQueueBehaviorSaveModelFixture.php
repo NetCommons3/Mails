@@ -73,11 +73,26 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 			'is_active' => true,
 			'is_latest' => true,
 			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
-			'title' => '件名',
-			'content' => "本文１\r\n本文２\r\n本文３\r\n",
+			'title' => '件名2',
+			'content' => "本文１\r\n本文２\r\n本文３\r\nシステム管理者投稿",
 			'created_user' => '1',
 			'created' => '2016-03-29 10:39:13',
 			'modified_user' => '1',
+			'modified' => '2016-03-29 10:39:13'
+		),
+		array(
+			'id' => '3',
+			'language_id' => '2',
+			'key' => 'publish_key',
+			'status' => '1',
+			'is_active' => true,
+			'is_latest' => true,
+			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
+			'title' => '件名3',
+			'content' => "本文１\r\n本文２\r\n本文３\r\n一般投稿",
+			'created_user' => '4',
+			'created' => '2016-03-29 10:39:13',
+			'modified_user' => '4',
 			'modified' => '2016-03-29 10:39:13'
 		),
 	);

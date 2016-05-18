@@ -67,22 +67,13 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()のテスト - ルーム配信
+ * save()
  *
+ * @param array $data データ
  * @param string $pluginKey プラグインキー
  * @return void
  */
-	public function testSaveSendRoom($pluginKey = null) {
-		if (is_null($pluginKey)) {
-			$pluginKey = Current::read('Plugin.key');
-		}
-
-		//テストデータ
-		$data = array(
-			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
-				->records[1],
-		);
-
+	private function __saveSend($data, $pluginKey) {
 		//テスト実施
 		$this->TestModel->save($data, false);
 
@@ -100,7 +91,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		// --- 件名には下記が含まれる
 		$mailSubject = $mailQueue[0]['MailQueue']['mail_subject'];
-		$siteName = (new SiteSettingForMailFixture())->records[4];
+		$siteName = (new SiteSettingForMailFixture())->records[0];
 		// サイト名
 		$this->assertTextContains($siteName['value'], $mailSubject);
 		// プラグイン名
@@ -116,8 +107,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		// --- 本文には下記が含まれる
 		$mailBody = $mailQueue[0]['MailQueue']['mail_body'];
-		$mailSignature = (new SiteSettingForMailFixture())->records[3];
-		$mailBodyHeader = (new SiteSettingForMailFixture())->records[2];
+		$mailBodyHeader = (new SiteSettingForMailFixture())->records[1];
+		$mailSignature = (new SiteSettingForMailFixture())->records[2];
 		// 署名
 		$this->assertTextContains($mailSignature['value'], $mailBody);
 		// 本文ヘッダー文
@@ -154,6 +145,35 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 				//$this->assertNotEmpty($mailQueueUser['MailQueueUser']['not_send_room_user_ids']);
 			}
 		}
+	}
+
+/**
+ * save()のテスト - 承認機能ありで配信
+ *
+ * @param string $pluginKey プラグインキー
+ * @return void
+ */
+	public function testSaveSendRoom($pluginKey = null) {
+		if (is_null($pluginKey)) {
+			$pluginKey = Current::read('Plugin.key');
+		}
+
+		//準備
+		//テストデータ
+		// 一般で登録
+		$dataAdmin = array(
+			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
+				->records[1],
+		);
+		// 一般で登録
+		$dataGeneral = array(
+			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
+				->records[2],
+		);
+
+		//テスト実施
+		$this->__saveSend($dataAdmin, $pluginKey);
+		$this->__saveSend($dataGeneral, $pluginKey);
 	}
 
 /**
