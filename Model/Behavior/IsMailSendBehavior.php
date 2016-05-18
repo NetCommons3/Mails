@@ -29,13 +29,7 @@ class IsMailSendBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::setup
  */
 	public function setup(Model $model, $settings = array()) {
-		if (isset($settings[$model->alias])) {
-			// 動的にBehaviors->load()の場合、既に`$settings[$model->alias]`しているので、しない
-			$this->settings = $settings;
-		} else {
-			// 通常
-			$this->settings[$model->alias] = $settings;
-		}
+		$this->settings[$model->alias] = $settings;
 
 		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);

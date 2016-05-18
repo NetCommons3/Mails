@@ -134,8 +134,6 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias] =
 			Hash::merge($this->_defaultSettings, $this->settings[$model->alias]);
 
-		$model->Behaviors->load('Mails.IsMailSend', $this->settings);
-
 		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
 		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
@@ -153,7 +151,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$model->Behaviors->load('Mails.MailQueueDelete');
+		$model->Behaviors->load('Mails.MailQueueDelete', $this->settings[$model->alias]);
 		$contentKey = $this->__getContentKey($model);
 
 		// 未来日系の送信日時更新を考慮して delete->insert
@@ -162,7 +160,9 @@ class MailQueueBehavior extends ModelBehavior {
 		// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
 		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
 		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
+		$model->Behaviors->disable('Mails.MailQueueDelete');
 
+		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 		$typeKey = $this->settings[$model->alias]['typeKey'];
 
 		// --- リマインダー
@@ -181,6 +181,7 @@ class MailQueueBehavior extends ModelBehavior {
 				$settingPluginKey)) {
 			$this->saveQueue($model, array($sendTimePublish), $typeKey);
 		}
+		$model->Behaviors->unload('Mails.IsMailSend');
 
 		return true;
 	}
