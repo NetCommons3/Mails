@@ -54,7 +54,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		Current::write('Block.key', 'block_1');
 		Current::write('Block.name', 'テストメールブロック');
-		Current::write('Plugin.key', 'Dummy');
+		Current::write('Plugin.key', 'dummy');
 		Current::write('Plugin.name', 'ダミー');
 		Current::write('Room.id', 1);
 		SiteSettingUtil::write('App.default_timezone', 'Asia/Tokyo', 0);
@@ -69,41 +69,37 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 /**
  * save()のテスト - ルーム配信
  *
+ * @param string $pluginKey プラグインキー
  * @return void
  */
-	public function testSaveSendRoom() {
+	public function testSaveSendRoom($pluginKey = null) {
+		if (is_null($pluginKey)) {
+			$pluginKey = Current::read('Plugin.key');
+		}
+
 		//テストデータ
 		$data = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
 				->records[1],
 		);
 
-		// リマインダー セット
-		$netCommonsTime = new NetCommonsTime();
-		$sendTimeReminders = array(
-			$netCommonsTime->toServerDatetime('2027-03-31 14:30:00'),
-			$netCommonsTime->toServerDatetime('2027-04-20 13:30:00'),
-		);
-		/** @see MailQueueBehavior::setSendTimeReminder() */
-		$this->TestModel->setSendTimeReminder($sendTimeReminders);
-
 		//テスト実施
 		$this->TestModel->save($data, false);
 
 		//チェック
-		$mailQueue = $this->MailQueue->find('first', array(
+		$mailQueue = $this->MailQueue->find('all', array(
 			'recursive' => -1,
-			'conditions' => array('plugin_key' => Current::read('Plugin.key'))
+			'conditions' => array('plugin_key' => $pluginKey)
 		));
 		$mailQueueUsers = $this->MailQueueUser->find('all', array(
 			'recursive' => -1,
-			'conditions' => array('plugin_key' => Current::read('Plugin.key'))
+			'conditions' => array('plugin_key' => $pluginKey)
 		));
 		//debug($mailQueue);
 		//debug($mailQueueUsers);
 
 		// --- 件名には下記が含まれる
-		$mailSubject = $mailQueue['MailQueue']['mail_subject'];
+		$mailSubject = $mailQueue[0]['MailQueue']['mail_subject'];
 		$siteName = (new SiteSettingForMailFixture())->records[4];
 		// サイト名
 		$this->assertTextContains($siteName['value'], $mailSubject);
@@ -119,7 +115,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->assertTextNotContains('X-', $mailSubject);
 
 		// --- 本文には下記が含まれる
-		$mailBody = $mailQueue['MailQueue']['mail_body'];
+		$mailBody = $mailQueue[0]['MailQueue']['mail_body'];
 		$mailSignature = (new SiteSettingForMailFixture())->records[3];
 		$mailBodyHeader = (new SiteSettingForMailFixture())->records[2];
 		// 署名
@@ -158,17 +154,139 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 				//$this->assertNotEmpty($mailQueueUser['MailQueueUser']['not_send_room_user_ids']);
 			}
 		}
+	}
 
-		// リマインダー 登録チェック
-		$mailQueueReminders = $this->MailQueue->find('all', array(
+/**
+ * save()のテスト - 承認機能なしで配信
+ *
+ * @return void
+ */
+	public function testSaveSendNoneWorkflow() {
+		//準備
+		/** @see MailQueueBehavior::setSetting() */
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE);
+
+		//テスト実施
+		$this->testSaveSendRoom();
+	}
+
+/**
+ * save()のテスト - リマインダーを配信
+ *
+ * @return void
+ */
+	public function testSaveReminder() {
+		// セット
+		$netCommonsTime = new NetCommonsTime();
+		$sendTimeReminders = array(
+			$netCommonsTime->toServerDatetime('2027-03-31 14:30:00'),
+			$netCommonsTime->toServerDatetime('2027-04-20 13:30:00'),
+		);
+		/** @see MailQueueBehavior::setSendTimeReminder() */
+		$this->TestModel->setSendTimeReminder($sendTimeReminders);
+
+		//テスト実施
+		$this->testSaveSendRoom();
+
+		// チェック
+		$results = $this->MailQueue->find('all', array(
 			'recursive' => -1,
 			'conditions' => array(
 				'plugin_key' => Current::read('Plugin.key'),
 				'send_time' => $sendTimeReminders,
 			)
 		));
-		//debug($mailQueueReminders);
-		$this->assertCount(2, $mailQueueReminders);
+		//debug($results);
+		$this->assertCount(2, $results);
+	}
+
+/**
+ * save()のテスト - 回答配信
+ *
+ * @return void
+ */
+	public function testSaveSendAnswer() {
+		//準備
+		/** @see MailQueueBehavior::setSetting() */
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER);
+
+		// メールアドレス セット
+		$toAddresses = array(
+			'test1@example.com',
+			'test2@example.com',
+		);
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES, $toAddresses);
+
+		//テスト実施
+		$this->testSaveSendRoom();
+
+		// チェック
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'to_address' => $toAddresses,
+			)
+		));
+		//debug($results);
+		$this->assertCount(2, $results);
+	}
+
+/**
+ * save()のテスト - グループ配信
+ *
+ * @return void
+ */
+	public function testSaveSendGroup() {
+		//準備
+		/** @see MailQueueBehavior::setSetting() */
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY);
+
+		// ユーザID セット
+		$userIds = array(
+			4,
+			5,
+		);
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
+
+		//テスト実施
+		$this->testSaveSendRoom();
+
+		// チェック
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'user_id' => $userIds,
+			)
+		));
+		//debug($results);
+		$this->assertCount(2, $results);
+	}
+
+/**
+ * save()のテスト - コンテンツコメント配信
+ *
+ * @return void
+ */
+	public function testSaveSendComment() {
+		//準備
+		$pluginKey = 'content_comments';
+
+		/** @see MailQueueBehavior::setSetting() */
+		//$this->TestModel->setSetting('useCommentApproval', '_mail.use_comment_approval');
+		//$this->TestModel->setSetting('isCommentApproveAction', '_mail.is_comment_approve_action');
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT);
+		$this->TestModel->setSetting('keyField', 'key');
+		$this->TestModel->setSetting('pluginKey', $pluginKey);
+		$this->TestModel->setSetting('publishablePermissionKey', 'content_comment_publishable');
+
+		//テスト実施
+		$this->testSaveSendRoom($pluginKey);
 	}
 
 /**

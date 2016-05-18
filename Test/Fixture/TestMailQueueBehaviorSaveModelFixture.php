@@ -29,7 +29,10 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 		'status' => array('type' => 'integer', 'null' => false, 'default' => null, 'length' => 4, 'unsigned' => false, 'comment' => ''),
 		'is_active' => array('type' => 'boolean', 'null' => false, 'default' => '0', 'comment' => ''),
 		'is_latest' => array('type' => 'boolean', 'null' => false, 'default' => '0', 'comment' => ''),
-		'title' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => '', 'charset' => 'utf8'),
+		'plugin_key' => array('type' => 'string', 'null' => false, 'default' => null, 'key' => 'index',
+			'collate' => 'utf8_general_ci', 'comment' => 'コンテンツコメント送信のみ利用 ', 'charset' => 'utf8'),
+		'title' => array('type' => 'string', 'null' => false, 'default' => null,
+			'collate' => 'utf8_general_ci', 'comment' => 'メール送信の件名で利用', 'charset' => 'utf8'),
 		'content' => array('type' => 'text', 'null' => true, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => '', 'charset' => 'utf8'),
 		'created_user' => array('type' => 'integer', 'null' => true, 'default' => '0', 'unsigned' => false, 'comment' => ''),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => null, 'comment' => ''),
@@ -54,6 +57,7 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 			'status' => '3',
 			'is_active' => false,
 			'is_latest' => true,
+			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
 			'title' => 'Lorem ipsum.',
 			'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
 			'created_user' => '1',
@@ -68,6 +72,7 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 			'status' => '1',
 			'is_active' => true,
 			'is_latest' => true,
+			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
 			'title' => '件名',
 			'content' => "本文１\r\n本文２\r\n本文３\r\n",
 			'created_user' => '1',

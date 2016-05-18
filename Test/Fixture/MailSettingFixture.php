@@ -48,7 +48,7 @@ class MailSettingFixture extends CakeTestFixture {
 	public $records = array(
 		array(
 			'id' => 1,
-			'plugin_key' => 'Dummy',
+			'plugin_key' => 'dummy',
 			'block_key' => 'block_1',
 			'is_mail_send' => 1,
 			'replay_to' => 'replay-to@test.com',
