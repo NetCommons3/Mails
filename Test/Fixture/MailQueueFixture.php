@@ -53,18 +53,15 @@ class MailQueueFixture extends CakeTestFixture {
 	public $records = array(
 		array(
 			'id' => 1,
-			'language_id' => 1,
+			'language_id' => '1',
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
 			'block_key' => 'Lorem ipsum dolor sit amet',
+			//'replay_to' => 'replay_to@test.com',
 			'replay_to' => 'replay_to@dummy.com',
 			'content_key' => 'Lorem ipsum dolor sit amet',
 			'mail_subject' => '件名',
 			'mail_body' => "本文１\r\n本文２\r\n本文３\r\n",
 			'send_time' => '2016-03-22 12:22:15',
-			'created_user' => 1,
-			'created' => '2016-03-22 12:22:15',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:22:15'
 		),
 	);
 
