@@ -426,9 +426,13 @@ class MailQueueBehavior extends ModelBehavior {
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.' .
 			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
-		$roomId = Current::read('Room.id');
 		$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 		$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
+		$roomId = Current::read('Room.id');
+		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
+			// グループ配信は、ルーム配信しない
+			$roomId = null;
+		}
 
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW ||
 			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
