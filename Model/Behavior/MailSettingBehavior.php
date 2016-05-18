@@ -72,19 +72,19 @@ class MailSettingBehavior extends ModelBehavior {
 			$model->MailQueueUser->alias . '.block_key' => $content[$model->alias]['key']
 		);
 		if (! $model->MailQueueUser->deleteAll($conditions, false)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed - MailQueueUser ' . __METHOD__);
 		}
 
 		// キュー 削除
 		$conditions = array($model->MailQueue->alias . '.block_key' => $content[$model->alias]['key']);
 		if (! $model->MailQueue->deleteAll($conditions, false)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed - MailQueue ' . __METHOD__);
 		}
 
 		// メール設定 削除
 		$conditions = array($model->MailSetting->alias . '.block_key' => $content[$model->alias]['key']);
 		if (! $model->MailSetting->deleteAll($conditions, false)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed - MailSetting ' . __METHOD__);
 		}
 
 		$this->__isDeleted = true;

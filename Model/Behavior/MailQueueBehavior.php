@@ -552,7 +552,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param int $mailQueueId メールキューID
  * @return void
- * @throws InternalErrorException
  */
 	private function __addMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
@@ -582,7 +581,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param int $mailQueueId メールキューID
  * @return bool
- * @throws InternalErrorException
  */
 	private function __addMailQueueUserInRoomAuthorizers(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
@@ -630,7 +628,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed ' . __METHOD__);
 		}
 		$mailQueueId = $mailQueueResult['MailQueue']['id'];
 
@@ -649,7 +647,6 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $typeKey メールの種類
  * @param string $fixedPhraseType SiteSettingの定型文の種類
  * @return array メールキューデータ
- * @throws InternalErrorException
  */
 	private function __createMailQueue(Model $model, $languageId,
 										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {

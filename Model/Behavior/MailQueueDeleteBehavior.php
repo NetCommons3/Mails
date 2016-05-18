@@ -88,13 +88,13 @@ class MailQueueDeleteBehavior extends ModelBehavior {
 		// キューの配信先 削除
 		$conditions = array($model->MailQueueUser->alias . '.' . $deleteColum => $value);
 		if (! $model->MailQueueUser->deleteAll($conditions, false)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed - MailQueueUser ' . __METHOD__);
 		}
 
 		// キュー 削除
 		$conditions = array($model->MailQueue->alias . '.' . $deleteColum => $value);
 		if (! $model->MailQueue->deleteAll($conditions, false)) {
-			throw new InternalErrorException(__d('net_commons', 'Internal Server Error'));
+			throw new InternalErrorException('Failed - MailQueue  ' . __METHOD__);
 		}
 	}
 }
