@@ -56,7 +56,6 @@ class MailQueueFixture extends CakeTestFixture {
 			'language_id' => '1',
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
 			'block_key' => 'Lorem ipsum dolor sit amet',
-			//'replay_to' => 'replay_to@test.com',
 			'replay_to' => 'replay_to@dummy.com',
 			'content_key' => 'Lorem ipsum dolor sit amet',
 			'mail_subject' => '件名',
