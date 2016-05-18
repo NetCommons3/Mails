@@ -427,6 +427,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.' .
 			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 		$roomId = Current::read('Room.id');
+		$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
+		$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
+
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW ||
 			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- ワークフローのstatusによって送信内容を変える
@@ -439,31 +442,20 @@ class MailQueueBehavior extends ModelBehavior {
 			$status = Hash::get($model->data, $model->alias . '.status');
 			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 				// 投稿メール - ルーム配信
-				$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $roomId, $typeKey);
+				$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
+					$roomId, $typeKey);
 			}
 
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE) {
-			// --- ワークフローの機能自体、使ってないプラグインの処理
-			// --- 公開
-			// 投稿メール - ルーム配信
-			$this->saveQueuePostMail($model, $languageId, $sendTimes, null, null, $roomId, $typeKey);
+		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
+			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER ||
+			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
+			// ・承認機能なし - 「公開」記事の内容を投稿メールでルーム配信
+			// ・回答メール配信(即時) - ユーザID、メールアドレス、ルームに即時配信
+			// ・グループ送信のみ - ユーザIDに配信
 
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
-			// --- 回答
-			// 回答メール配信(即時)
-			$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-			$toAddresses = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_TO_ADDRESSES];
-
-			// ユーザIDに配信、メールアドレスに配信、ルーム配信 - メールキューSave
-			$this->saveQueuePostMail($model, $languageId, null, $userIds, $toAddresses, $roomId,
-				$typeKey);
-
-		} elseif ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_GROUP_ONLY) {
-			// --- グループ送信のみ
-			$userIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
-
-			// ユーザIDに配信 - メールキューSave
-			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, null, null, $typeKey);
+			// メールキューSave
+			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
+				$roomId, $typeKey);
 		}
 
 		return true;
@@ -540,15 +532,13 @@ class MailQueueBehavior extends ModelBehavior {
 				$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 				$notSendRoomUserIds = $this->settings[$model->alias][$key];
 				$notSendRoomUserIds = Hash::merge($notSendRoomUserIds, $userIds);
-				// 追加で配信するユーザ
-				$addUserIds = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_USER_IDS];
 				// ルーム配信で送るパーミッション
 				$sendRoomPermission = $this->__getSendRoomPermission($typeKey);
 
 				// ルーム配信
 				/** @see MailQueueUser::addMailQueueUserInRoom() */
 				$model->MailQueueUser->addMailQueueUserInRoom($roomId, $mailQueueUser,
-					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $addUserIds, $sendRoomPermission);
+					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $sendRoomPermission);
 			}
 		}
 

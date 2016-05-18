@@ -307,13 +307,12 @@ class MailQueueUser extends MailsAppModel {
  * @param array $mailQueueUser received post data
  * @param string $sendTime メール送信日時
  * @param array $notSendRoomUserIds ルーム配信で送らないユーザID
- * @param array $addUserIds 追加のユーザ達
  * @param string $sendRoomPermission ルーム配信で送るパーミッション
  * @return void
  * @throws InternalErrorException
  */
 	public function addMailQueueUserInRoom($roomId, $mailQueueUser, $sendTime, $notSendRoomUserIds,
-											$addUserIds, $sendRoomPermission = 'mail_content_receivable') {
+											$sendRoomPermission = 'mail_content_receivable') {
 		// --- ルーム配信
 		//$roomId = Current::read('Room.id');
 		$mailQueueUser['MailQueueUser']['room_id'] = $roomId;
@@ -332,11 +331,6 @@ class MailQueueUser extends MailsAppModel {
 		// --- 追加のユーザ達に配信
 		// ルームIDをクリア
 		$mailQueueUser['MailQueueUser']['room_id'] = null;
-
-		// 追加のユーザ達
-		$addUserIds = $this->__getAddUserIds($addUserIds, $notSendRoomUserIds);
-
-		$this->addMailQueueUsers($mailQueueUser, 'user_id', $addUserIds);
 	}
 
 /**
@@ -360,33 +354,5 @@ class MailQueueUser extends MailsAppModel {
 		$notSendRoomUserIds = implode('|', $notSendRoomUserIds);
 
 		return $notSendRoomUserIds;
-	}
-
-/**
- * 追加で配信するのユーザID ゲット
- *
- * @param array $addUserIds 追加で配信するのユーザID
- * @param array $notSendUserIds 送らないユーザID
- * @return string 追加で配信するのユーザID
- */
-	private function __getAddUserIds($addUserIds, $notSendUserIds) {
-		// 登録者と追加ユーザ達の重複登録を排除
-		$addUserIds = array_unique($addUserIds);
-		// 空要素を排除
-		$addUserIds = Hash::filter($addUserIds);
-
-		if ($notSendUserIds === null) {
-			return $addUserIds;
-		}
-
-		// 送らないユーザIDを排除
-		$notSendUserIds = explode('|', $notSendUserIds);
-		foreach ($notSendUserIds as $notSendRoomUserId) {
-			if (($key = array_search($notSendRoomUserId, $addUserIds)) !== false) {
-				unset($addUserIds[$key]);
-			}
-		}
-
-		return $addUserIds;
 	}
 }
