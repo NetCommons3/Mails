@@ -52,7 +52,11 @@ class MailQueue extends MailsAppModel {
 			//),
 			'replay_to' => array(
 				'email' => array(
-					'rule' => array('email'),
+					// 2ループ以上すると Validation.php の $regex に別項目の validateチェックの $regex
+					// が代入されて下記エラーになったので、明示的に初期化
+					//   preg_match(): Delimiter must not be alphanumeric or backslash
+					//   /var/www/app/vendors/cakephp/cakephp/lib/Cake/Utility/Validation.php : 880
+					'rule' => array('email', false, null),
 					'message' => __d('net_commons', 'Invalid request.'),
 					'allowEmpty' => true,
 				),

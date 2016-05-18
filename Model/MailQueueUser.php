@@ -76,7 +76,7 @@ class MailQueueUser extends MailsAppModel {
 			),
 			'to_address' => array(
 				'email' => array(
-					'rule' => array('email'),
+					'rule' => array('email', false, null),
 					'message' => __d('net_commons', 'Invalid request.'),
 					'allowEmpty' => true,
 				),
