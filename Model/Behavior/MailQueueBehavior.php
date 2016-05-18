@@ -255,6 +255,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_PLUGIN_NAME
+ * @see MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE
  */
 	public function setSetting(Model $model, $settingKey, $settingValue) {
 		$this->settings[$model->alias][$settingKey] = $settingValue;
@@ -387,7 +388,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @return string コンテンツキー
  */
 	private function __getSettingPluginKey(Model $model) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$workflowType = Hash::get($this->settings, $model->alias . '.' .
+			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			return $model->data[$model->alias]['plugin_key'];
 		}
@@ -422,9 +424,9 @@ class MailQueueBehavior extends ModelBehavior {
 	public function saveQueue(Model $model, $sendTimes = null,
 								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$languageId = Current::read('Language.id');
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$workflowType = Hash::get($this->settings, $model->alias . '.' .
+			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 		$roomId = Current::read('Room.id');
-
 		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW ||
 			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- ワークフローのstatusによって送信内容を変える
@@ -686,7 +688,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$useWorkflowBehavior = $model->Behaviors->loaded('Workflow.Workflow');
 		$mailAssignTag->setXWorkflowComment($model->data, $fixedPhraseType, $useWorkflowBehavior);
 
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		$workflowType = Hash::get($this->settings, $model->alias . '.' .
+			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 		$useTagBehavior = $model->Behaviors->loaded('Tags.Tag');
 
 		// タグプラグイン
