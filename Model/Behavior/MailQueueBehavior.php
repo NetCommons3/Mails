@@ -9,6 +9,7 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
+App::uses('ModelBehavior', 'Model');
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');

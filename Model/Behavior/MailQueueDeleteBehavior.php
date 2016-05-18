@@ -9,6 +9,8 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
+App::uses('ModelBehavior', 'Model');
+
 /**
  * メールキュー削除 Behavior
  *
