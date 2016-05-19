@@ -59,16 +59,12 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
 			'block_key' => 'block_1',
 			'content_key' => 'Lorem ipsum dolor sit amet',
-			'mail_queue_id' => 1,
-			'user_id' => 1,
+			'mail_queue_id' => '1',
+			'user_id' => '1',
 			'room_id' => null,
 			'to_address' => null,
 			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
-			'created_user' => 1,
-			'created' => '2016-03-22 12:23:24',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:23:24'
 		),
 		// メールアドレス送信パターン
 		array(
@@ -82,10 +78,6 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'to_address' => 'to@dummp.com',
 			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
-			'created_user' => 1,
-			'created' => '2016-03-22 12:23:24',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:23:24'
 		),
 		// room_id送信パターン
 		array(
@@ -99,10 +91,6 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'to_address' => null,
 			'send_room_permission' => 'mail_content_receivable',
 			'not_send_room_user_ids' => '1|2',
-			'created_user' => 1,
-			'created' => '2016-03-22 12:23:24',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:23:24'
 		),
 		array(
 			'id' => 4,
@@ -115,10 +103,6 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'to_address' => null,
 			'send_room_permission' => 'mail_answer_receivable',
 			'not_send_room_user_ids' => '1|2',
-			'created_user' => 1,
-			'created' => '2016-03-22 12:23:24',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:23:24'
 		),
 		// 送信パターン全部null
 		array(
@@ -132,10 +116,6 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'to_address' => null,
 			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
-			'created_user' => 1,
-			'created' => '2016-03-22 12:23:24',
-			'modified_user' => 1,
-			'modified' => '2016-03-22 12:23:24'
 		),
 	);
 
