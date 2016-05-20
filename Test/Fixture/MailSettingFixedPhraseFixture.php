@@ -93,7 +93,7 @@ Please click on the link below to check this post content.
 
 {X-BODY}
 
-この投稿内容を確認するには下記のリンクをクリックして下さい。
+この投稿内容を確認するには下記のリンクをクリックしてください。
 {X-URL}",
 			'created_user' => 1,
 			'created' => '2016-03-22 12:21:35',
@@ -136,7 +136,7 @@ Answer to see the results click on the link below.
 回答者:{X-USER}
 回答日時:{X-TO_DATE}
 
-回答結果を参照するには下記のリンクをクリックして下さい。
+回答結果を参照するには下記のリンクをクリックしてください。
 {X-URL}",
 			'created_user' => 1,
 			'created' => '2016-03-22 12:21:35',
