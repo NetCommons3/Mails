@@ -22,7 +22,7 @@ msgstr ""
 
 #: Plugin/Mails/Model/MailSetting.php:68
 msgid "%s, please enter by e-mail format"
-msgstr "%s, please enter by e-mail format"
+msgstr "%s, please enter by e-mail format."
 
 #: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
@@ -86,7 +86,7 @@ msgstr "Use the mail notification function"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:49
 msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr "If you do not want to use, and removes any mail was scheduled to be sent to the future"
+msgstr "If you do not want to use, and removes any mail was scheduled to be sent to the future."
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:56
 msgid "Notification to the authority"
@@ -94,11 +94,11 @@ msgstr "Notification to the authority"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "You can specify if you want to change the e-mail address to receive a reply"
+msgstr "You can specify if you want to change the e-mail address to receive a reply."
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"
-msgstr "Can use an embedded keyword in the subject line and body"
+msgstr "Can use an embedded keyword in the subject line and body."
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:90
 msgid "Embedded keyword?"
