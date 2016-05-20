@@ -21,7 +21,7 @@ msgstr "メール設定"
 
 #: Plugin/Mails/Model/MailSetting.php:68
 msgid "%s, please enter by e-mail format"
-msgstr "%s はメール形式で入力してください"
+msgstr "%s はメール形式で入力してください。"
 
 #: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
@@ -84,7 +84,7 @@ msgstr "メール通知機能を使う"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:49
 msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr "使用しない場合、未来に送る予定だったメールがあれば削除します"
+msgstr "使用しない場合、未来に送る予定だったメールがあれば削除します。"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:56
 msgid "Notification to the authority"
@@ -92,11 +92,11 @@ msgstr "通知する権限"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "返信を受けるメールアドレスを変えたい場合に指定できます"
+msgstr "返信を受けるメールアドレスを変えたい場合に指定できます。"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"
-msgstr "件名と本文には埋め込みキーワードが使えます"
+msgstr "件名と本文には埋め込みキーワードが使えます。"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:90
 msgid "Embedded keyword?"
