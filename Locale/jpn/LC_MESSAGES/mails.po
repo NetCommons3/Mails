@@ -80,7 +80,7 @@ msgstr ""
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:47
 msgid "Use the mail notification function"
-msgstr "メール通知機能を使用する"
+msgstr "メール通知機能を使う"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:49
 msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"

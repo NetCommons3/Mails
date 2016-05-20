@@ -14,7 +14,7 @@ App::uses('AppController', 'Controller');
 /**
  * メール設定 Controller
  *
- * 各プラグインで継承して使用する
+ * 各プラグインで継承して使う
  *
  * #### サンプルコード
  * ##### Controller
