@@ -86,13 +86,13 @@ class MailSendShell extends AppShell {
 		// キュー取得 - 行ロック
 		// http://k-1blog.com/development/program/post-7407/
 		// http://d.hatena.ne.jp/fat47/20140212/1392171784
-		$sql = "SELECT * FROM " .
-			"mail_queues MailQueue, " .
-			"mail_queue_users MailQueueUser " .
-			"WHERE " .
-			"MailQueue.id = MailQueueUser.mail_queue_id " .
-			"AND MailQueue.send_time <= ? " .
-			"FOR UPDATE ";
+		$sql = 'SELECT * FROM ' .
+			'mail_queues MailQueue, ' .
+			'mail_queue_users MailQueueUser ' .
+			'WHERE ' .
+			'MailQueue.id = MailQueueUser.mail_queue_id ' .
+			'AND MailQueue.send_time <= ? ' .
+			'FOR UPDATE ';
 		$mailQueues = $this->MailQueue->query($sql, array($now));
 
 		if (empty($mailQueues)) {
