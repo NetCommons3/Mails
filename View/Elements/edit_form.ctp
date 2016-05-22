@@ -22,78 +22,82 @@
 
 	<div class="panel panel-default">
 		<div class="panel-body">
-			<div class="col-xs-12">
-				<div class="form-inline">
-					<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
-						'type' => 'checkbox',
-						'label' => __d('mails', 'Use the mail notification function'),
-					)); ?>
-					<?php echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future')); ?>
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="form-inline">
+						<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
+							'type' => 'checkbox',
+							'label' => __d('mails', 'Use the mail notification function'),
+						)); ?>
+						<?php echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future')); ?>
+					</div>
 				</div>
 			</div>
 
-			<div class="col-xs-11 col-xs-offset-1">
+			<div class="row">
+				<div class="col-xs-11 col-xs-offset-1">
 
-				<?php if ($useReplayTo): ?>
-					<div class="form-group">
-						<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
-							'type' => 'text',
-							'label' => __d('mails', 'E-mail address to receive a reply'),
-							'div' => '',
-							'help' => __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'),
-						)); ?>
-					</div>
-				<?php endif; ?>
-
-				<?php foreach ($editForms as $index => $editForm) : ?>
-					<?php
-					$mailSettingFixedPhrase = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey']);
-					$id = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey'] . '.id');
-					?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.id', array('value' => $id)); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.language_id', array('value' => Current::read('Language.id'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.block_key', array('value' => Current::read('Block.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.type_key', array('value' => $editForm['mailTypeKey'])); ?>
-
-					<div class="panel panel-default">
-						<div class="panel-heading">
-							<?php echo $editForm['panelHeading']; ?>
-						</div>
-						<div class="panel-body">
-							<?php if ($editForm['useNoticeAuthority']): ?>
-								<?php echo $this->element('Blocks.block_permission_setting', array(
-									'settingPermissions' => array(
-										$editForm['permission'] => __d('mails', 'Notification to the authority'),
-									),
-								)); ?>
-							<?php endif; ?>
-
-							<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
+					<?php if ($useReplayTo): ?>
+						<div class="form-group">
+							<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
 								'type' => 'text',
-								'label' => __d('mails', 'Subject'),
-								'required' => true,
-								'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
+								'label' => __d('mails', 'E-mail address to receive a reply'),
+								'div' => '',
+								'help' => __d('mails', 'You can specify if you want to change the e-mail address to receive a reply'),
 							)); ?>
+						</div>
+					<?php endif; ?>
 
-							<div class="form-group">
-								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
-									'type' => 'textarea',
-									'label' => __d('mails', 'Body'),
+					<?php foreach ($editForms as $index => $editForm) : ?>
+						<?php
+						$mailSettingFixedPhrase = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey']);
+						$id = hash::get($this->request->data, 'MailSettingFixedPhrase.' . $editForm['mailTypeKey'] . '.id');
+						?>
+						<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.id', array('value' => $id)); ?>
+						<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.language_id', array('value' => Current::read('Language.id'))); ?>
+						<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
+						<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.block_key', array('value' => Current::read('Block.key'))); ?>
+						<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.type_key', array('value' => $editForm['mailTypeKey'])); ?>
+
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<?php echo $editForm['panelHeading']; ?>
+							</div>
+							<div class="panel-body">
+								<?php if ($editForm['useNoticeAuthority']): ?>
+									<?php echo $this->element('Blocks.block_permission_setting', array(
+										'settingPermissions' => array(
+											$editForm['permission'] => __d('mails', 'Notification to the authority'),
+										),
+									)); ?>
+								<?php endif; ?>
+
+								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
+									'type' => 'text',
+									'label' => __d('mails', 'Subject'),
 									'required' => true,
-									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
-									'div' => '',
+									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
 								)); ?>
-								<?php
-								// popover説明
-								$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
-								echo $this->NetCommonsForm->help($mailHelp);
-								?>
+
+								<div class="form-group">
+									<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
+										'type' => 'textarea',
+										'label' => __d('mails', 'Body'),
+										'required' => true,
+										'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
+										'div' => '',
+									)); ?>
+									<?php
+									// popover説明
+									$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
+									echo $this->NetCommonsForm->help($mailHelp);
+									?>
+								</div>
 							</div>
 						</div>
-					</div>
-				<?php endforeach; ?>
+					<?php endforeach; ?>
 
+				</div>
 			</div>
 		</div>
 
