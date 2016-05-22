@@ -9,8 +9,10 @@
     },
     "require": {
         "cakedc/migrations":            "~2.2",
+        "netcommons/blocks":            "dev-master",
         "netcommons/net-commons":       "dev-master",
         "netcommons/pages":             "dev-master",
+        "netcommons/roles":             "dev-master",
         "netcommons/rooms":             "dev-master",
         "netcommons/site-manager":      "dev-master",
         "netcommons/users":             "dev-master",
