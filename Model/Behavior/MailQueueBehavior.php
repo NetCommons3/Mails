@@ -673,7 +673,12 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag->setMailFixedPhrase($languageId, $fixedPhraseType, $mailSettingPlugin);
 
 		// --- 埋め込みタグ
-		$mailAssignTag->setXUrl($contentKey);
+		$embedTags = $this->settings[$model->alias]['embedTags'];
+		$xUrl = Hash::get($embedTags, 'X-URL', array());
+		$mailAssignTag->setXUrl($contentKey, $xUrl);
+		if (is_array($xUrl)) {
+			$embedTags = Hash::remove($embedTags, 'X-URL');
+		}
 
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 		$mailAssignTag->setXUser($createdUserId);
@@ -690,7 +695,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag->setXTags($model->data, $workflowType, $useTagBehavior);
 
 		// 定型文の埋め込みタグをセット
-		$mailAssignTag->assignTagDatas($this->settings[$model->alias]['embedTags'], $model->data);
+		$mailAssignTag->assignTagDatas($embedTags, $model->data);
 
 		// - 追加の埋め込みタグ セット
 		// 既にセットされているタグであっても、上書きされる

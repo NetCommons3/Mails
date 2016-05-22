@@ -440,18 +440,26 @@ class NetCommonsExtentionTag {
  * 埋め込みタグ{X-URL}にセットする値 を取得
  *
  * @param string $contentKey コンテンツキー
+ * @param array $urlParams X-URLのurlパラメータ
  * @return array
  */
-	public function getXUrl($contentKey) {
+	public function getXUrl($contentKey, $urlParams = array()) {
 		// fullpassのURL
-		$url = NetCommonsUrl::actionUrl(array(
-			'controller' => Current::read('Plugin.key'),
-			'action' => 'view',
-			'block_id' => Current::read('Block.id'),
-			'frame_id' => Current::read('Frame.id'),
-			'key' => $contentKey
-		));
-		$url = NetCommonsUrl::url($url, true);
+		if (is_array($urlParams)) {
+			$url = NetCommonsUrl::actionUrl(Hash::merge(
+				array(
+					'controller' => Current::read('Plugin.key'),
+					'action' => 'view',
+					'block_id' => Current::read('Block.id'),
+					'frame_id' => Current::read('Frame.id'),
+					'key' => $contentKey
+				),
+				$urlParams
+			));
+			$url = NetCommonsUrl::url($url, true);
+		} else {
+			$url = $urlParams;
+		}
 		return array('X-URL', $url);
 	}
 
