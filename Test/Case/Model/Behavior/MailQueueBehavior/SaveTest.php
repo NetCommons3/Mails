@@ -148,18 +148,17 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()のテスト - 承認機能ありで配信
+ * ルーム配信
  *
  * @param string $pluginKey プラグインキー
  * @return void
  */
-	public function testSaveSendRoom($pluginKey = null) {
+	private function __saveSendRoom($pluginKey = null) {
 		if (is_null($pluginKey)) {
 			$pluginKey = Current::read('Plugin.key');
 		}
 
-		//準備
-		//テストデータ
+		//準備1
 		// 管理者(created_user=1)で登録
 		$dataAdmin = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
@@ -173,6 +172,47 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		//テスト実施
 		$this->__saveSend($dataAdmin, $pluginKey);
+		$this->__saveSend($dataGeneral, $pluginKey);
+	}
+
+/**
+ * save()のテスト - 承認機能ありで配信 & ルーム配信で登録者ユーザIDは、送らない設定になっている
+ *
+ * @return void
+ */
+	public function testSaveSendRoom() {
+		$pluginKey = Current::read('Plugin.key');
+
+		//準備1
+		// 管理者(created_user=1)で登録
+		$dataAdmin = array(
+			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
+				->records[1],
+		);
+
+		//テスト実施
+		$this->__saveSend($dataAdmin, $pluginKey);
+
+		// ルーム配信で登録者ユーザIDは、送らない設定になっている
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'room_id' => Current::read('Room.id'),
+			)
+		));
+		//debug($results);
+		$this->assertEquals($dataAdmin['TestMailQueueBehaviorSaveModel']['created_user'],
+			$results[0]['MailQueueUser']['not_send_room_user_ids']);
+
+		//準備2
+		// 一般(created_user=4)で登録
+		$dataGeneral = array(
+			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
+				->records[2],
+		);
+
+		//テスト実施
 		$this->__saveSend($dataGeneral, $pluginKey);
 	}
 
@@ -194,7 +234,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
 
 		//テスト実施
-		$this->testSaveSendRoom();
+		$this->__saveSendRoom();
 
 		// --- チェック
 		// 追加で配信するユーザID
@@ -217,7 +257,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			)
 		));
 		//debug($results);
-		$this->assertEquals($userIds[0], $results[0]['MailQueueUser']['not_send_room_user_ids']);
+		$this->assertEquals('1|4', $results[0]['MailQueueUser']['not_send_room_user_ids']);
 	}
 
 /**
@@ -236,7 +276,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSendTimeReminder($sendTimeReminders);
 
 		//テスト実施
-		$this->testSaveSendRoom();
+		$this->__saveSendRoom();
 
 		// チェック
 		$results = $this->MailQueue->find('all', array(
@@ -248,6 +288,17 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		));
 		//debug($results);
 		$this->assertCount(2, $results);
+
+		// リマインダーは、ルーム配信で登録者にも再送するので、送らない設定は、されてない
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'room_id' => Current::read('Room.id'),
+			)
+		));
+		//debug($results);
+		$this->assertEmpty($results[0]['MailQueueUser']['not_send_room_user_ids']);
 	}
 
 /**
@@ -269,7 +320,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES, $toAddresses);
 
 		//テスト実施
-		$this->testSaveSendRoom();
+		$this->__saveSendRoom();
 
 		// チェック
 		$results = $this->MailQueueUser->find('all', array(
@@ -302,7 +353,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
 
 		//テスト実施
-		$this->testSaveSendRoom();
+		$this->__saveSendRoom();
 
 		// チェック
 		$results = $this->MailQueueUser->find('all', array(
@@ -335,7 +386,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting('publishablePermissionKey', 'content_comment_publishable');
 
 		//テスト実施
-		$this->testSaveSendRoom($pluginKey);
+		$this->__saveSendRoom($pluginKey);
 	}
 
 /**

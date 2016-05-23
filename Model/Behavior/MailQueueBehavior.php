@@ -539,6 +539,9 @@ class MailQueueBehavior extends ModelBehavior {
 				$this->__addMailQueueUserInCreatedUser($model,
 					$mailQueueUser['MailQueueUser']['mail_queue_id']);
 
+				// 登録者に配信で、ルーム配信で送らないユーザIDをセットしているので、再取得
+				$notSendRoomUserIds = $this->settings[$model->alias][$key];
+
 				// ルーム配信で送るパーミッション
 				$sendRoomPermission = $this->__getSendRoomPermission($typeKey);
 
