@@ -29,11 +29,11 @@ App::uses('NetCommonsUrl', 'NetCommons.Utility');
  * | `X-TO_DATE`             | 今日日付 'Y/m/d H:i:s' |  |
  * | `X-BODY_HEADER`         | 本文ヘッダー | SiteSettingUtil::read('Mail.body_header'); |
  * | `X-SIGNATURE`           | 署名 | SiteSettingUtil::read('Mail.signature'); |
- * | `X-USER`                | ユーザ名(ハンドル) | NetCommonsMailAssignTag::getXUser() |
- * | `X-ROOM`                | ルーム名 | NetCommonsMailAssignTag::getXRoom() |
- * | `X-URL`                 | コンテンツURL | NetCommonsMailAssignTag::getXUrl() |
- * | `X-TAGS`                | タグ(タグプラグイン) | NetCommonsMailAssignTag::getXTags() |
- * | `X-WORKFLOW_COMMENT`    | 承認コメント | NetCommonsMailAssignTag::getXWorkflowComment() |
+ * | `X-USER`                | ユーザ名(ハンドル) | NetCommonsExtentionTag::getXUser() |
+ * | `X-ROOM`                | ルーム名 | NetCommonsExtentionTag::getXRoom() |
+ * | `X-URL`                 | コンテンツURL | NetCommonsExtentionTag::getXUrl() |
+ * | `X-TAGS`                | タグ(タグプラグイン) | NetCommonsExtentionTag::getXTags() |
+ * | `X-WORKFLOW_COMMENT`    | 承認コメント | NetCommonsExtentionTag::getXWorkflowComment() |
  * | `X-PLUGIN_MAIL_SUBJECT` | プラグイン側で設定した件名(承認メール用) | NetCommonsMailAssignTag::setMailFixedPhraseSiteSetting() |
  * | `X-PLUGIN_MAIL_BODY`    | プラグイン側で設定した本文(承認メール用) | NetCommonsMailAssignTag::setMailFixedPhraseSiteSetting() |
  *
@@ -129,10 +129,10 @@ class NetCommonsMailAssignTag {
 		$bodyHeader = SiteSettingUtil::read('Mail.body_header', null, $languageId);
 		$signature = SiteSettingUtil::read('Mail.signature', null, $languageId);
 
-		$siteimezone = (new NetCommonsTime())->getSiteTimezone();
+		$siteTimezone = (new NetCommonsTime())->getSiteTimezone();
 		$now = NetCommonsTime::getNowDatetime();
 		$date = new DateTime($now);
-		$date->setTimezone(new DateTimeZone($siteimezone));
+		$date->setTimezone(new DateTimeZone($siteTimezone));
 		$siteNow = $date->format('Y/m/d H:i:s');
 
 		$this->assignTag('X-FROM_EMAIL', $from);
