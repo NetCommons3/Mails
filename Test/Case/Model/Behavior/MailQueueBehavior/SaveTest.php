@@ -160,12 +160,12 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		//準備
 		//テストデータ
-		// 一般で登録
+		// 管理者(created_user=1)で登録
 		$dataAdmin = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
 				->records[1],
 		);
-		// 一般で登録
+		// 一般(created_user=4)で登録
 		$dataGeneral = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
 				->records[2],
@@ -177,7 +177,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()のテスト - 承認機能なしで配信
+ * save()のテスト - 承認機能なしで配信 & created_userと同じIDがセットされてても、同じメールを２通送らない
  *
  * @return void
  */
@@ -187,8 +187,37 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
 			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE);
 
+		// 追加で配信するユーザID セット（created_userと同じIDがセットされてても、同じメールを２通送らない事を確認）
+		$userIds = array(
+			1,
+		);
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
+
 		//テスト実施
 		$this->testSaveSendRoom();
+
+		// --- チェック
+		// 追加で配信するユーザID
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'user_id' => $userIds,
+			)
+		));
+		//debug($results);
+		$this->assertCount(1, $results);
+
+		// ルーム配信で追加で配信するユーザIDは、送らない設定になっている
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'room_id' => Current::read('Room.id'),
+			)
+		));
+		//debug($results);
+		$this->assertEquals($userIds[0], $results[0]['MailQueueUser']['not_send_room_user_ids']);
 	}
 
 /**
