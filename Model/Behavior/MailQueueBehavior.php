@@ -69,6 +69,7 @@ class MailQueueBehavior extends ModelBehavior {
 		'addEmbedTagsValues' => array(),
 		'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
 		'keyField' => 'key',
+		'editablePermissionKey' => 'content_editable',
 		'publishablePermissionKey' => 'content_publishable',
 		'useWorkflow' => null,
 		'publishStartField' => null,
@@ -585,7 +586,7 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * ルーム内の承認者達に配信 登録
+ * ルーム内の編集者、承認者達に配信 登録
  *
  * @param Model $model モデル
  * @param int $mailQueueId メールキューID
@@ -594,11 +595,17 @@ class MailQueueBehavior extends ModelBehavior {
 	private function __addMailQueueUserInRoomAuthorizers(Model $model, $mailQueueId) {
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
-		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
+		$permissionKey = $this->settings[$model->alias]['editablePermissionKey'];
 
-		/** @see MailQueueUser::addMailQueueUserInRoomAuthorizers() */
-		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomAuthorizers($mailQueueId,
+		// 編集者達(編集許可ありユーザ)
+		/** @see MailQueueUser::addMailQueueUserInRoomByPermission() */
+		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomByPermission($mailQueueId,
 			$contentKey, $pluginKey, $permissionKey);
+
+		// 承認者達(公開許可ありユーザ)
+		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
+		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomByPermission($mailQueueId,
+			$contentKey, $pluginKey, $permissionKey, $notSendRoomUserIds);
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット

@@ -252,17 +252,21 @@ class MailQueueUser extends MailsAppModel {
 	}
 
 /**
- * ルーム内の承認者達に配信 登録
+ * ルーム内のパーミッションを持っているユーザ（例えば承認者達）に配信 登録
  *
  * @param int $mailQueueId メールキューID
  * @param string $contentKey 各プラグイン側のコンテンツキー
  * @param string $pluginKey プラグインキー
  * @param string $permissionKey パーミッションキー
- * @return array ユーザID
+ * @param array $notSendUserIds 送らないユーザID
+ * @return array ルーム配信で送らないユーザID
  * @throws InternalErrorException
  */
-	public function addMailQueueUserInRoomAuthorizers($mailQueueId, $contentKey, $pluginKey = null,
-														$permissionKey = 'content_publishable') {
+	public function addMailQueueUserInRoomByPermission($mailQueueId,
+														$contentKey,
+														$pluginKey = null,
+														$permissionKey = 'content_publishable',
+														$notSendUserIds = array()) {
 		if ($pluginKey === null) {
 			$pluginKey = Current::read('Plugin.key');
 		}
@@ -285,6 +289,11 @@ class MailQueueUser extends MailsAppModel {
 		// 送信者データ取得
 		$rolesRoomsUsers = self::getRolesRoomsUsersByPermission($permissionKey);
 		foreach ($rolesRoomsUsers as $rolesRoomsUser) {
+			// 送らないユーザIDにあれば、登録しない
+			if (in_array($rolesRoomsUser['RolesRoomsUser']['user_id'], $notSendUserIds)) {
+				continue;
+			}
+
 			$mailQueueUser['MailQueueUser']['user_id'] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 			// 新規登録
 			$mailQueueUser = $this->create($mailQueueUser);
@@ -296,6 +305,9 @@ class MailQueueUser extends MailsAppModel {
 			// ルーム配信で送らないユーザID を返す
 			$notSendRoomUserIds[] = $rolesRoomsUser['RolesRoomsUser']['user_id'];
 		}
+
+		// 引数の送らないユーザIDとまとめる
+		$notSendRoomUserIds = Hash::merge($notSendRoomUserIds, $notSendUserIds);
 
 		return $notSendRoomUserIds;
 	}
