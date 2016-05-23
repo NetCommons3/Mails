@@ -33,7 +33,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		'plugin.mails.test_mail_queue_behavior_save_model',
 		'plugin.rooms.default_role_permission4test',
 		'plugin.rooms.room_role',
-		'plugin.rooms.room_role_permission4test',
+		//'plugin.rooms.room_role_permission4test',
+		'plugin.mails.room_role_permission_for_mail',
 		'plugin.user_attributes.user_role_setting4test',
 	);
 
