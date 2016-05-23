@@ -195,7 +195,8 @@ class MailQueueUser extends MailsAppModel {
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
 		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
 		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey),
-																DefaultRolePermission::TYPE_ROOM_ROLE);
+																DefaultRolePermission::TYPE_ROOM_ROLE,
+																$roomId);
 		foreach ($permissions['RoomRolePermission'][$permissionKey] as $key => $roomRolePermission) {
 			if (!$roomRolePermission['value']) {
 				unset($permissions['RoomRolePermission'][$permissionKey][$key]);
