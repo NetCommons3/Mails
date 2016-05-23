@@ -113,3 +113,6 @@ msgstr "Posting mail"
 
 msgid "Answer mail"
 msgstr "Answer mail"
+
+msgid "not login"
+msgstr "not login"

@@ -90,3 +90,6 @@ msgstr ""
 
 msgid "Answer mail"
 msgstr ""
+
+msgid "not login"
+msgstr ""

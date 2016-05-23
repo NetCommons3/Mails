@@ -111,3 +111,6 @@ msgstr "投稿メール"
 
 msgid "Answer mail"
 msgstr "回答メール"
+
+msgid "not login"
+msgstr "ログインしていないユーザ"

@@ -283,12 +283,6 @@ class IsMailSendBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isSendMailQueueNotice(Model $model, $useWorkflow, $createdUserId) {
-		// 投稿ユーザIDなしは、通知メール送らない
-		// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなし
-		if (empty($createdUserId)) {
-			return false;
-		}
-
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー

@@ -431,8 +431,13 @@ class NetCommonsExtentionTag {
  * @return array
  */
 	public function getXUser($createdUserId) {
-		$user = $this->User->findById($createdUserId);
-		$handlename = Hash::get($user, 'User.handlename');
+		if (empty($createdUserId)) {
+			// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなし
+			$handlename = __d('mails', 'not login');
+		} else {
+			$user = $this->User->findById($createdUserId);
+			$handlename = Hash::get($user, 'User.handlename');
+		}
 		return array('X-USER', $handlename);
 	}
 
