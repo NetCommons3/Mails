@@ -63,15 +63,30 @@ class MailFormHelper extends AppHelper {
  * ); ?>
  * ```
  *
+ * ##### template file(ctp file) - メール通知機能を使うヘルプメッセージ表示
+ * ```
+ * <?php echo $this->MailForm->editFrom(
+ *   array(
+ *     array(
+ *       'mailBodyPopoverMessage' => __d('videos', 'MailSetting.mail_fixed_phrase_body.popover'),
+ *     )
+ *   ),
+ *   NetCommonsUrl::backToIndexUrl('default_setting_action'),
+ *   1, // 返信を受けるメールアドレス 表示
+ *   1  // メール通知機能を使うヘルプメッセージ 表示
+ * ); ?>
+ * ```
+ *
  * @param array $editForms 編集フォーム設定
  * @param string $cancelUrl キャンセルボタン遷移先URL
  * @param int $useReplayTo 返信を受けるメールアドレスを使う
+ * @param int $isMailSendHelp メール通知機能を使うヘルプメッセージを表示するか
  * @param array $options フォームオプション
  * @param string $action 決定ボタン遷移先URL
  * @return string HTML tags
  */
 	public function editFrom($editForms = array(), $cancelUrl = null, $useReplayTo = 1,
-								$options = array(), $action = null) {
+								$isMailSendHelp = 0, $options = array(), $action = null) {
 		$output = '';
 		if (isset($action)) {
 			$options['url'] = $action;
@@ -112,6 +127,7 @@ class MailFormHelper extends AppHelper {
 		$output .= $this->_View->element('Mails.edit_form', array(
 			'editForms' => $editForms,
 			'useReplayTo' => $useReplayTo,
+			'isMailSendHelp' => $isMailSendHelp,
 			'cancelUrl' => $cancelUrl,
 			'options' => $options,
 		));

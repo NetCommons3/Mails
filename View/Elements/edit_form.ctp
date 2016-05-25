@@ -4,6 +4,7 @@
  *   - $editForms: 編集フォーム設定
  *   - $cancelUrl: Cancel url.
  *   - $useReplayTo: 返信を受けるメールアドレスを使うか
+ *   - $isMailSendHelp: メール通知機能を使うヘルプメッセージを表示するか
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -22,16 +23,16 @@
 
 	<div class="panel panel-default">
 		<div class="panel-body">
-			<div class="row">
-				<div class="col-xs-12">
-					<div class="form-inline">
-						<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
-							'type' => 'checkbox',
-							'label' => __d('mails', 'Use the mail notification function'),
-						)); ?>
-						<?php echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future')); ?>
-					</div>
-				</div>
+			<div class="<?php echo $isMailSendHelp ? 'form-inline' : ''; ?>">
+				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
+					'type' => 'checkbox',
+					'label' => __d('mails', 'Use the mail notification function'),
+				)); ?>
+				<?php
+				if ($isMailSendHelp) {
+					echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'));
+				}
+				?>
 			</div>
 
 			<div class="row">
