@@ -23,7 +23,7 @@ class MailFormHelper extends AppHelper {
  *
  * #### Sample code
  * ##### template file(ctp file) - 通常パターン
- * ```
+ * ```php
  * <?php echo $this->MailForm->editFrom(
  *   array(
  *     array(
@@ -35,7 +35,7 @@ class MailFormHelper extends AppHelper {
  * ```
  *
  * ##### template file(ctp file) - 返信を受けるメールアドレス, 通知する権限 非表示
- * ```
+ * ```php
  * <?php echo $this->MailForm->editFrom(
  *   array(
  *     array(
@@ -49,7 +49,7 @@ class MailFormHelper extends AppHelper {
  * ```
  *
  * ##### template file(ctp file) - 回答メールありパターン
- * ```
+ * ```php
  * <?php echo $this->MailForm->editFrom(
  *   array(
  *     array(
@@ -63,8 +63,8 @@ class MailFormHelper extends AppHelper {
  * ); ?>
  * ```
  *
- * ##### template file(ctp file) - メール通知機能を使うヘルプメッセージ表示
- * ```
+ * ##### template file(ctp file) - メール通知機能を使う ヘルプメッセージ表示
+ * ```php
  * <?php echo $this->MailForm->editFrom(
  *   array(
  *     array(
@@ -73,7 +73,7 @@ class MailFormHelper extends AppHelper {
  *   ),
  *   NetCommonsUrl::backToIndexUrl('default_setting_action'),
  *   1, // 返信を受けるメールアドレス 表示
- *   1  // メール通知機能を使うヘルプメッセージ 表示
+ *   1  // メール通知機能を使う ヘルプメッセージ 表示
  * ); ?>
  * ```
  *
