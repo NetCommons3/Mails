@@ -309,8 +309,15 @@ class NetCommonsMailAssignTag {
 
 		// 本文
 		if (array_key_exists('X-BODY', $this->assignTags)) {
-			$this->fixedPhraseBody = str_replace('{X-BODY}', h($this->assignTags['X-BODY']),
-				$this->fixedPhraseBody);
+			if ($messageType == 'text') {
+				$this->fixedPhraseBody = str_replace('{X-BODY}',
+													strip_tags($this->assignTags['X-BODY']),
+													$this->fixedPhraseBody);
+			} else {
+				$this->fixedPhraseBody = str_replace('{X-BODY}',
+													$this->assignTags['X-BODY'],
+													$this->fixedPhraseBody);
+			}
 			unset($this->assignTags['X-BODY']);
 		}
 
