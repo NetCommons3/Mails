@@ -508,6 +508,13 @@ class MailQueueBehavior extends ModelBehavior {
 
 		foreach ($sendTimes as $sendTime) {
 
+			/** @see IsMailSendBehavior::isMailSendTime() */
+			// cron使えず未来日メールなら、送らない
+			if (! $model->isMailSendTime($sendTime)) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return;
+			}
+
 			// メール内容save
 			$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime($sendTime);
 			$mailQueue = $model->MailQueue->create($mailQueue);

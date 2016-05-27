@@ -184,7 +184,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	public function testSaveSendRoom() {
 		$pluginKey = Current::read('Plugin.key');
 
-		//準備1
+		// --- 準備1
 		// 管理者(created_user=1)で登録
 		$dataAdmin = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
@@ -202,11 +202,13 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 				'room_id' => Current::read('Room.id'),
 			)
 		));
+
+		// チェック
 		//debug($results);
 		$this->assertEquals($dataAdmin['TestMailQueueBehaviorSaveModel']['created_user'],
 			$results[0]['MailQueueUser']['not_send_room_user_ids']);
 
-		//準備2
+		// --- 準備2
 		// 一般(created_user=4)で登録
 		$dataGeneral = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
@@ -215,6 +217,68 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		//テスト実施
 		$this->__saveSend($dataGeneral, $pluginKey);
+
+		// 承認完了なので２通（承認完了メール、ルーム配信メール）あること
+		$mailQueue = $this->MailQueue->find('all', array(
+			'recursive' => -1,
+			'conditions' => array('plugin_key' => $pluginKey)
+		));
+
+		// チェック
+		//debug($results);
+		$this->assertCount(2, $mailQueue);
+	}
+
+/**
+ * save()のテスト - 承認機能ありで配信 & ルーム配信で一般投稿、cron=OFFで未来日なら、承認通知のみ、ルームへの送信はしない（ブログ想定）
+ *
+ * @return void
+ */
+	public function testSaveSendRoomNoticeOnly() {
+		$pluginKey = Current::read('Plugin.key');
+
+		//準備
+		// 一般(created_user=4)で登録
+		$dataGeneral = array(
+			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
+				->records[2],
+		);
+
+		// cron=OFF
+		$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
+		$data['SiteSetting'] =
+			$SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.use_cron'));
+		$data['SiteSetting']['Mail.use_cron'][0]['value'] = 0;
+		$SiteSetting->saveSiteSetting($data);
+
+		// 未来日
+		// 公開日フィールドをテストの時だけ、modifiedを流用
+		$this->TestModel->setSetting('publishStartField', 'modified');
+
+		//テスト実施
+		$this->__saveSend($dataGeneral, $pluginKey);
+
+		// チェック
+		// ルーム配信は0件
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'plugin_key' => Current::read('Plugin.key'),
+				'room_id' => Current::read('Room.id'),
+			)
+		));
+		//debug($results);
+		$this->assertEmpty($results);
+
+		// 承認通知あり (担当者へのコメントがあるのは、承認通知だけ)１件のみ
+		$mailQueue = $this->MailQueue->find('all', array(
+			'recursive' => -1,
+			'conditions' => array('plugin_key' => $pluginKey)
+		));
+
+		//debug($results);
+		$this->assertCount(1, $mailQueue);
+		$this->assertTextContains('担当者へのコメント:', $mailQueue[0]['MailQueue']['mail_body']);
 	}
 
 /**

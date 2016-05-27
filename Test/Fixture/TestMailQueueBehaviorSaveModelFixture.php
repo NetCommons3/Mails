@@ -93,7 +93,7 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 			'created_user' => '4',
 			'created' => '2016-03-29 10:39:13',
 			'modified_user' => '4',
-			'modified' => '2016-03-29 10:39:13'
+			'modified' => '2026-12-29 10:00:00',	//テストの時だけ公開日として流用
 		),
 	);
 

@@ -63,15 +63,6 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
-		// DBに公開日時の項目あり & 公開日時がセットされていて & cron使えず未来日メールなら、送らない（ブログを想定）
-		// 公開日時
-		/** @see MailQueueBehavior::__getSendTimePublish() */
-		//$sendTime = $this->getSendTimePublish($model);
-		if (! $this->__isMailSendTime($model, $sendTimePublish)) {
-			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return false;
-		}
-
 		// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
 		// 公開記事 編集フラグ
 		$isPublishableEdit = $this->__isPublishableEdit($model, $contentKey);
@@ -115,7 +106,7 @@ class IsMailSendBehavior extends ModelBehavior {
 		$isMailSendReminder = false;
 		$sendTimeReminders = $this->settings[$model->alias]['reminder']['sendTimes'];
 		foreach ($sendTimeReminders as $sendTime) {
-			if ($this->__isMailSendTime($model, $sendTime)) {
+			if ($this->isMailSendTime($model, $sendTime)) {
 				$isMailSendReminder = true;
 			}
 		}
@@ -247,7 +238,7 @@ class IsMailSendBehavior extends ModelBehavior {
  * @param date $sendTime メール送信日時
  * @return bool
  */
-	private function __isMailSendTime(Model $model, $sendTime) {
+	public function isMailSendTime(Model $model, $sendTime) {
 		if ($sendTime === null) {
 			return true;
 		}
