@@ -11,6 +11,7 @@
 
 App::uses('ModelBehavior', 'Model');
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
+App::uses('MailSend', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 
@@ -181,6 +182,9 @@ class MailQueueBehavior extends ModelBehavior {
 		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey, $sendTimePublish,
 				$settingPluginKey)) {
 			$this->saveQueue($model, array($sendTimePublish), $typeKey);
+
+			// キューからメール送信
+			MailSend::send();
 		}
 		$model->Behaviors->unload('Mails.IsMailSend');
 
