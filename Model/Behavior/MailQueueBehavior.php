@@ -13,7 +13,6 @@ App::uses('ModelBehavior', 'Model');
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 App::uses('MailSend', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
-App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 
 /**
  * メールキュー Behavior
@@ -449,7 +448,10 @@ class MailQueueBehavior extends ModelBehavior {
 
 			// --- 公開
 			$status = Hash::get($model->data, $model->alias . '.status');
-			if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+
+			/** @see WorkflowComponent::STATUS_PUBLISHED */
+			//if ($status == WorkflowComponent::STATUS_PUBLISHED) {
+			if ($status == '1') {
 				// 投稿メール - ルーム配信
 				$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
 					$roomId, $typeKey);
