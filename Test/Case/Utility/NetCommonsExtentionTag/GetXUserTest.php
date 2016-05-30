@@ -63,10 +63,10 @@ class MailsUtilityNetCommonsExtentionTagGetXUserTest extends NetCommonsCakeTestC
 	public function testGetXUserEmptyUserId() {
 		//データ生成
 		$createdUserId = null;
-		$mailAssignTag = new NetCommonsExtentionTag();
+		$extentionTag = new NetCommonsExtentionTag();
 
 		//テスト実施
-		$result = $mailAssignTag->getXUser($createdUserId);
+		$result = $extentionTag->getXUser($createdUserId);
 
 		//チェック
 		//debug($result);
