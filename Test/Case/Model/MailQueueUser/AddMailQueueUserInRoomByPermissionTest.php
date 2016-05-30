@@ -132,11 +132,14 @@ class MailQueueUserAddMailQueueUserInRoomByPermissionTest extends NetCommonsMode
 		$result = $this->dataProviderSave()['登録'];
 
 		$mailQueueId = $result[0];
-		$createdUserId = $result[1];
-		$contentKey = $result[2];
+		$contentKey = $result[1];
+		$pluginKey = $result[2];
+		$permissionKey = $result[3];
+		$notSendUserIds = $result[4];
 
 		return array(
-			array('Mails.MailQueueUser', 'validates', $mailQueueId, $createdUserId, $contentKey),
+			array('Mails.MailQueueUser', 'validates', $mailQueueId, $contentKey, $pluginKey,
+				$permissionKey, $notSendUserIds),
 		);
 	}
 
