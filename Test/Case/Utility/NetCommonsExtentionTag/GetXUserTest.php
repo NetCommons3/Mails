@@ -1,6 +1,6 @@
 <?php
 /**
- * NetCommonsMailAssignTag::getXUser()のテスト
+ * NetCommonsExtentionTag::getXUser()のテスト
  *
  * @author Noriko Arai <arai@nii.ac.jp>
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
@@ -13,12 +13,12 @@ App::uses('NetCommonsCakeTestCase', 'NetCommons.TestSuite');
 App::uses('NetCommonsExtentionTag', 'Mails.Utility');
 
 /**
- * NetCommonsMailAssignTag::getXUser()のテスト
+ * NetCommonsExtentionTag::getXUser()のテスト
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Test\Case\Utility\NetCommonsMailAssignTag
  */
-class MailsUtilityNetCommonsMailAssignTagGetXUserTest extends NetCommonsCakeTestCase {
+class NetCommonsExtentionTagGetXUserTest extends NetCommonsCakeTestCase {
 
 /**
  * Fixtures
