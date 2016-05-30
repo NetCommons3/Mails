@@ -175,11 +175,14 @@ class MailSetting extends MailsAppModel {
  * @return array メール設定データ配列
  */
 	public function getMailSettingSystem($typeKey) {
+		$this->loadModels(array(
+			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
+		));
 		$pluginKey = Current::read('Plugin.key');
 
 		// $pluginKeyで SELECT する
 		$conditions = array(
-			'plug_key' => $pluginKey,
+			'plugin_key' => $pluginKey,
 			//'type_key' => $typeKey,
 		);
 		$mailSetting = $this->getMailSetting($conditions);
