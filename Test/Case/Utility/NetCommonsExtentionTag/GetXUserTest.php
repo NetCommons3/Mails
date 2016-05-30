@@ -18,7 +18,7 @@ App::uses('NetCommonsExtentionTag', 'Mails.Utility');
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Test\Case\Utility\NetCommonsMailAssignTag
  */
-class NetCommonsExtentionTagGetXUserTest extends NetCommonsCakeTestCase {
+class MailsUtilityNetCommonsExtentionTagGetXUserTest extends NetCommonsCakeTestCase {
 
 /**
  * Fixtures
