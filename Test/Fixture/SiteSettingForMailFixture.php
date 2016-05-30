@@ -90,6 +90,11 @@ class SiteSettingForMailFixture extends SiteSettingFixture {
 			'key' => 'Mail.use_cron',
 			'value' => '1',
 		),
+		array(
+			'language_id' => '0',
+			'key' => 'Mail.messageType',
+			'value' => 'html',
+		),
 		//コンテンツ承認
 		// * コンテンツ承認設定
 		// ** 申請メールの件名

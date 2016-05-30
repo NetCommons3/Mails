@@ -282,7 +282,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()のテスト - 承認機能なしで配信 & created_userと同じIDがセットされてても、同じメールを２通送らない
+ * save()のテスト - 承認機能なしで配信 & created_userと同じIDがセットされてても、同じメールを２通送らない & テキストメール
  *
  * @return void
  */
@@ -297,6 +297,13 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			1,
 		);
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
+
+		// textメール
+		$SiteSetting = ClassRegistry::init('SiteManager.SiteSetting');
+		$data['SiteSetting'] =
+			$SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.messageType'));
+		$data['SiteSetting']['Mail.messageType'][0]['value'] = 'text';
+		$SiteSetting->saveSiteSetting($data);
 
 		//テスト実施
 		$this->__saveSendRoom();
