@@ -11,6 +11,7 @@
  */
 
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
+App::uses('NetCommonsExtentionTag', 'Mails.Utility');
 
 /**
  * NetCommonsメール 埋め込みタグ Utility
