@@ -10,6 +10,7 @@
 
 App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
 App::uses('NetCommonsUrl', 'NetCommons.Utility');
+App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 
 /**
  * NetCommonsメール 埋め込みタグ Utility
