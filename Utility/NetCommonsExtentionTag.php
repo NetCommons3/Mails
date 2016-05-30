@@ -121,7 +121,7 @@ class NetCommonsExtentionTag {
 
 			$tags = Hash::extract($data, 'Tag.{n}.name');
 			$tags = implode(',', $tags);
-			$tagLabel = __d('blogs', 'tag');
+			$tagLabel = __d('tags', 'tag');
 			$tags = $tagLabel . ':' . $tags;
 			$result = array('X-TAGS', $tags);
 		}
