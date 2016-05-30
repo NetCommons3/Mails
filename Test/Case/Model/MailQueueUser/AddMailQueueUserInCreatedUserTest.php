@@ -56,9 +56,6 @@ class MailQueueUserAddMailQueueUserInCreatedUserTest extends NetCommonsModelTest
  * @return array テストデータ
  */
 	public function dataProviderSave() {
-		Current::$current['Plugin']['key'] = 'dummy';
-		Current::$current['Block']['key'] = 'block_key999';
-
 		$results = array();
 		$results['登録'] = array(1, 5, 'content_key', null, 1);
 		$results['createdUserId:空'] = array(1, null, 'content_key', null, 0);
@@ -81,6 +78,8 @@ class MailQueueUserAddMailQueueUserInCreatedUserTest extends NetCommonsModelTest
 								$pluginKey = null, $expectedCount = 0) {
 		$model = $this->_modelName;
 		$method = $this->_methodName;
+		Current::$current['Plugin']['key'] = 'dummy';
+		Current::$current['Block']['key'] = 'block_key999';
 
 		$this->$model->$method($mailQueueId, $createdUserId, $contentKey,
 			$pluginKey);
