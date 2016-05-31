@@ -50,18 +50,16 @@ class MailSettingFixture extends CakeTestFixture {
 			'id' => 1,
 			'plugin_key' => 'dummy',
 			'block_key' => 'block_1',
-			'is_mail_send' => 1,
+			'is_mail_send' => true,
 			'replay_to' => 'replay-to@test.com',
 			'created_user' => 1,
-			'created' => '2016-03-22 12:21:35',
 			'modified_user' => 1,
-			'modified' => '2016-03-22 12:21:35'
 		),
 		// block_key=nullは、プラグインの初期データ
 		array(
 			'plugin_key' => 'dummy',
 			'block_key' => null,
-			'is_mail_send' => 1,
+			'is_mail_send' => true,
 			'replay_to' => 'replay-to@test.com',
 		),
 	);
