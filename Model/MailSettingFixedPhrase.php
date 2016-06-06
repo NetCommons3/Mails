@@ -148,12 +148,11 @@ class MailSettingFixedPhrase extends MailsAppModel {
 			return;
 		}
 
+		$mailFixedPhrase[$this->alias][$key] = '';
 		if ($typeKey == self::DEFAULT_TYPE) {
 			$mailFixedPhrase[$this->alias][$key] = __d('mails', 'MailSetting.' . $key);
 		} elseif ($typeKey == self::ANSWER_TYPE) {
 			$mailFixedPhrase[$this->alias][$key] = __d('mails', 'MailSetting.' . $key . '.answer');
-		} else {
-			$mailFixedPhrase[$this->alias][$key] = '';
 		}
 	}
 }
