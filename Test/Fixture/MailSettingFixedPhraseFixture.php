@@ -143,6 +143,46 @@ Answer to see the results click on the link below.
 			'modified_user' => 1,
 			'modified' => '2016-03-22 12:21:35'
 		),
+		// block_key=nullは、プラグインの初期データ
+		array(
+			'mail_setting_id' => 2,
+			'language_id' => 1,
+			'plugin_key' => 'dummy',
+			'block_key' => null,
+			'type_key' => 'contents',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME} to let you know because the content has
+been posted.
+Room name: {X-ROOM}
+Block Name: {X-BLOCK_NAME}
+Title: {X-SUBJECT}
+Posted: {X-USER}
+Post time: {X-TO_DATE}
+
+{X-BODY}
+
+Please click on the link below to check this post content.
+{X-URL}",
+		),
+		array(
+			'mail_setting_id' => 2,
+			'language_id' => 2,
+			'plugin_key' => 'dummy',
+			'block_key' => null,
+			'type_key' => 'contents',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME}にコンテンツが投稿されたのでお知らせします。
+ルーム名:{X-ROOM}
+ブロック名:{X-BLOCK_NAME}
+タイトル:{X-SUBJECT}
+投稿者:{X-USER}
+投稿日時:{X-TO_DATE}
+
+{X-BODY}
+
+この投稿内容を確認するには下記のリンクをクリックしてください。
+{X-URL}",
+		),
 	);
 
 }

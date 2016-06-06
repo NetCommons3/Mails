@@ -57,6 +57,7 @@ class MailSettingFixture extends CakeTestFixture {
 		),
 		// block_key=nullは、プラグインの初期データ
 		array(
+			'id' => 2,
 			'plugin_key' => 'dummy',
 			'block_key' => null,
 			'is_mail_send' => true,
