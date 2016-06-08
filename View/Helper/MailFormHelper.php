@@ -34,7 +34,7 @@ class MailFormHelper extends AppHelper {
  * ); ?>
  * ```
  *
- * ##### template file(ctp file) - 返信を受けるメールアドレス, 通知する権限 非表示
+ * ##### template file(ctp file) - 問合せ先メールアドレス, 通知する権限 非表示
  * ```php
  * <?php echo $this->MailForm->editFrom(
  *   array(
@@ -44,7 +44,7 @@ class MailFormHelper extends AppHelper {
  *     )
  *   ),
  *   NetCommonsUrl::backToIndexUrl('default_setting_action'),
- *   0 // 返信を受けるメールアドレス 非表示
+ *   0 // 問合せ先メールアドレス 非表示
  * ); ?>
  * ```
  *
@@ -72,14 +72,14 @@ class MailFormHelper extends AppHelper {
  *     )
  *   ),
  *   NetCommonsUrl::backToIndexUrl('default_setting_action'),
- *   1, // 返信を受けるメールアドレス 表示
+ *   1, // 問合せ先メールアドレス 表示
  *   1  // メール通知機能を使う ヘルプメッセージ 表示
  * ); ?>
  * ```
  *
  * @param array $editForms 編集フォーム設定
  * @param string $cancelUrl キャンセルボタン遷移先URL
- * @param int $useReplayTo 返信を受けるメールアドレスを使う
+ * @param int $useReplayTo 問合せ先メールアドレスを使う
  * @param int $isMailSendHelp メール通知機能を使うヘルプメッセージを表示するか
  * @param array $options フォームオプション
  * @param string $action 決定ボタン遷移先URL

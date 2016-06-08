@@ -3,7 +3,7 @@
  * Element of mail edit form
  *   - $editForms: 編集フォーム設定
  *   - $cancelUrl: Cancel url.
- *   - $useReplayTo: 返信を受けるメールアドレスを使うか
+ *   - $useReplayTo: 問合せ先メールアドレスを使うか
  *   - $isMailSendHelp: メール通知機能を使うヘルプメッセージを表示するか
  *   - $options: Options array for Form->create()
  *
