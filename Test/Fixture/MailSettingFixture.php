@@ -63,6 +63,13 @@ class MailSettingFixture extends CakeTestFixture {
 			'is_mail_send' => true,
 			'replay_to' => 'replay-to@test.com',
 		),
+		array(
+			'id' => 3,
+			'plugin_key' => 'dummy2',
+			'block_key' => null,
+			'is_mail_send' => true,
+			'replay_to' => 'replay-to@test.com',
+		),
 	);
 
 }

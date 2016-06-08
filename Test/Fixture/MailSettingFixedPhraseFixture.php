@@ -183,6 +183,25 @@ Please click on the link below to check this post content.
 この投稿内容を確認するには下記のリンクをクリックしてください。
 {X-URL}",
 		),
+		array(
+			'mail_setting_id' => 3,
+			'language_id' => 2,
+			'plugin_key' => 'dummy2',
+			'block_key' => null,
+			'type_key' => 'contents',
+			'mail_fixed_phrase_subject' => '[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})',
+			'mail_fixed_phrase_body' => "{X-PLUGIN_NAME}にコンテンツが投稿されたのでお知らせします。
+ルーム名:{X-ROOM}
+ブロック名:{X-BLOCK_NAME}
+タイトル:{X-SUBJECT}
+投稿者:{X-USER}
+投稿日時:{X-TO_DATE}
+
+{X-BODY}
+
+この投稿内容を確認するには下記のリンクをクリックしてください。
+{X-URL}",
+		),
 	);
 
 }
