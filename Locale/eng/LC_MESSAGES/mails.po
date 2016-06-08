@@ -94,7 +94,7 @@ msgstr "Notification to the authority"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "You can specify if you want to change the contact mail address."
+msgstr "For registration, you can specify the mail address of the contact details."
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"

@@ -92,7 +92,7 @@ msgstr "通知する権限"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "問合せ先メールアドレスを変えたい場合に指定できます。"
+msgstr "登録に関して、問合せ先のメールアドレスを指定できます。"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"
