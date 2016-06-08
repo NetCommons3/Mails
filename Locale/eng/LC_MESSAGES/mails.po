@@ -26,7 +26,7 @@ msgstr "%s, please enter by e-mail format."
 
 #: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
-msgstr "E-mail address to receive a reply"
+msgstr "Contact mail address"
 
 #: Plugin/Mails/Model/MailSetting.php:75 Plugin/Mails/View/Elements/edit_form.ctp:71
 msgid "Subject"
@@ -94,7 +94,7 @@ msgstr "Notification to the authority"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "You can specify if you want to change the e-mail address to receive a reply."
+msgstr "You can specify if you want to change the contact mail address."
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"

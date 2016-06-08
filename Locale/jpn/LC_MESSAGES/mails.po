@@ -25,7 +25,7 @@ msgstr "%s はメール形式で入力してください。"
 
 #: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
 msgid "E-mail address to receive a reply"
-msgstr "返信を受けるメールアドレス"
+msgstr "問合せ先メールアドレス"
 
 #: Plugin/Mails/Model/MailSetting.php:75 Plugin/Mails/View/Elements/edit_form.ctp:71
 msgid "Subject"
@@ -92,7 +92,7 @@ msgstr "通知する権限"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:66
 msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "返信を受けるメールアドレスを変えたい場合に指定できます。"
+msgstr "問合せ先メールアドレスを変えたい場合に指定できます。"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:83
 msgid "Can use an embedded keyword in the subject line and body"
