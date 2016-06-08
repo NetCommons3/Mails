@@ -152,6 +152,17 @@ class NetCommonsMail extends CakeEmail {
 	public function setFrom($languageId) {
 		$from = SiteSettingUtil::read('Mail.from');
 		$fromName = SiteSettingUtil::read('Mail.from_name', null, $languageId);
+		$this->__setFrom($from, $fromName);
+	}
+
+/**
+ * From 各種セット
+ *
+ * @param string $from 送信者メールアドレス
+ * @param string $fromName 送信者名
+ * @return void
+ */
+	private function __setFrom($from, $fromName = null) {
 		parent::from($from, $fromName);
 		// 通称envelope-fromセット(正式名reverse-path RFC 5321)
 		parent::sender($from, $fromName);
@@ -213,7 +224,8 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function setReplyTo($replyTo) {
 		if (! empty($replyTo)) {
-			parent::replyTo($replyTo);
+			//parent::replyTo($replyTo);
+			$this->__setFrom($replyTo);
 		}
 	}
 
