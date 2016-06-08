@@ -85,7 +85,7 @@ class MailFormHelper extends AppHelper {
  * @param string $action 決定ボタン遷移先URL
  * @return string HTML tags
  */
-	public function editFrom($editForms = array(), $cancelUrl = null, $useReplayTo = 1,
+	public function editFrom($editForms = array(), $cancelUrl = null, $useReplayTo = 0,
 								$isMailSendHelp = 0, $options = array(), $action = null) {
 		$output = '';
 		if (isset($action)) {
