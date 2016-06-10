@@ -5,6 +5,7 @@
  *   - $cancelUrl: Cancel url.
  *   - $useReplayTo: 問合せ先メールアドレスを使うか
  *   - $isMailSendHelp: メール通知機能を使うヘルプメッセージを表示するか
+ *   - $useMailSendApproval: 承認メール通知機能を使うチェックボックスを表示するか
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
@@ -33,11 +34,15 @@ echo $this->NetCommonsHtml->css(array(
 					'label' => __d('mails', 'Use the mail notification function'),
 				)); ?>
 				&nbsp;
-				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send_approval', array(
-					'type' => 'checkbox',
-					'div' => '',
-					'label' => __d('mails', 'Use the approval mail notification function'),
-				)); ?>
+				<?php
+				if ($useMailSendApproval) {
+					echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send_approval', array(
+						'type' => 'checkbox',
+						'div' => '',
+						'label' => __d('mails', 'Use the approval mail notification function'),
+					));
+				}
+				?>
 			</div>
 			<?php
 			if ($isMailSendHelp) {

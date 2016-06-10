@@ -19,7 +19,7 @@ App::uses('MailSettingFixedPhrase', 'Mails.Model');
 class MailFormHelper extends AppHelper {
 
 /**
- * コメント一覧表示＆コメント登録
+ * メール設定
  *
  * #### Sample code
  * ##### template file(ctp file) - 通常パターン
@@ -81,12 +81,13 @@ class MailFormHelper extends AppHelper {
  * @param string $cancelUrl キャンセルボタン遷移先URL
  * @param int $useReplayTo 問合せ先メールアドレスを使う
  * @param int $isMailSendHelp メール通知機能を使うヘルプメッセージを表示するか
+ * @param int $useMailSendApproval 承認メール通知機能を使うチェックボックスを表示するか
  * @param array $options フォームオプション
  * @param string $action 決定ボタン遷移先URL
  * @return string HTML tags
  */
 	public function editFrom($editForms = array(), $cancelUrl = null, $useReplayTo = 0,
-								$isMailSendHelp = 0, $options = array(), $action = null) {
+								$isMailSendHelp = 0, $useMailSendApproval = 1, $options = array(), $action = null) {
 		$output = '';
 		if (isset($action)) {
 			$options['url'] = $action;
@@ -128,6 +129,7 @@ class MailFormHelper extends AppHelper {
 			'editForms' => $editForms,
 			'useReplayTo' => $useReplayTo,
 			'isMailSendHelp' => $isMailSendHelp,
+			'useMailSendApproval' => $useMailSendApproval,
 			'cancelUrl' => $cancelUrl,
 			'options' => $options,
 		));
