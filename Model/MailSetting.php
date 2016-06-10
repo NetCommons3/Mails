@@ -62,6 +62,12 @@ class MailSetting extends MailsAppModel {
 					'message' => __d('net_commons', 'Invalid request.'),
 				),
 			),
+			'is_mail_send_approval' => array(
+				'boolean' => array(
+					'rule' => array('boolean'),
+					'message' => __d('net_commons', 'Invalid request.'),
+				),
+			),
 			'replay_to' => array(
 				'email' => array(
 					'rule' => array('email', false, null),

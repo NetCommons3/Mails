@@ -193,18 +193,23 @@ class MailQueueUser extends MailsAppModel {
 		}
 
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
-		//$permissions = $WorkflowComponent->getBlockRolePermissions(array($permission));
-		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey),
-																DefaultRolePermission::TYPE_ROOM_ROLE,
-																$roomId);
-		foreach ($permissions['RoomRolePermission'][$permissionKey] as $key => $roomRolePermission) {
+		$permissions = $WorkflowComponent->getBlockRolePermissions(array($permissionKey), $roomId);
+		foreach ($permissions['BlockRolePermissions'][$permissionKey] as $key => $roomRolePermission) {
 			if (!$roomRolePermission['value']) {
-				unset($permissions['RoomRolePermission'][$permissionKey][$key]);
+				unset($permissions['BlockRolePermissions'][$permissionKey][$key]);
 			}
 		}
+		//		$permissions = $WorkflowComponent->getRoomRolePermissions(array($permissionKey),
+		//			DefaultRolePermission::TYPE_ROOM_ROLE,
+		//			$roomId);
+		//		foreach ($permissions['RoomRolePermission'][$permissionKey] as $key => $roomRolePermission) {
+		//			if (!$roomRolePermission['value']) {
+		//				unset($permissions['RoomRolePermission'][$permissionKey][$key]);
+		//			}
+		//		}
 
-		//$roleKeys = array_keys($permissions['BlockRolePermissions'][$permission]);
-		$roleKeys = array_keys($permissions['RoomRolePermission'][$permissionKey]);
+		$roleKeys = array_keys($permissions['BlockRolePermissions'][$permissionKey]);
+		//$roleKeys = array_keys($permissions['RoomRolePermission'][$permissionKey]);
 		$conditions = array(
 			'Room.id' => $roomId,
 			'RolesRoom.role_key' => $roleKeys,

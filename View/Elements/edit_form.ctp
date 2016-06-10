@@ -14,6 +14,10 @@
  * @license http://www.netcommons.org/license.txt NetCommons License
  * @copyright Copyright 2014, NetCommons Project
  */
+
+echo $this->NetCommonsHtml->css(array(
+	'/mails/css/style.css',
+));
 ?>
 
 <?php echo $this->NetCommonsForm->create('MailSetting', Hash::merge(array(), $options)); ?>
@@ -23,17 +27,23 @@
 
 	<div class="panel panel-default">
 		<div class="panel-body">
-			<div class="<?php echo $isMailSendHelp ? 'form-inline' : ''; ?>">
+			<div class="form-inline <?php echo !$isMailSendHelp ? 'mail-is-mail-send-row' : ''; ?>">
 				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send', array(
 					'type' => 'checkbox',
 					'label' => __d('mails', 'Use the mail notification function'),
 				)); ?>
-				<?php
-				if ($isMailSendHelp) {
-					echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'));
-				}
-				?>
+				&nbsp;
+				<?php echo $this->NetCommonsForm->inlineCheckbox('MailSetting.is_mail_send_approval', array(
+					'type' => 'checkbox',
+					'div' => '',
+					'label' => __d('mails', 'Use the approval mail notification function'),
+				)); ?>
 			</div>
+			<?php
+			if ($isMailSendHelp) {
+				echo $this->NetCommonsForm->help(__d('mails', 'If you do not want to use, and removes any mail was scheduled to be sent to the future'));
+			}
+			?>
 
 			<div class="row">
 				<div class="col-xs-11 col-xs-offset-1">

@@ -71,7 +71,7 @@ class MailQueueBehavior extends ModelBehavior {
 		'keyField' => 'key',
 		'editablePermissionKey' => 'content_editable',
 		'publishablePermissionKey' => 'content_publishable',
-		'useWorkflow' => null,
+		//'useWorkflow' => null,
 		'publishStartField' => null,
 		'pluginKey' => null,
 		'reminder' => array(
@@ -84,6 +84,11 @@ class MailQueueBehavior extends ModelBehavior {
 		self::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST => null,
 		self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS => array(),
 	);
+
+/**
+ * @var array
+ */
+	protected $_mailSettingPlugin = null;
 
 /**
  * setup
@@ -178,7 +183,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// --- 通常メール
 		/** @see IsMailSendBehavior::isMailSend() */
-		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey, $sendTimePublish,
+		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey,
 				$settingPluginKey)) {
 			$this->saveQueue($model, array($sendTimePublish), $typeKey);
 
@@ -358,20 +363,39 @@ class MailQueueBehavior extends ModelBehavior {
 		return $sendTime;
 	}
 
+	///**
+	// * 承認つかうフラグ ゲット
+	// *
+	// * @param Model $model モデル
+	// * @return int 承認つかうフラグ
+	// */
+	//	private function __getUseWorkflow(Model $model) {
+	//		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
+	//		$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
+	//		$useWorkflow = 1;
+	//		if (isset($key)) {
+	//			$useWorkflow = Hash::get($model->data, $key);
+	//		}
+	//		return $useWorkflow;
+	//	}
+
 /**
- * 承認つかうフラグ ゲット
+ * プラグインのメール設定(定型文等) 取得
  *
  * @param Model $model モデル
- * @return int 承認つかうフラグ
+ * @param int $languageId 言語ID
+ * @param string $typeKey メールの種類
+ * @return array メール設定データ配列
  */
-	private function __getUseWorkflow(Model $model) {
-		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
-		$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
-		$useWorkflow = 1;
-		if (isset($key)) {
-			$useWorkflow = Hash::get($model->data, $key);
+	private function __getMailSettingPlugin(Model $model, $languageId,
+											$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		if (!$this->_mailSettingPlugin) {
+			$settingPluginKey = $this->__getSettingPluginKey($model);
+			/** @see MailSetting::getMailSettingPlugin() */
+			$this->_mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey,
+				$settingPluginKey);
 		}
-		return $useWorkflow;
+		return $this->_mailSettingPlugin;
 	}
 
 /**
@@ -423,7 +447,7 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param array $sendTimes メール送信日時 配列
  * @param string $typeKey メールの種類
- * @return bool
+ * @return void
  */
 	public function saveQueue(Model $model, $sendTimes = null,
 								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
@@ -446,16 +470,17 @@ class MailQueueBehavior extends ModelBehavior {
 			// 承認依頼通知, 差戻し通知, 承認完了通知メール(即時)
 			$this->__saveQueueNoticeMail($model, $languageId, $typeKey);
 
-			// --- 公開
-			$status = Hash::get($model->data, $model->alias . '.status');
+			$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
+			$isMailSend = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send');
 
-			/** @see WorkflowComponent::STATUS_PUBLISHED */
-			//if ($status == WorkflowComponent::STATUS_PUBLISHED) {
-			if ($status == '1') {
-				// 投稿メール - ルーム配信
-				$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
-					$roomId, $typeKey);
+			/** @see IsMailSendBehavior::isSendMailQueuePublish() */
+			if (! $model->isSendMailQueuePublish($isMailSend)) {
+				return;
 			}
+
+			// 投稿メール - ルーム配信
+			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
+				$roomId, $typeKey);
 
 		} else {
 			//$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
@@ -469,8 +494,6 @@ class MailQueueBehavior extends ModelBehavior {
 			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
 				$roomId, $typeKey);
 		}
-
-		return true;
 	}
 
 /**
@@ -565,8 +588,6 @@ class MailQueueBehavior extends ModelBehavior {
 					$mailQueue['MailQueue']['send_time'], $notSendRoomUserIds, $sendRoomPermission);
 			}
 		}
-
-		//return $mailQueueResult['MailQueue']['id'];
 	}
 
 /**
@@ -639,11 +660,13 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __saveQueueNoticeMail(Model $model, $languageId,
 											$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
-		$useWorkflow = $this->__getUseWorkflow($model);
+		$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
+
+		$isMailSendApproval = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send_approval');
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
 
 		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
-		if (! $model->isSendMailQueueNotice($useWorkflow, $createdUserId)) {
+		if (! $model->isSendMailQueueNotice($isMailSendApproval, $createdUserId)) {
 			return;
 		}
 
@@ -679,10 +702,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __createMailQueue(Model $model, $languageId,
 										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
-		$settingPluginKey = $this->__getSettingPluginKey($model);
-		/** @see MailSetting::getMailSettingPlugin() */
-		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey,
-			$settingPluginKey);
+		$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
 
 		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
 		$contentKey = $this->__getContentKey($model);

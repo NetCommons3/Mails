@@ -42,14 +42,12 @@ class IsMailSendBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param string $typeKey メールの種類
  * @param string $contentKey コンテンツキー
- * @param string $sendTimePublish 開するメール送信日時
  * @param string $settingPluginKey 設定を取得するプラグインキー
  * @return bool
  */
 	public function isMailSend(Model $model,
 								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
 								$contentKey = null,
-								$sendTimePublish = null,
 								$settingPluginKey = null) {
 		if (! $this->isMailSendCommon($model, $typeKey, $settingPluginKey)) {
 			return false;
@@ -209,13 +207,13 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
-		//$settingPluginKey = $this->__getSettingPluginKey($model);
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettingPlugin = $model->MailSetting->getMailSettingPlugin(null, $typeKey, $settingPluginKey);
 		$isMailSend = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send');
+		$isMailSendApproval = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send_approval');
 
-		// プラグイン設定でメール通知を使わないなら、メール送らない
-		if (! $isMailSend) {
+		// プラグイン設定でメール通知 and 承認メール通知をどちらも使わないなら、メール送らない
+		if (!$isMailSend && !$isMailSendApproval) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
@@ -266,33 +264,37 @@ class IsMailSendBehavior extends ModelBehavior {
 	}
 
 /**
- * 通知メールを送るかどうか
+ * 承認通知メールを送るかどうか
  *
  * @param Model $model モデル
- * @param strig $useWorkflow ワークフローの種類
+ * @param strig $isMailSendApproval 承認メール通知機能を使うフラグ
  * @param int $createdUserId 登録ユーザID
  * @return bool
  */
-	public function isSendMailQueueNotice(Model $model, $useWorkflow, $createdUserId) {
-		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-			// --- ワークフロー
-			// 承認しないなら、通知メール送らない
-			//$useWorkflow = $this->__getUseWorkflow($model);
-			if (! $useWorkflow) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
-
-		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-			// --- コンテンツコメント
-			// コメント承認しないなら、通知メール送らない
-			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
-			$useCommentApproval = Hash::get($model->data, $key);
-			if (! $useCommentApproval) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
+	public function isSendMailQueueNotice(Model $model, $isMailSendApproval, $createdUserId) {
+		//		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		//		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+		//			// --- ワークフロー
+		//			// 承認しないなら、通知メール送らない
+		//			if (! $useWorkflow) {
+		//				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+		//				return false;
+		//			}
+		//
+		//		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+		//			// --- コンテンツコメント
+		//			// コメント承認しないなら、通知メール送らない
+		//			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
+		//			$useCommentApproval = Hash::get($model->data, $key);
+		//			if (! $useCommentApproval) {
+		//				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+		//				return false;
+		//			}
+		//		}
+		// 承認メール使わないなら、通知メール送らない
+		if (! $isMailSendApproval) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
 		}
 
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
@@ -301,8 +303,31 @@ class IsMailSendBehavior extends ModelBehavior {
 		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
 		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($permissionKey);
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
-		//$createdUserId = $this->__getCreatedUserId($model);
 		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		return true;
+	}
+
+/**
+ * 公開メールを送るかどうか
+ *
+ * @param Model $model モデル
+ * @param strig $isMailSend メール通知機能を使うフラグ
+ * @return bool
+ */
+	public function isSendMailQueuePublish(Model $model, $isMailSend) {
+		// メール送らないなら、公開メール送らない
+		if (! $isMailSend) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// 公開以外はメール送らない
+		$status = Hash::get($model->data, $model->alias . '.status');
+		if ($status != WorkflowComponent::STATUS_PUBLISHED) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}

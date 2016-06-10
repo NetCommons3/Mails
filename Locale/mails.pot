@@ -61,6 +61,9 @@ msgstr ""
 msgid "Use the mail notification function"
 msgstr ""
 
+msgid "Use the approval mail notification function"
+msgstr ""
+
 #: Plugin/Mails/View/Elements/edit_form.ctp:49
 msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
 msgstr ""
