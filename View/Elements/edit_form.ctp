@@ -5,7 +5,7 @@
  *   - $cancelUrl: Cancel url.
  *   - $useReplayTo: 問合せ先メールアドレスを使うか
  *   - $isMailSendHelp: メール通知機能を使うヘルプメッセージを表示するか
- *   - $useMailSendApproval: 承認メール通知機能を使うチェックボックスを表示するか
+ *   - $useMailSendApproval: 承認メール通知機能を使う を表示するか
  *   - $options: Options array for Form->create()
  *
  * @author Noriko Arai <arai@nii.ac.jp>
