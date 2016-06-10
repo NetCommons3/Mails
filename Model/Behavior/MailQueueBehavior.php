@@ -86,7 +86,7 @@ class MailQueueBehavior extends ModelBehavior {
 	);
 
 /**
- * @var array
+ * @var array メール設定データ配列
  */
 	protected $_mailSettingPlugin = null;
 
