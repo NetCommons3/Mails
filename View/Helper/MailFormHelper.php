@@ -81,14 +81,14 @@ class MailFormHelper extends AppHelper {
  *
  * @param array $editForms 編集フォーム設定
  * @param string $cancelUrl キャンセルボタン遷移先URL
- * @param int $useReplayTo 問合せ先メールアドレスを使う
+ * @param int $useReplyTo 問合せ先メールアドレスを使う
  * @param int $isMailSendHelp メール通知機能を使うヘルプメッセージを表示するか
  * @param int $useMailSendApproval 承認メール通知機能を使う を表示するか
  * @param array $options フォームオプション
  * @param string $action 決定ボタン遷移先URL
  * @return string HTML tags
  */
-	public function editFrom($editForms = array(), $cancelUrl = null, $useReplayTo = 0,
+	public function editFrom($editForms = array(), $cancelUrl = null, $useReplyTo = 0,
 								$isMailSendHelp = 0, $useMailSendApproval = 1, $options = array(), $action = null) {
 		$output = '';
 		if (isset($action)) {
@@ -129,7 +129,7 @@ class MailFormHelper extends AppHelper {
 
 		$output .= $this->_View->element('Mails.edit_form', array(
 			'editForms' => $editForms,
-			'useReplayTo' => $useReplayTo,
+			'useReplyTo' => $useReplyTo,
 			'isMailSendHelp' => $isMailSendHelp,
 			'useMailSendApproval' => $useMailSendApproval,
 			'cancelUrl' => $cancelUrl,

@@ -43,14 +43,7 @@ class MailQueue extends MailsAppModel {
 					'required' => true,
 				),
 			),
-			//'block_key' => array(
-			//	'notBlank' => array(
-			//		'rule' => array('notBlank'),
-			//		'message' => __d('net_commons', 'Invalid request.'),
-			//		'required' => true,
-			//	),
-			//),
-			'replay_to' => array(
+			'reply_to' => array(
 				'email' => array(
 					// 2ループ以上すると Validation.php の $regex に別項目の validateチェックの $regex
 					// が代入されて下記エラーになったので、明示的に初期化

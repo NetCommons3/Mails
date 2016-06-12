@@ -704,7 +704,7 @@ class MailQueueBehavior extends ModelBehavior {
 										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE, $fixedPhraseType = null) {
 		$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
 
-		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.replay_to');
+		$replyTo = Hash::get($mailSettingPlugin, 'MailSetting.reply_to');
 		$contentKey = $this->__getContentKey($model);
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 		$pluginName = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_PLUGIN_NAME];
@@ -756,7 +756,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'plugin_key' => $pluginKey,
 			'block_key' => $blockKey,
 			'content_key' => $contentKey,
-			'replay_to' => $replyTo,
+			'reply_to' => $replyTo,
 			'mail_subject' => $mailAssignTag->fixedPhraseSubject,
 			'mail_body' => $mailAssignTag->fixedPhraseBody,
 			'send_time' => null,

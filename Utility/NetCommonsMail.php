@@ -186,7 +186,7 @@ class NetCommonsMail extends CakeEmail {
 
 		$subject = Hash::get($mailQueue, 'MailQueue.mail_subject');
 		$body = Hash::get($mailQueue, 'MailQueue.mail_body');
-		$replyTo = Hash::get($mailQueue, 'MailQueue.replay_to');
+		$replyTo = Hash::get($mailQueue, 'MailQueue.reply_to');
 
 		// 生文
 		$this->setSubject($subject);
@@ -224,8 +224,7 @@ class NetCommonsMail extends CakeEmail {
  */
 	public function setReplyTo($replyTo) {
 		if (! empty($replyTo)) {
-			//parent::replyTo($replyTo);
-			$this->__setFrom($replyTo);
+			parent::replyTo($replyTo);
 		}
 	}
 

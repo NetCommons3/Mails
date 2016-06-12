@@ -69,7 +69,7 @@ class MailQueueValidateTest extends NetCommonsValidateTest {
 		return array(
 			array('data' => $data, 'field' => 'plugin_key', 'value' => null,
 				'message' => __d('net_commons', 'Invalid request.')),
-			array('data' => $data, 'field' => 'replay_to', 'value' => 'xxx',
+			array('data' => $data, 'field' => 'reply_to', 'value' => 'xxx',
 				'message' => __d('net_commons', 'Invalid request.')),
 			array('data' => $data, 'field' => 'mail_subject', 'value' => null,
 				'message' => __d('net_commons', 'Invalid request.')),

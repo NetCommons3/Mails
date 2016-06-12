@@ -68,7 +68,7 @@ class MailSetting extends MailsAppModel {
 					'message' => __d('net_commons', 'Invalid request.'),
 				),
 			),
-			'replay_to' => array(
+			'reply_to' => array(
 				'email' => array(
 					'rule' => array('email', false, null),
 					'message' => sprintf(__d('mails', '%s, please enter by e-mail format'),

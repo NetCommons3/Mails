@@ -71,7 +71,7 @@ class MailSettingValidateTest extends NetCommonsValidateTest {
 				'message' => __d('net_commons', 'Invalid request.')),
 			array('data' => $data, 'field' => 'is_mail_send_approval', 'value' => 'xxx',
 				'message' => __d('net_commons', 'Invalid request.')),
-			array('data' => $data, 'field' => 'replay_to', 'value' => 'hoge',
+			array('data' => $data, 'field' => 'reply_to', 'value' => 'hoge',
 				'message' => sprintf(__d('mails', '%s, please enter by e-mail format'),
 					__d('mails', 'E-mail address to receive a reply'))),
 		);

@@ -78,11 +78,7 @@ class MailsUtilityNetCommonsMailInitShellTest extends NetCommonsCakeTestCase {
 		// $mailQueueがデータありなら、件名、本文、replyToは値あり
 		$this->assertNotEmpty($this->mail->subject);
 		$this->assertNotEmpty($this->mail->body);
-
-		// replyToからFrom上書きに仕様変更
-		//$this->assertNotEmpty($this->mail->replyTo());
-		$this->assertEmpty($this->mail->replyTo());
-		$this->assertEquals($mailQueue['MailQueue']['replay_to'], key($this->mail->from()));
+		$this->assertNotEmpty($this->mail->replyTo());
 	}
 
 /**

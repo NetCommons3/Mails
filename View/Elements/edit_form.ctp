@@ -3,7 +3,7 @@
  * Element of mail edit form
  *   - $editForms: 編集フォーム設定
  *   - $cancelUrl: Cancel url.
- *   - $useReplayTo: 問合せ先メールアドレスを使うか
+ *   - $useReplyTo: 問合せ先メールアドレスを使うか
  *   - $isMailSendHelp: メール通知機能を使うヘルプメッセージを表示するか
  *   - $useMailSendApproval: 承認メール通知機能を使う を表示するか
  *   - $options: Options array for Form->create()
@@ -53,9 +53,9 @@ echo $this->NetCommonsHtml->css(array(
 			<div class="row">
 				<div class="col-xs-11 col-xs-offset-1">
 
-					<?php if ($useReplayTo): ?>
+					<?php if ($useReplyTo): ?>
 						<div class="form-group">
-							<?php echo $this->NetCommonsForm->input('MailSetting.replay_to', array(
+							<?php echo $this->NetCommonsForm->input('MailSetting.reply_to', array(
 								'type' => 'text',
 								'label' => __d('mails', 'E-mail address to receive a reply'),
 								'div' => '',
