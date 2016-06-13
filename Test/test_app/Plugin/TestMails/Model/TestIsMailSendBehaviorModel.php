@@ -32,7 +32,10 @@ class TestIsMailSendBehaviorModel extends AppModel {
  * @var array
  */
 	public $actsAs = array(
-		'Mails.IsMailSend'
+		'Mails.IsMailSend' => array(
+			'publishablePermissionKey' => 'content_publishable',
+			'keyField' => 'key',
+		)
 	);
 
 }
