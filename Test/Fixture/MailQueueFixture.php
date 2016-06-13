@@ -57,7 +57,7 @@ class MailQueueFixture extends CakeTestFixture {
 			'plugin_key' => 'Lorem ipsum dolor sit amet',
 			'block_key' => 'Lorem ipsum dolor sit amet',
 			'reply_to' => 'reply_to@dummy.com',
-			'content_key' => 'Lorem ipsum dolor sit amet',
+			'content_key' => 'content_1',
 			'mail_subject' => '件名',
 			'mail_body' => "本文１\r\n本文２\r\n本文３\r\n",
 			'send_time' => '2016-03-22 12:22:15',
