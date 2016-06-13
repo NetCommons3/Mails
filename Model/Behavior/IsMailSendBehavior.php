@@ -54,8 +54,8 @@ class IsMailSendBehavior extends ModelBehavior {
 		}
 
 		// 投稿メールOFFなら、メール送らない
-		$isMailSendPostKey = MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST;
-		$isMailSendPost = $this->settings[$model->alias][$isMailSendPostKey];
+		$isMailSendPost = Hash::get($this->settings,
+			$model->alias . '.' . MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST);
 		if (isset($isMailSendPost) && $isMailSendPost == '0') {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
