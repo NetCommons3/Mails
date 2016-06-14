@@ -60,17 +60,9 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
 /**
  * isMailSend()テストのDataProvider
  *
- * ### 戻り値
- *  - isMailSendApproval 承認メール通知機能を使うフラグ
- *  - createdUserId 登録ユーザID
- *  - expected テスト結果の想定
- *
  * @return array データ
  */
 	public function dataProvider() {
-		$data['TestIsMailSendBehaviorModel'] =
-			(new TestIsMailSendBehaviorModelFixture())->records[1];
-
 		return array(
 			'true:正常ケース' => array(
 				'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
@@ -129,6 +121,59 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
 				'data' => array(),
 				'expected' => true,
 			),
+		);
+	}
+
+/**
+ * isMailSend()のテスト
+ *
+ * @param string $typeKey メールの種類
+ * @param string $contentKey コンテンツキー
+ * @param string $settingPluginKey 設定を取得するプラグインキー
+ * @param array $settings ビヘイビアsetting
+ * @param string $permission パーミッション
+ * @param array $data modelデータ
+ * @param bool $expected テスト結果の想定
+ * @dataProvider dataProvider
+ * @return void
+ */
+	public function testIsMailSend($typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
+												$contentKey = null,
+												$settingPluginKey = null,
+												$settings = array(),
+												$permission = null,
+												$data = array(),
+												$expected = null) {
+		if (isset($permission)) {
+			Current::write('Permission.' . $permission . '.value', 1);
+		}
+
+		if (isset($settings)) {
+			// ビヘイビアのsettingに isMailSendPost を設定
+			$this->TestModel->Behaviors->unload('Mails.IsMailSend');
+			$this->TestModel->Behaviors->load('Mails.IsMailSend', $settings);
+		}
+		$this->TestModel->data = $data;
+
+		//テスト実施
+		/** @see IsMailSendBehavior::isMailSend() */
+		$result = $this->TestModel->isMailSend($typeKey, $contentKey, $settingPluginKey);
+
+		//チェック
+		//debug($result);
+		$this->assertEquals($expected, $result);
+	}
+
+/**
+ * isMailSend()テストのコメント用DataProvider
+ *
+ * @return array データ
+ */
+	public function dataProviderCommnet() {
+		$data['TestIsMailSendBehaviorModel'] =
+			(new TestIsMailSendBehaviorModelFixture())->records[1];
+
+		return array(
 			// コメント公開許可
 			'true:コメント - 公開許可なし' => array(
 				'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
@@ -179,7 +224,7 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * isMailSend()のテスト
+ * isMailSend()のコメント部分のテスト
  *
  * @param string $typeKey メールの種類
  * @param string $contentKey コンテンツキー
@@ -188,34 +233,23 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
  * @param string $permission パーミッション
  * @param array $data modelデータ
  * @param bool $expected テスト結果の想定
- * @dataProvider dataProvider
+ * @dataProvider dataProviderCommnet
  * @return void
  */
-	public function testIsSendMailQueueNotice($typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
-												$contentKey = null,
-												$settingPluginKey = null,
-												$settings = array(),
-												$permission = null,
-												$data = array(),
-												$expected = null) {
-		if (isset($permission)) {
-			Current::write('Permission.' . $permission . '.value', 1);
-		}
-
-		if (isset($settings)) {
-			// ビヘイビアのsettingに isMailSendPost を設定
-			$this->TestModel->Behaviors->unload('Mails.IsMailSend');
-			$this->TestModel->Behaviors->load('Mails.IsMailSend', $settings);
-		}
-		$this->TestModel->data = $data;
-
-		//テスト実施
-		/** @see IsMailSendBehavior::isMailSend() */
-		$result = $this->TestModel->isMailSend($typeKey, $contentKey, $settingPluginKey);
-
-		//チェック
-		//debug($result);
-		$this->assertEquals($expected, $result);
+	public function testIsMailSendCommnet($typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
+											$contentKey = null,
+											$settingPluginKey = null,
+											$settings = array(),
+											$permission = null,
+											$data = array(),
+											$expected = null) {
+		$this->testIsMailSend($typeKey,
+			$contentKey,
+			$settingPluginKey,
+			$settings,
+			$permission,
+			$data,
+			$expected);
 	}
 
 }
