@@ -124,18 +124,17 @@ class IsMailSendBehavior extends ModelBehavior {
  * @return bool
  */
 	private function __isPublishableEdit(Model $model, $contentKey) {
-		if (!Current::permission('content_comment_publishable')) {
-			// 公開権限なし
-			return false;
-		}
-
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		// --- コンテンツコメント
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			if (!Current::permission('content_comment_publishable')) {
+				// 公開権限なし
+				return false;
+			}
+
 			// 登録日時
 			$created = Hash::get($model->data, $model->alias . '.created');
 			$isApproveAction = Hash::get($this->settings, $model->alias . '.isCommentApproveAction');
-
 			if (isset($created)) {
 				// 新規登録
 				return false;
@@ -148,25 +147,30 @@ class IsMailSendBehavior extends ModelBehavior {
 		}
 
 		// --- 通常
+		if (!Current::permission('content_publishable')) {
+			// 公開権限なし
+			return false;
+		}
+
 		//$contentKey = $this->__getContentKey($model);
 		$keyField = $this->settings[$model->alias]['keyField'];
 		$conditions = array($model->alias . '.' . $keyField => $contentKey);
-		$data = $model->find('all', array(
+		$result = $model->find('all', array(
 			'recursive' => -1,
 			'conditions' => $conditions,
 			'order' => array($model->alias . '.modified DESC'),
 			'callbacks' => false,
 		));
 
-		if (count($data) <= 1) {
+		if (count($result) <= 1) {
 			// 新規登録
 			return false;
 		}
 
 		// keyに対して2件以上記事がある = 編集
 		// 1つ前のコンテンツのステータス
-		$beforeStatus = $data[1][$model->alias]['status'];
-		$status = $data[0][$model->alias]['status'];
+		$beforeStatus = $result[1][$model->alias]['status'];
+		$status = $result[0][$model->alias]['status'];
 
 		// 承認ONでもOFFでも、公開中の記事を編集して、公開だったら、公開の編集
 		// ・承認ONで、承認者が公開中の記事を編集しても、公開許可ありの編集で、メール送らない
