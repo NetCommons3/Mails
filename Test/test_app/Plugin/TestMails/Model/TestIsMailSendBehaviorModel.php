@@ -20,13 +20,6 @@ App::uses('AppModel', 'Model');
 class TestIsMailSendBehaviorModel extends AppModel {
 
 /**
- * テーブル名
- *
- * @var mixed
- */
-	public $useTable = false;
-
-/**
  * 使用ビヘイビア
  *
  * @var array
