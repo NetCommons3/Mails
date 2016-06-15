@@ -28,6 +28,10 @@ class TestIsMailSendBehaviorModel extends AppModel {
 		'Mails.IsMailSend' => array(
 			'publishablePermissionKey' => 'content_publishable',
 			'keyField' => 'key',
+			'reminder' => array(
+				'sendTimes' => null,
+				'useReminder' => 0,
+			),
 		)
 	);
 
