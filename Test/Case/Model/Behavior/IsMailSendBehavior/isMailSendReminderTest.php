@@ -172,7 +172,6 @@ class IsMailSendBehaviorIsMailSendReminderTest extends NetCommonsModelTestCase {
 
 		//テスト実施
 		/** @see IsMailSendBehavior::isMailSendReminder() */
-		//$result = $this->TestModel->isMailSendReminder($typeKey, $contentKey, $settingPluginKey);
 		$result = $this->TestModel->isMailSendReminder($typeKey, $settingPluginKey);
 
 		//チェック
