@@ -1,6 +1,6 @@
 <?php
 /**
- * MailSendShell::send()のテスト
+ * MailSendShell::send()のmailQueue空テスト
  *
  * @author Noriko Arai <arai@nii.ac.jp>
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
@@ -12,12 +12,12 @@
 App::uses('NetCommonsConsoleTestCase', 'NetCommons.TestSuite');
 
 /**
- * MailSendShell::send()のテスト
+ * MailSendShell::send()のmailQueue空テスト
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Test\Case\Console\Command\MailSendShell
  */
-class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase {
+class MailsConsoleCommandMailSendShellSend2Test extends NetCommonsConsoleTestCase {
 
 /**
  * Fixtures
@@ -60,46 +60,27 @@ class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase
 		SiteSettingUtil::write('Mail.transport', 'Debug', 0);
 
 		$this->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
-		$this->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
 	}
 
 /**
- * send()のテスト
+ * send()のmailQueue空テスト
  *
  * @return void
  */
-	public function testSend() {
+	public function testSendMailQueueEmpty() {
+		//mailQueue削除
+		$conditions = array(
+			'content_key' => ['content_1', 'content_2']
+		);
+		$this->MailQueue->deleteAll($conditions);
+
 		$shell = $this->_shellName;
 		$this->$shell = $this->loadShell($shell);
 		SiteSettingUtil::write('Mail.from', 'dummy@test.com', 0);
 
-		//テスト実施
-		$this->$shell->send();
-
-		//チェック
-		$mailQueueCnt = $this->MailQueue->find('count');
-		$mailQueueUserCnt = $this->MailQueueUser->find('count');
-		//		debug($mailQueueCnt);
-		//		debug($mailQueueUserCnt);
-		$this->assertEquals(0, $mailQueueCnt);
-		$this->assertEquals(0, $mailQueueUserCnt);
-	}
-
-/**
- * send()のFrom空テスト
- *
- * @return void
- */
-	public function testSendFromEmpty() {
-		$shell = $this->_shellName;
-		$this->$shell = $this->loadShell($shell);
-
-		// From空
-		SiteSettingUtil::write('Mail.from', '', 0);
-
 		//チェック
 		$this->$shell->expects($this->at(0))->method('out')
-			->with('<error>From Address is empty. [MailSendShell::send]</error>');
+			->with('MailQueue is empty. [MailSendShell::send] ');
 
 		//テスト実施
 		$this->$shell->send();

@@ -67,6 +67,8 @@ class MailSendShell extends AppShell {
 				$this->SiteSetting->getSiteSettingForEdit(array('key' => 'Mail.use_cron'));
 			$data['SiteSetting']['Mail.use_cron'][0]['value'] = 1;
 			$this->SiteSetting->saveSiteSetting($data);
+
+			SiteSettingUtil::write('Mail.use_cron', 1, 0);
 		}
 
 		// メール送信
@@ -94,12 +96,9 @@ class MailSendShell extends AppShell {
 			'AND MailQueue.send_time <= ? ' .
 			'FOR UPDATE ';
 		$mailQueues = $this->MailQueue->query($sql, array($now));
-
 		if (empty($mailQueues)) {
-			//CakeLog::debug("MailQueue is empty. [" . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return;
-			//			$this->out('MailQueue is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			//exit;
+			$this->out('MailQueue is empty. [' . __METHOD__ . '] ');
+			return $this->_stop();
 		}
 
 		// SiteSettingからメール設定を取得する
@@ -118,10 +117,8 @@ class MailSendShell extends AppShell {
 
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
-			LogError('From Address is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-			return;
-			//			$this->out('<error>From Address is empty. [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')</error>');
-			//			exit;
+			$this->out('<error>From Address is empty. [' . __METHOD__ . ']</error>');
+			return $this->_stop();
 		}
 
 		$beforeId = $mailQueues[0]['MailQueue']['id'];
@@ -135,17 +132,7 @@ class MailSendShell extends AppShell {
 			$mail = new NetCommonsMail();
 			$mail->initShell($mailQueue);
 
-			if ($isDebug) {
-				//送信しない（デバッグ用）
-				$config = $mail->config();
-				$config['transport'] = 'Debug';
-				$mail->config($config);
-				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-				//$messages = $mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-				//CakeLog::debug(print_r($messages, true));
-			} else {
-				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-			}
+			$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
 
 			// 送信後にMailQueueUser削除
 			$this->__delete($this->MailQueueUser, $mailQueue['MailQueueUser']['id'], $isDebug);

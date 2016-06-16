@@ -117,6 +117,19 @@ class MailQueueUserFixture extends CakeTestFixture {
 			'send_room_permission' => null,
 			'not_send_room_user_ids' => null,
 		),
+		// mail_queue_id=2
+		array(
+			'id' => 6,
+			'plugin_key' => 'Lorem ipsum dolor sit amet',
+			'block_key' => 'block_999',
+			'content_key' => 'content_2',
+			'mail_queue_id' => 2,
+			'user_id' => null,
+			'room_id' => null,
+			'to_address' => 'to@dummp.com',
+			'send_room_permission' => null,
+			'not_send_room_user_ids' => null,
+		),
 	);
 
 }

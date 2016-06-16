@@ -51,42 +51,12 @@ class MailsConsoleCommandMailSendShellMainTest extends NetCommonsConsoleTestCase
 		$shell = $this->_shellName;
 		$this->$shell = $this->loadShell($shell);
 
-		//チェック
-		//		$this->$shell->expects($this->at(0))->method('out')
-		//			->with('ここに出力内容を書く');
-
 		//テスト実施
 		$this->$shell->main();
+
+		//チェック
+		$useCron = SiteSettingUtil::read('Mail.use_cron', false);
+		//debug($useCron);
+		$this->assertEquals(1, $useCron);
 	}
-
-/**
- * Mockのロード処理
- *
- * @param string $shell ロードするShell名(PluginName.ShellName)
- * @param string $stdinValue 標準入力値
- * @param array $methods メソッド
- * @param bool $construct コンストラクタの有無
- * @return Mock Mockオブジェクト
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- */
-	protected function _loadMock($shell, $stdinValue = '', $methods = array(), $construct = true) {
-		//		$stdout = $this->getMock('ConsoleOutput', array(), array(), '', false);
-		//		$stderr = $this->getMock('ConsoleOutput', array(), array(), '', false);
-		if ($stdinValue) {
-			$file = fopen(TMP . 'tests' . DS . 'test_stdin', 'w');
-			fwrite($file, $stdinValue);
-			fclose($file);
-			$stdin = new ConsoleInput(TMP . 'tests' . DS . 'test_stdin');
-		} else {
-			$stdin = $this->getMock('ConsoleInput', array(), array(), '', false);
-			$methods += array('in');
-		}
-
-		return $this->getMock($shell,
-			Hash::merge(array('out', 'hr', 'err', 'createFile', '_stop'), $methods),
-			//array($stdout, $stderr, $stdin), '', $construct
-			array(), '', $construct
-		);
-	}
-
 }

@@ -131,9 +131,13 @@ class NetCommonsMail extends CakeEmail {
 				$config['password'] = $smtpPass;
 			}
 
-			// phpmail
 		} elseif ($transport == SiteSetting::MAIL_TRANSPORT_PHPMAIL) {
+			// phpmail
 			$config['transport'] = 'Mail';
+
+		} elseif ($transport == 'Debug') {
+			// テスト用
+			$config['transport'] = 'Debug';
 		}
 
 		parent::config($config);
