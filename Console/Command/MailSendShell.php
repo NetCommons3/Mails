@@ -81,9 +81,29 @@ class MailSendShell extends AppShell {
  * @return void
  */
 	public function send() {
+		// SiteSettingからメール設定を取得する
+		SiteSettingUtil::setup(array(
+			'Mail.from',
+			'Mail.from_name',
+			'Mail.messageType',
+			'Mail.transport',
+			'Mail.smtp.host',
+			'Mail.smtp.port',
+			'Mail.smtp.user',
+			'Mail.smtp.pass',
+			'App.site_name',
+		));
+		$from = SiteSettingUtil::read('Mail.from');
+
+		// Fromが空ならメール未設定のため、メール送らない
+		if (empty($from)) {
+			$this->out('<error>From Address is empty. [' . __METHOD__ . ']</error>');
+			return $this->_stop();
+		}
+
 		$now = NetCommonsTime::getNowDatetime();
 
-		// キュー取得 - 行ロック
+		// キュー取得
 		// http://k-1blog.com/development/program/post-7407/
 		// http://d.hatena.ne.jp/fat47/20140212/1392171784
 		// 制約がないカラムを指定して、SELECT FOR UPDATEを実行すると、レコード全体にロックがかかるので注意
@@ -116,26 +136,6 @@ class MailSendShell extends AppShell {
 			'FOR UPDATE ';
 		$sql = sprintf($sql, $inClause);
 		$this->MailQueueUser->query($sql, $mailQueueUserIds);
-
-		// SiteSettingからメール設定を取得する
-		SiteSettingUtil::setup(array(
-			'Mail.from',
-			'Mail.from_name',
-			'Mail.messageType',
-			'Mail.transport',
-			'Mail.smtp.host',
-			'Mail.smtp.port',
-			'Mail.smtp.user',
-			'Mail.smtp.pass',
-			'App.site_name',
-		));
-		$from = SiteSettingUtil::read('Mail.from');
-
-		// Fromが空ならメール未設定のため、メール送らない
-		if (empty($from)) {
-			$this->out('<error>From Address is empty. [' . __METHOD__ . ']</error>');
-			return $this->_stop();
-		}
 
 		$beforeId = $mailQueues[0]['MailQueue']['id'];
 
