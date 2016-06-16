@@ -24,8 +24,52 @@ class MailsConsoleCommandMailSendShellSend2Test extends NetCommonsConsoleTestCas
  *
  * @var array
  */
+	protected $_defaultFixtures = array(
+		'plugin.blocks.block',
+		'plugin.blocks.block_role_permission',
+		'plugin.boxes.box',
+		'plugin.boxes.boxes_page',
+		'plugin.containers.container',
+		'plugin.containers.containers_page',
+		'plugin.data_types.data_type',
+		'plugin.data_types.data_type_choice',
+		'plugin.files.upload_file',
+		'plugin.files.upload_files_content',
+		'plugin.frames.frame',
+		'plugin.m17n.language',
+		//'plugin.mails.mail_queue',
+		//'plugin.mails.mail_queue_user',
+		'plugin.mails.mail_setting',
+		'plugin.pages.page',
+		'plugin.plugin_manager.plugin',
+		//'plugin.plugin_manager.plugins_role',
+		//'plugin.roles.default_role_permission',
+		'plugin.roles.role',
+		'plugin.rooms.roles_room',
+		'plugin.rooms.roles_rooms_user',
+		'plugin.rooms.room',
+		'plugin.rooms.rooms_language',
+		//'plugin.rooms.room_role',
+		//'plugin.rooms.room_role_permission',
+		'plugin.rooms.space',
+		'plugin.topics.topic',
+		'plugin.topics.topic_readable',
+		'plugin.topics.topic_user_status',
+		'plugin.user_attributes.user_attribute',
+		'plugin.user_attributes.user_attribute_choice',
+		'plugin.user_attributes.user_attribute_setting',
+		'plugin.user_roles.user_attributes_role',
+		'plugin.users.user',
+		'plugin.users.users_language',
+	);
+
+/**
+ * Fixtures
+ *
+ * @var array
+ */
 	public $fixtures = array(
-		'plugin.mails.mail_queue',
+		'plugin.mails.mail_queue_empty',
 		'plugin.mails.mail_queue_user',
 		'plugin.mails.site_setting_for_mail',
 		//'plugin.site_manager.site_setting',
@@ -68,12 +112,6 @@ class MailsConsoleCommandMailSendShellSend2Test extends NetCommonsConsoleTestCas
  * @return void
  */
 	public function testSendMailQueueEmpty() {
-		//mailQueue削除
-		$conditions = array(
-			'content_key' => ['content_1', 'content_2']
-		);
-		$this->MailQueue->deleteAll($conditions);
-
 		$shell = $this->_shellName;
 		$this->$shell = $this->loadShell($shell);
 		SiteSettingUtil::write('Mail.from', 'dummy@test.com', 0);
