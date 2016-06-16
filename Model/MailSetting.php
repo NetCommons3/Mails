@@ -255,6 +255,9 @@ class MailSetting extends MailsAppModel {
 				$this->Behaviors->unload('Mails.MailQueueDelete');
 			}
 
+			$data = Hash::insert($data,
+				'MailSettingFixedPhrase.{n}.MailSettingFixedPhrase.mail_setting_id', $this->id);
+
 			// 複数レコード保存
 			if (! $mailFixedPhrase = $this->MailSettingFixedPhrase->saveMany($data['MailSettingFixedPhrase'],
 					array('validate' => false))) {
