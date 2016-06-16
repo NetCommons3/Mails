@@ -25,8 +25,6 @@ class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase
  * @var array
  */
 	public $fixtures = array(
-		'plugin.mails.mail_queue',
-		'plugin.mails.mail_queue_user',
 		'plugin.mails.site_setting_for_mail',
 		//'plugin.site_manager.site_setting',
 		'plugin.rooms.default_role_permission4test',
