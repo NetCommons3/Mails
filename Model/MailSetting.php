@@ -36,7 +36,6 @@ class MailSetting extends MailsAppModel {
  */
 	public $actsAs = array(
 		'Blocks.BlockRolePermission',
-		'Mails.MailQueueDelete',
 	);
 
 /**
