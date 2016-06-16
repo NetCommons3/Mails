@@ -81,25 +81,41 @@ class MailSendShell extends AppShell {
  * @return void
  */
 	public function send() {
-		$isDebug = Hash::get($this->args, 0);
-		//$isDebug = 1;
 		$now = NetCommonsTime::getNowDatetime();
 
 		// キュー取得 - 行ロック
 		// http://k-1blog.com/development/program/post-7407/
 		// http://d.hatena.ne.jp/fat47/20140212/1392171784
+		// 制約がないカラムを指定して、SELECT FOR UPDATEを実行すると、レコード全体にロックがかかるので注意
 		$sql = 'SELECT * FROM ' .
 			'mail_queues MailQueue, ' .
 			'mail_queue_users MailQueueUser ' .
 			'WHERE ' .
 			'MailQueue.id = MailQueueUser.mail_queue_id ' .
-			'AND MailQueue.send_time <= ? ' .
-			'FOR UPDATE ';
+			'AND MailQueue.send_time <= ? ';
+			//'FOR UPDATE ';
 		$mailQueues = $this->MailQueue->query($sql, array($now));
 		if (empty($mailQueues)) {
 			$this->out('MailQueue is empty. [' . __METHOD__ . '] ');
 			return $this->_stop();
 		}
+
+		// プライマリーキーで行ロック
+		$mailQueueIds = Hash::extract($mailQueues, '{n}.MailQueue.id');
+		$mailQueueIds = array_values(array_unique($mailQueueIds));
+		$inClause = substr(str_repeat(',?', count($mailQueueIds)), 1);
+		$sql = 'SELECT * FROM mail_queues MailQueue WHERE MailQueue.id in (%s) ' .
+			'FOR UPDATE ';
+		$sql = sprintf($sql, $inClause);
+		$this->MailQueue->query($sql, $mailQueueIds);
+
+		$mailQueueUserIds = Hash::extract($mailQueues, '{n}.MailQueueUser.id');
+		$mailQueueUserIds = array_values(array_unique($mailQueueUserIds));
+		$inClause = substr(str_repeat(',?', count($mailQueueUserIds)), 1);
+		$sql = 'SELECT * FROM mail_queue_users MailQueueUser WHERE MailQueueUser.id in (%s) ' .
+			'FOR UPDATE ';
+		$sql = sprintf($sql, $inClause);
+		$this->MailQueueUser->query($sql, $mailQueueUserIds);
 
 		// SiteSettingからメール設定を取得する
 		SiteSettingUtil::setup(array(
@@ -126,7 +142,7 @@ class MailSendShell extends AppShell {
 		foreach ($mailQueues as $mailQueue) {
 			// idが変わったら、MailQueue削除
 			if ($beforeId != $mailQueue['MailQueue']['id']) {
-				$this->__delete($this->MailQueue, $beforeId, $isDebug);
+				$this->MailQueue->delete($beforeId);
 			}
 
 			$mail = new NetCommonsMail();
@@ -135,26 +151,11 @@ class MailSendShell extends AppShell {
 			$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
 
 			// 送信後にMailQueueUser削除
-			$this->__delete($this->MailQueueUser, $mailQueue['MailQueueUser']['id'], $isDebug);
+			$this->MailQueueUser->delete($mailQueue['MailQueueUser']['id']);
 			$beforeId = $mailQueue['MailQueue']['id'];
 		}
 
 		// 後始末 - MailQueue削除
-		$this->__delete($this->MailQueue, $beforeId, $isDebug);
-	}
-
-/**
- * 削除
- *
- * @param Model $model モデル
- * @param int $id ID
- * @param int $isDebug デバッグONフラグ
- * @return void
- */
-	private function __delete($model, $id, $isDebug) {
-		if ($isDebug) {
-			return;
-		}
-		$model->delete($id);
+		$this->MailQueue->delete($beforeId);
 	}
 }
