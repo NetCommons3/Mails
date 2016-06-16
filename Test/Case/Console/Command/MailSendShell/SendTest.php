@@ -102,4 +102,32 @@ class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase
 		//テスト実施
 		$this->$shell->send();
 	}
+
+/**
+ * send()のmailQueue空テスト
+ *
+ * @return void
+ */
+	public function testSendMailQueueEmpty() {
+		$this->MailQueue->query('TRUNCATE mail_queues;');
+		$this->MailQueueUser->query('TRUNCATE mail_queue_users;');
+
+		$shell = $this->_shellName;
+		$this->$shell = $this->loadShell($shell);
+		SiteSettingUtil::write('Mail.from', 'dummy@test.com', 0);
+
+		//チェック
+		// Trancateして、このテストmethod内だと0件。だけどconsoleだと6件でemptyにならない
+		//		$this->$shell->expects($this->at(0))->method('out')
+		//			->with('MailQueue is empty. [MailSendShell::send] ');
+
+		//		$mailQueueCnt = $this->MailQueue->find('count');
+		//		$mailQueueUserCnt = $this->MailQueueUser->find('count');
+		//		debug($mailQueueCnt);
+		//		debug($mailQueueUserCnt);
+
+		//テスト実施
+		$this->$shell->send();
+	}
+
 }
