@@ -51,6 +51,13 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 		parent::setUp();
 
 		//テストデータ生成
+		// travis-ci上での Undefined index: type エラー対応
+		//		/home/travis/build/NetCommons3/NetCommons3/app/Plugin/NetCommons/Utility/Current.php:512
+		//		/home/travis/build/NetCommons3/NetCommons3/app/Plugin/NetCommons/Utility/NetCommonsUrl.php:35
+		//		/home/travis/build/NetCommons3/NetCommons3/app/Plugin/NetCommons/View/Helper/ButtonHelper.php:231
+		//		/home/travis/build/NetCommons3/NetCommons3/app/Plugin/Mails/View/Elements/edit_form.ctp:121
+		Current::write('Plugin.type', '');
+
 		$roomId = 1;
 		$blockKey = null;
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
