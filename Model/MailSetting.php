@@ -246,9 +246,13 @@ class MailSetting extends MailsAppModel {
 			// メール設定変更時「通知しない」なら、メールキュー削除
 			// idあり(=編集) & 通知しない
 			if (isset($data[$this->alias]['id']) && !$data[$this->alias]['is_mail_send']) {
+				$this->Behaviors->load('Mails.MailQueueDelete');
+
 				$blockKey = Current::read('Block.key');
 				/** @see MailQueueDeleteBehavior::deleteQueue() */
 				$this->deleteQueue($blockKey, 'block_key');
+
+				$this->Behaviors->unload('Mails.MailQueueDelete');
 			}
 
 			// 複数レコード保存
