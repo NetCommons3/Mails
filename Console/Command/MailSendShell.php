@@ -106,36 +106,19 @@ class MailSendShell extends AppShell {
 		// キュー取得
 		// http://k-1blog.com/development/program/post-7407/
 		// http://d.hatena.ne.jp/fat47/20140212/1392171784
-		// 制約がないカラムを指定して、SELECT FOR UPDATEを実行すると、レコード全体にロックがかかるので注意
+		// 下記SQL（テーブル結合＆範囲条件）でSELECT FOR UPDATEを実行すると、テーブルロック
 		$sql = 'SELECT * FROM ' .
 			'mail_queues MailQueue, ' .
 			'mail_queue_users MailQueueUser ' .
 			'WHERE ' .
 			'MailQueue.id = MailQueueUser.mail_queue_id ' .
-			'AND MailQueue.send_time <= ? ';
-			//'FOR UPDATE ';
+			'AND MailQueue.send_time <= ? ' .
+			'FOR UPDATE ';
 		$mailQueues = $this->MailQueue->query($sql, array($now));
 		if (empty($mailQueues)) {
 			$this->out('MailQueue is empty. [' . __METHOD__ . '] ');
 			return $this->_stop();
 		}
-
-		// プライマリーキーで行ロック
-		$mailQueueIds = Hash::extract($mailQueues, '{n}.MailQueue.id');
-		$mailQueueIds = array_values(array_unique($mailQueueIds));
-		$inClause = substr(str_repeat(',?', count($mailQueueIds)), 1);
-		$sql = 'SELECT * FROM mail_queues MailQueue WHERE MailQueue.id in (%s) ' .
-			'FOR UPDATE ';
-		$sql = sprintf($sql, $inClause);
-		$this->MailQueue->query($sql, $mailQueueIds);
-
-		$mailQueueUserIds = Hash::extract($mailQueues, '{n}.MailQueueUser.id');
-		$mailQueueUserIds = array_values(array_unique($mailQueueUserIds));
-		$inClause = substr(str_repeat(',?', count($mailQueueUserIds)), 1);
-		$sql = 'SELECT * FROM mail_queue_users MailQueueUser WHERE MailQueueUser.id in (%s) ' .
-			'FOR UPDATE ';
-		$sql = sprintf($sql, $inClause);
-		$this->MailQueueUser->query($sql, $mailQueueUserIds);
 
 		$beforeId = $mailQueues[0]['MailQueue']['id'];
 
