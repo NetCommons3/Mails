@@ -81,11 +81,13 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		//チェック
 		$mailQueue = $this->MailQueue->find('all', array(
 			'recursive' => -1,
-			'conditions' => array('plugin_key' => $pluginKey)
+			'conditions' => array('plugin_key' => $pluginKey),
+			'order' => array('modified DESC'),
 		));
 		$mailQueueUsers = $this->MailQueueUser->find('all', array(
 			'recursive' => -1,
-			'conditions' => array('plugin_key' => $pluginKey)
+			'conditions' => array('plugin_key' => $pluginKey),
+			'order' => array('modified DESC'),
 		));
 		//debug($mailQueue);
 		//debug($mailQueueUsers);
