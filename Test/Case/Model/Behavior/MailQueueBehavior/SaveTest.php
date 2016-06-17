@@ -12,6 +12,8 @@
 App::uses('NetCommonsModelTestCase', 'NetCommons.TestSuite');
 App::uses('TestMailQueueBehaviorSaveModelFixture', 'Mails.Test/Fixture');
 App::uses('NetCommonsTime', 'NetCommons.Utility');
+App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 
 /**
  * MailQueueBehavior::save()のテスト
@@ -72,9 +74,10 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
  *
  * @param array $data データ
  * @param string $pluginKey プラグインキー
+ * @param array $settings セッティング
  * @return void
  */
-	private function __saveSend($data, $pluginKey) {
+	private function __saveSend($data, $pluginKey, $settings = array()) {
 		//テスト実施
 		$this->TestModel->save($data, false);
 
@@ -89,6 +92,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			'conditions' => array('plugin_key' => $pluginKey),
 			'order' => array('id DESC'),
 		));
+		//debug($data);
 		//debug($mailQueue);
 		//debug($mailQueueUsers);
 
@@ -116,13 +120,18 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->assertTextContains($mailSignature['value'], $mailBody);
 		// 本文ヘッダー文
 		$this->assertTextContains($mailBodyHeader['value'], $mailBody);
-		// コンテンツの本文
-		$this->assertTextContains($data['TestMailQueueBehaviorSaveModel']['content'], $mailBody);
+
+		$workflowType = Hash::get($settings, 'workflowType');
+		// 回答タイプ以外チェック
+		if ($workflowType != MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
+			// コンテンツの本文
+			$this->assertTextContains($data['TestMailQueueBehaviorSaveModel']['content'], $mailBody);
+			// ブロック名
+			$this->assertTextContains(Current::read('Block.name'), $mailBody);
+		}
 
 		// コンテンツのタイトル
 		$this->assertTextContains($data['TestMailQueueBehaviorSaveModel']['title'], $mailBody);
-		// ブロック名
-		$this->assertTextContains(Current::read('Block.name'), $mailBody);
 		// プラグイン名
 		$this->assertTextContains(Current::read('Plugin.name'), $mailBody);
 		// 埋め込みタグが、消えている事
@@ -153,29 +162,28 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 /**
  * ルーム配信
  *
+ * @param int $fixtureIndex フィクスチャーのインデックス
  * @param string $pluginKey プラグインキー
+ * @param array $settings セッティング
  * @return void
  */
-	private function __saveSendRoom($pluginKey = null) {
+	private function __saveSendRoom($fixtureIndex = 1, $pluginKey = null, $settings = array()) {
 		if (is_null($pluginKey)) {
 			$pluginKey = Current::read('Plugin.key');
 		}
 
 		//準備1
-		// 管理者(created_user=1)で登録
-		$dataAdmin = array(
+		// records[1] 管理者(created_user=1)で登録
+		// records[2] 一般(created_user=4)で登録
+		// records[3] 一般の限定公開(created_user=4)で登録
+		// records[4] 一般(created_user=4)で status=2 承認待ち
+		$data = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
-				->records[1],
-		);
-		// 一般(created_user=4)で登録
-		$dataGeneral = array(
-			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
-				->records[2],
+				->records[$fixtureIndex],
 		);
 
 		//テスト実施
-		$this->__saveSend($dataAdmin, $pluginKey);
-		$this->__saveSend($dataGeneral, $pluginKey);
+		$this->__saveSend($data, $pluginKey, $settings);
 	}
 
 /**
@@ -220,15 +228,17 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		//テスト実施
 		$this->__saveSend($dataGeneral, $pluginKey);
 
-		// 承認完了なので２通（承認完了メール、ルーム配信メール）あること
+		// 準備1で1通
+		// 承認完了なので２通（承認完了メール、ルーム配信メール）
+		// 計３通
 		$mailQueue = $this->MailQueue->find('all', array(
 			'recursive' => -1,
 			'conditions' => array('plugin_key' => $pluginKey)
 		));
 
 		// チェック
-		//debug($results);
-		$this->assertCount(2, $mailQueue);
+		//debug($mailQueue);
+		$this->assertCount(3, $mailQueue);
 	}
 
 /**
@@ -254,8 +264,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$SiteSetting->saveSiteSetting($data);
 
 		// 未来日
-		// 公開日フィールドをテストの時だけ、modifiedを流用
-		$this->TestModel->setSetting('publishStartField', 'modified');
+		$this->TestModel->setSetting('publishStartField', 'publish_start');
 
 		//テスト実施
 		$this->__saveSend($dataGeneral, $pluginKey);
@@ -284,20 +293,36 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()のテスト - 承認機能なしで配信 & created_userと同じIDがセットされてても、同じメールを２通送らない & テキストメール
+ * save()のテスト
+ *   - 承認機能なしで配信
+ *   - created_userと同じIDがセットされてても、同じメールを２通送らない
+ *   - テキストメール
+ *   - created_userと同じIDがセットされてても、同じメールを２通送らない & テキストメール
  *
  * @return void
  */
 	public function testSaveSendNoneWorkflow() {
 		//準備
-		/** @see MailQueueBehavior::setSetting() */
-		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
-			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE);
+		$settings = array(
+			'embedTags' => array(
+				'X-SUBJECT' => 'TestMailQueueBehaviorSaveModel.title',
+				'X-BODY' => 'TestMailQueueBehaviorSaveModel.content',
+			),
+			'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE,
+		);
+		// ビヘイビアのsetting設定は一番初めにやる。ビヘイビアのほかのmethod使ったら、その時点でsetupが動くため
+		$this->TestModel->Behaviors->unload('Mails.MailQueue');
+		$this->TestModel->Behaviors->load('Mails.MailQueue', $settings);
+		//$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
+		//	MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_NONE);
+
+		//$this->TestModel->Behaviors->unload('Workflow.Workflow');
 
 		// 追加で配信するユーザID セット（created_userと同じIDがセットされてても、同じメールを２通送らない事を確認）
 		$userIds = array(
 			1,
 		);
+		/** @see MailQueueBehavior::setSetting() */
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
 
 		// textメール
@@ -308,7 +333,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$SiteSetting->saveSiteSetting($data);
 
 		//テスト実施
-		$this->__saveSendRoom();
+		$this->__saveSendRoom(1);
+		$this->__saveSendRoom(3);
 
 		// --- チェック
 		// 追加で配信するユーザID
@@ -320,7 +346,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			)
 		));
 		//debug($results);
-		$this->assertCount(1, $results);
+		$this->assertCount(2, $results);
 
 		// ルーム配信で追加で配信するユーザIDは、送らない設定になっている
 		$results = $this->MailQueueUser->find('all', array(
@@ -328,7 +354,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			'conditions' => array(
 				'plugin_key' => Current::read('Plugin.key'),
 				'room_id' => Current::read('Room.id'),
-			)
+			),
+			'order' => array('id DESC'),
 		));
 		//debug($results);
 		$this->assertEquals('1|4', $results[0]['MailQueueUser']['not_send_room_user_ids']);
@@ -350,7 +377,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSendTimeReminder($sendTimeReminders);
 
 		//テスト実施
-		$this->__saveSendRoom();
+		$this->__saveSendRoom(1);
+		$this->__saveSendRoom(2);
 
 		// チェック
 		$results = $this->MailQueue->find('all', array(
@@ -361,18 +389,22 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			)
 		));
 		//debug($results);
-		$this->assertCount(2, $results);
+		$this->assertCount(4, $results);
+		$mailQueueIds = Hash::extract($results, '{n}.MailQueue.id');
 
-		// リマインダーは、ルーム配信で登録者にも再送するので、送らない設定は、されてない
+		// リマインダーは、ルーム配信で登録者にも再送するので、送らない設定（not_send_room_user_ids）は空
 		$results = $this->MailQueueUser->find('all', array(
 			'recursive' => -1,
 			'conditions' => array(
-				'plugin_key' => Current::read('Plugin.key'),
-				'room_id' => Current::read('Room.id'),
-			)
+				//'plugin_key' => Current::read('Plugin.key'),
+				//'room_id' => Current::read('Room.id'),
+				'mail_queue_id' => $mailQueueIds,
+			),
 		));
 		//debug($results);
-		$this->assertEmpty($results[0]['MailQueueUser']['not_send_room_user_ids']);
+		foreach ($results as $result) {
+			$this->assertEmpty($result['MailQueueUser']['not_send_room_user_ids']);
+		}
 	}
 
 /**
@@ -382,19 +414,29 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
  */
 	public function testSaveSendAnswer() {
 		//準備
-		/** @see MailQueueBehavior::setSetting() */
-		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_WORKFLOW_TYPE,
-			MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER);
+		$settings = array(
+			'embedTags' => array(
+				'X-SUBJECT' => 'TestMailQueueBehaviorSaveModel.title',
+				'X-BODY' => 'TestMailQueueBehaviorSaveModel.content',
+			),
+			'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
+		);
+		// ビヘイビアのsetting設定は一番初めにやる。ビヘイビアのほかのmethod使ったら、その時点でsetupが動くため
+		$this->TestModel->Behaviors->unload('Mails.MailQueue');
+		$this->TestModel->Behaviors->load('Mails.MailQueue', $settings);
+		//$this->TestModel->setSetting('typeKey', MailSettingFixedPhrase::ANSWER_TYPE);
 
 		// メールアドレス セット
 		$toAddresses = array(
 			'test1@example.com',
 			'test2@example.com',
 		);
+		/** @see MailQueueBehavior::setSetting() */
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_TO_ADDRESSES, $toAddresses);
 
 		//テスト実施
-		$this->__saveSendRoom();
+		$this->__saveSendRoom(1, null, $settings);
+		$this->__saveSendRoom(2, null, $settings);
 
 		// チェック
 		$results = $this->MailQueueUser->find('all', array(
@@ -405,11 +447,11 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			)
 		));
 		//debug($results);
-		$this->assertCount(2, $results);
+		$this->assertCount(4, $results);
 	}
 
 /**
- * save()のテスト - グループ配信
+ * save()のテスト - グループ配信、送らない指定
  *
  * @return void
  */
@@ -427,7 +469,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_USER_IDS, $userIds);
 
 		//テスト実施
-		$this->__saveSendRoom();
+		$this->__saveSendRoom(1);
+		$this->__saveSendRoom(2);
 
 		// チェック
 		$results = $this->MailQueueUser->find('all', array(
@@ -438,7 +481,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			)
 		));
 		//debug($results);
-		$this->assertCount(2, $results);
+		$this->assertCount(4, $results);
 	}
 
 /**
@@ -460,7 +503,8 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		$this->TestModel->setSetting('publishablePermissionKey', 'content_comment_publishable');
 
 		//テスト実施
-		$this->__saveSendRoom($pluginKey);
+		$this->__saveSendRoom(1, $pluginKey);
+		$this->__saveSendRoom(4, $pluginKey);
 	}
 
 /**
@@ -490,11 +534,11 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 	}
 
 /**
- * save()の例外テスト - MailQueue::saveMailQueue() で Plugin.key=nullでvalidateエラーのため発生
+ * save()の__saveQueueNoticeMail例外テスト - MailQueue::saveMailQueue() で Plugin.key=nullでvalidateエラーのため発生
  *
  * @return void
  */
-	public function testSaveException() {
+	public function testSaveQueueNoticeMailException() {
 		$this->setExpectedException('InternalErrorException');
 
 		$this->TestModel->setSetting('pluginKey', null);
@@ -502,7 +546,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		//テストデータ
 		$data = array(
 			'TestMailQueueBehaviorSaveModel' => (new TestMailQueueBehaviorSaveModelFixture())
-				->records[1],
+				->records[4],
 		);
 
 		//テスト実施

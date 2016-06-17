@@ -34,6 +34,9 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 		'title' => array('type' => 'string', 'null' => false, 'default' => null,
 			'collate' => 'utf8mb4_general_ci', 'comment' => 'メール送信の件名で利用', 'charset' => 'utf8mb4'),
 		'content' => array('type' => 'text', 'null' => true, 'default' => null, 'collate' => 'utf8mb4_general_ci', 'comment' => '', 'charset' => 'utf8mb4'),
+		'public_type' => array('type' => 'integer', 'null' => false, 'default' => '2', 'length' => 4, 'unsigned' => false),
+		'publish_start' => array('type' => 'datetime', 'null' => true, 'default' => null),
+		'publish_end' => array('type' => 'datetime', 'null' => true, 'default' => null),
 		'created_user' => array('type' => 'integer', 'null' => true, 'default' => '0', 'unsigned' => false, 'comment' => ''),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => null, 'comment' => ''),
 		'modified_user' => array('type' => 'integer', 'null' => true, 'default' => '0', 'unsigned' => false, 'comment' => ''),
@@ -60,6 +63,9 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
 			'title' => 'Lorem ipsum.',
 			'content' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+			'public_type' => '1',
+			'publish_start' => null,
+			'publish_end' => null,
 			'created_user' => '1',
 			'created' => '2016-03-29 10:39:13',
 			'modified_user' => '1',
@@ -68,13 +74,16 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 		array(
 			'id' => '2',
 			'language_id' => '2',
-			'key' => 'publish_key',
+			'key' => 'publish_key2',
 			'status' => '1',
 			'is_active' => true,
 			'is_latest' => true,
 			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
 			'title' => '件名2',
 			'content' => "本文１\r\n本文２\r\n本文３\r\nシステム管理者投稿",
+			'public_type' => '1',
+			'publish_start' => null,
+			'publish_end' => null,
 			'created_user' => '1',
 			'created' => '2016-03-29 10:39:13',
 			'modified_user' => '1',
@@ -83,17 +92,58 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 		array(
 			'id' => '3',
 			'language_id' => '2',
-			'key' => 'publish_key',
+			'key' => 'publish_key3',
 			'status' => '1',
 			'is_active' => true,
 			'is_latest' => true,
 			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
 			'title' => '件名3',
 			'content' => "本文１\r\n本文２\r\n本文３\r\n一般投稿",
+			'public_type' => '1',
+			'publish_start' => '2026-12-29 10:00:00', // 未来日として利用
+			'publish_end' => null,
 			'created_user' => '4',
 			'created' => '2016-03-29 10:39:13',
 			'modified_user' => '4',
-			'modified' => '2026-12-29 10:00:00',	//テストの時だけ公開日として流用
+			'modified' => '2016-03-29 10:39:13',
+		),
+		// public_type=2 一般の限定公開
+		array(
+			'id' => '4',
+			'language_id' => '2',
+			'key' => 'publish_key4',
+			'status' => '1',
+			'is_active' => true,
+			'is_latest' => true,
+			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
+			'title' => '件名4',
+			'content' => "本文１\r\n本文２\r\n本文３\r\n一般の限定公開",
+			'public_type' => '2',
+			'publish_start' => '2016-03-17 07:10:12',
+			'publish_end' => '2026-03-17 07:10:12',
+			'created_user' => '4',
+			'created' => '2016-03-29 10:39:13',
+			'modified_user' => '4',
+			'modified' => '2016-03-29 10:39:13',
+		),
+		// status=2 承認待ち
+		array(
+			'id' => '5',
+			'language_id' => '2',
+			'key' => 'publish_key5',
+			'status' => '2',
+			'is_active' => true,
+			'is_latest' => true,
+			'plugin_key' => 'dummy',	// コンテンツコメント送信のみ利用. これを基にMailSettingを取得
+			'title' => '件名5',
+			'content' => "本文１\r\n本文２\r\n本文３\r\n一般の承認待ち",
+			'public_type' => '1',
+			'publish_start' => null,
+			'publish_end' => null,
+			'created_user' => '4',
+			'created' => '2016-03-29 10:39:13',
+			'modified_user' => '4',
+			'modified' => '2016-03-29 10:39:13',
 		),
 	);
 
