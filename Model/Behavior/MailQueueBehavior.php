@@ -157,16 +157,21 @@ class MailQueueBehavior extends ModelBehavior {
  * @link http://book.cakephp.org/2.0/ja/models/behaviors.html#ModelBehavior::afterSave
  */
 	public function afterSave(Model $model, $created, $options = array()) {
-		$model->Behaviors->load('Mails.MailQueueDelete', $this->settings[$model->alias]);
 		$contentKey = $this->__getContentKey($model);
+		$workflowType = Hash::get($this->settings, $model->alias . '.' .
+			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 
-		// 未来日系の送信日時更新を考慮して delete->insert
-		/** @see MailQueueDeleteBehavior::deleteQueue() */
-		$model->deleteQueue($contentKey);
-		// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
-		// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
-		// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
-		$model->Behaviors->disable('Mails.MailQueueDelete');
+		if ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// 未来日系の送信日時更新を考慮して delete->insert
+			// コンテンツコメントは、同じ動画に複数コメントしてもコンテンツキー同じで消されると困る＆未来日系ありえないため、除外
+			$model->Behaviors->load('Mails.MailQueueDelete', $this->settings[$model->alias]);
+			/** @see MailQueueDeleteBehavior::deleteQueue() */
+			$model->deleteQueue($contentKey);
+			// MailQueueDeleteBehaviorはunloadしない。モデル側のactAsで既に、MailQueueDeleteBehavior を読み込んでいる場合、下記エラーが出るため。
+			// Notice (8): Undefined index: MailQueueDelete [CORE/Cake/Utility/ObjectCollection.php, line 128]
+			// Warning (2): call_user_func_array() expects parameter 1 to be a valid callback, first array member is not a valid class name or object [CORE/Cake/Utility/ObjectCollection.php, line 128]
+			$model->Behaviors->disable('Mails.MailQueueDelete');
+		}
 
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 		$typeKey = $this->settings[$model->alias]['typeKey'];
