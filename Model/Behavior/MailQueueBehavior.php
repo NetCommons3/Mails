@@ -161,9 +161,11 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.' .
 			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 
-		if ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+		if ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT ||
+			$workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
 			// 未来日系の送信日時更新を考慮して delete->insert
 			// コンテンツコメントは、同じ動画に複数コメントしてもコンテンツキー同じで消されると困る＆未来日系ありえないため、除外
+			// 回答も未来日系ありえないため、除外
 			$model->Behaviors->load('Mails.MailQueueDelete', $this->settings[$model->alias]);
 			/** @see MailQueueDeleteBehavior::deleteQueue() */
 			$model->deleteQueue($contentKey);
@@ -456,6 +458,8 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function saveQueue(Model $model, $sendTimes = null,
 								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
+
 		$languageId = Current::read('Language.id');
 		$workflowType = Hash::get($this->settings, $model->alias . '.' .
 			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
@@ -517,6 +521,7 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null,
 										$toAddresses = null, $roomId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 		if ($sendTimes === null) {
 			$sendTimes[] = $this->__getSaveSendTime();
 		}
