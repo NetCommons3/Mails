@@ -161,8 +161,11 @@ class MailQueueBehavior extends ModelBehavior {
 		$workflowType = Hash::get($this->settings, $model->alias . '.' .
 			self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE);
 
-		if ($workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT ||
-			$workflowType != self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER) {
+		$workflowTypeCheck = array(
+			self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT,
+			self::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
+		);
+		if (!in_array($workflowType, $workflowTypeCheck, true)) {
 			// 未来日系の送信日時更新を考慮して delete->insert
 			// コンテンツコメントは、同じ動画に複数コメントしてもコンテンツキー同じで消されると困る＆未来日系ありえないため、除外
 			// 回答も未来日系ありえないため、除外
@@ -471,8 +474,11 @@ class MailQueueBehavior extends ModelBehavior {
 			$roomId = null;
 		}
 
-		if ($workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW ||
-			$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+		$workflowTypeCheck = array(
+			self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW,
+			self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT,
+		);
+		if (in_array($workflowType, $workflowTypeCheck, true)) {
 			// --- ワークフローのstatusによって送信内容を変える
 			// 各プラグインが承認機能=ONかどうかは、気にしなくてＯＫ。承認機能=OFFなら status=公開が飛んでくるため。
 
