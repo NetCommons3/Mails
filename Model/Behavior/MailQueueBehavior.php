@@ -13,6 +13,7 @@ App::uses('ModelBehavior', 'Model');
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
 App::uses('MailSend', 'Mails.Utility');
 App::uses('MailSettingFixedPhrase', 'Mails.Model');
+App::uses('Current', 'NetCommons.Utility');
 
 /**
  * メールキュー Behavior
