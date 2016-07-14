@@ -104,6 +104,7 @@ class MailFormHelper extends AppHelper {
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_content_receivable',
 					'useNoticeAuthority' => 1,
+					'permissionOnly' => false,
 				),
 				array(
 					'mailTypeKey' => MailSettingFixedPhrase::ANSWER_TYPE,
@@ -111,6 +112,7 @@ class MailFormHelper extends AppHelper {
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover.answer'),
 					'permission' => 'mail_answer_receivable',
 					'useNoticeAuthority' => 1,
+					'permissionOnly' => false,
 				),
 			), $editForms);
 
@@ -123,6 +125,7 @@ class MailFormHelper extends AppHelper {
 					'mailBodyPopoverMessage' => __d('mails', 'MailSetting.mail_fixed_phrase_body.popover'),
 					'permission' => 'mail_content_receivable',
 					'useNoticeAuthority' => 1,
+					'permissionOnly' => false,
 				),
 			), $editForms);
 		}

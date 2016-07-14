@@ -89,7 +89,7 @@ echo $this->NetCommonsHtml->css(array(
 								<?php endif; ?>
 
 								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
-									'type' => 'text',
+									'type' => ($editForm['permissionOnly']) ? 'hidden' :'text',
 									'label' => __d('mails', 'Subject'),
 									'required' => true,
 									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
@@ -97,7 +97,7 @@ echo $this->NetCommonsHtml->css(array(
 
 								<div class="form-group">
 									<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
-										'type' => 'textarea',
+										'type' => ($editForm['permissionOnly']) ? 'hidden' :'textarea',
 										'label' => __d('mails', 'Body'),
 										'required' => true,
 										'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
@@ -105,8 +105,10 @@ echo $this->NetCommonsHtml->css(array(
 									)); ?>
 									<?php
 									// popover説明
-									$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
-									echo $this->NetCommonsForm->help($mailHelp);
+									if ($editForm['permissionOnly'] === false) {
+										$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
+										echo $this->NetCommonsForm->help($mailHelp);
+									}
 									?>
 								</div>
 							</div>
