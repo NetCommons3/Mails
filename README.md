@@ -9,3 +9,5 @@ Mails Plugin for NetCommons
 | composer.json | [![Dependency Status](https://www.versioneye.com/user/projects/5665251b846d41000a000471/badge.svg?style=flat)](https://www.versioneye.com/user/projects/5665251b846d41000a000471) |
 
 ### [phpdoc](https://netcommons3.github.io/NetCommons3Docs/phpdoc/Mails/)
+
+### [メール機能の組み込み](https://github.com/NetCommons3/NetCommons3/wiki/メール組み込み)
