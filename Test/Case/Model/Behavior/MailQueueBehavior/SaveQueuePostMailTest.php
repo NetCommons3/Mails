@@ -60,7 +60,6 @@ class MailQueueBehaviorSaveQueuePostMailTest extends NetCommonsModelTestCase {
 		NetCommonsCakeTestCase::loadTestPlugin($this, 'Mails', 'TestMails');
 		$this->TestModel = ClassRegistry::init('TestMails.TestMailQueueBehaviorSaveModel');
 
-//		$this->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$this->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
 	}
 
