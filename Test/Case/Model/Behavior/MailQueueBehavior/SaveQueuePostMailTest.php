@@ -82,8 +82,8 @@ class MailQueueBehaviorSaveQueuePostMailTest extends NetCommonsModelTestCase {
 			'languageId' => 2,
 			'sendTimes' => null,
 			'userIds' => array(10),
-			'toAddresses' => null,
-			'roomId' => null,
+			'toAddresses' => array('dummy@dummy.com'),
+			'roomId' => 1,
 			'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
 		);
 
@@ -109,21 +109,56 @@ class MailQueueBehaviorSaveQueuePostMailTest extends NetCommonsModelTestCase {
 		$this->TestModel->data = $data;
 		$this->TestModel->setSetting('pluginKey', 'dummy_check');
 
+		// 末尾定型文
+		$mailBodyAfter = "\n\n登録内容確認画面URL\n{X-URL}";
+		$this->TestModel->setSetting(MailQueueBehavior::MAIL_QUEUE_SETTING_MAIL_BODY_AFTER,
+			$mailBodyAfter);
+		$mailBodyAfterCheck = "\n\n登録内容確認画面URL\n<a href='http://";
+
 		//テスト実施
 		/** @see MailQueueBehavior::saveQueuePostMail() */
 		$this->TestModel->saveQueuePostMail($languageId, $sendTimes, $userIds,
 			$toAddresses, $roomId, $typeKey);
 
 		//チェック
+		// ユーザ配信1件
 		$results = $this->MailQueueUser->find('all', array(
-			'recursive' => -1,
+			'recursive' => 0,
 			'conditions' => array(
-				'plugin_key' => 'dummy_check',
-				'user_id' => $userIds,
+				'MailQueueUser.plugin_key' => 'dummy_check',
+				'MailQueueUser.user_id' => $userIds,
 			)
 		));
 		//debug($results);
 		$this->assertCount(1, $results);
+		// 末尾定型文なし
+		$this->assertTextNotContains($mailBodyAfterCheck, $results[0]['MailQueue']['mail_body']);
+
+		// メール配信1件
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => 0,
+			'conditions' => array(
+				'MailQueueUser.plugin_key' => 'dummy_check',
+				'MailQueueUser.to_address' => $toAddresses,
+			)
+		));
+		//debug($results);
+		$this->assertCount(1, $results);
+		// 末尾定型文なし
+		$this->assertTextNotContains($mailBodyAfterCheck, $results[0]['MailQueue']['mail_body']);
+
+		// ルーム配信1件
+		$results = $this->MailQueueUser->find('all', array(
+			'recursive' => 0,
+			'conditions' => array(
+				'MailQueueUser.plugin_key' => 'dummy_check',
+				'MailQueueUser.room_id' => $roomId,
+			)
+		));
+		//debug($results);
+		$this->assertCount(1, $results);
+		// 末尾定型文を含む
+		$this->assertTextContains($mailBodyAfterCheck, $results[0]['MailQueue']['mail_body']);
 	}
 
 /**
