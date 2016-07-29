@@ -303,7 +303,9 @@ class NetCommonsMail extends CakeEmail {
 			$permissions = $WorkflowComponent->getBlockRolePermissions(array($sendRoomPermission),
 				$roomId, $blockKey);
 
-			$roleKeys = array_keys($permissions['BlockRolePermissions'][$sendRoomPermission]);
+			$permRoleKeys = Hash::extract(
+				$permissions['BlockRolePermissions'][$sendRoomPermission], '{s}[value=1]');
+			$roleKeys = Hash::extract($permRoleKeys, '{n}.role_key');
 			$conditions = array(
 				'Room.id' => $roomId,
 				'RolesRoom.role_key' => $roleKeys,
