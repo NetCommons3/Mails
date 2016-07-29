@@ -11,6 +11,7 @@
 
 App::uses('ModelBehavior', 'Model');
 App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
+App::uses('BlockSettingBehavior', 'Blocks.Model/Behavior');
 
 /**
  * メール送信する・しない Behavior
@@ -31,9 +32,12 @@ class IsMailSendBehavior extends ModelBehavior {
 	public function setup(Model $model, $settings = array()) {
 		$this->settings[$model->alias] = $settings;
 
-		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
-		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
-		$model->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting', true);
+		$model->loadModels([
+			'MailSetting' => 'Mails.MailSetting',
+			'MailQueueUser' => 'Mails.MailQueueUser',
+			'SiteSetting' => 'SiteManager.SiteSetting',
+			'BlockSetting' => 'Blocks.BlockSetting',
+		]);
 	}
 
 /**
@@ -271,30 +275,35 @@ class IsMailSendBehavior extends ModelBehavior {
  * 承認通知メールを送るかどうか
  *
  * @param Model $model モデル
- * @param strig $isMailSendApproval 承認メール通知機能を使うフラグ
+ * @param int $isMailSendApproval 承認メール通知機能を使うフラグ
  * @param int $createdUserId 登録ユーザID
+ * @param string $pluginKey プラグインキー
  * @return bool
  */
-	public function isSendMailQueueNotice(Model $model, $isMailSendApproval, $createdUserId) {
-		//		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
-		//		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
-		//			// --- ワークフロー
-		//			// 承認しないなら、通知メール送らない
-		//			if (! $useWorkflow) {
-		//				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-		//				return false;
-		//			}
-		//
-		//		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
-		//			// --- コンテンツコメント
-		//			// コメント承認しないなら、通知メール送らない
-		//			$key = Hash::get($this->settings, $model->alias . '.useCommentApproval');
-		//			$useCommentApproval = Hash::get($model->data, $key);
-		//			if (! $useCommentApproval) {
-		//				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-		//				return false;
-		//			}
-		//		}
+	public function isSendMailQueueNotice(Model $model, $isMailSendApproval, $createdUserId,
+											$pluginKey) {
+		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
+		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
+			// --- ワークフロー
+			// 承認しないなら、通知メール送らない
+			$useWorkflow = $model->BlockSetting->getBlockSettingValue(
+				BlockSettingBehavior::FIELD_USE_WORKFLOW, $pluginKey);
+			if (! $useWorkflow) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+
+		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
+			// --- コンテンツコメント
+			// コメント承認しないなら、通知メール送らない
+			$useCommentApproval = $model->BlockSetting->getBlockSettingValue(
+				BlockSettingBehavior::FIELD_USE_COMMENT_APPROVAL, $pluginKey);
+			if (! $useCommentApproval) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+		}
+
 		// 承認メール使わないなら、通知メール送らない
 		if (! $isMailSendApproval) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
