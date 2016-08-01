@@ -49,7 +49,7 @@ class BlockSettingForMailFixture extends BlockSettingFixture {
 			'room_id' => 1,
 			'block_key' => 'block_1',
 			'field_name' => BlockSettingBehavior::FIELD_USE_WORKFLOW,
-			'value' => '0',
+			'value' => '1',
 			'type' => BlockSettingBehavior::TYPE_NUMERIC,
 		),
 		array(

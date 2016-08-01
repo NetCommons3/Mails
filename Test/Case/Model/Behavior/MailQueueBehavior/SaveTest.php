@@ -29,8 +29,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
  * @var array
  */
 	public $fixtures = array(
-		//'plugin.blocks.block_setting',
-		'plugin.mails.block_setting_for_mail', //試し
+		'plugin.mails.block_setting_for_mail',
 		'plugin.mails.mail_setting',
 		'plugin.mails.mail_setting_fixed_phrase',
 		'plugin.mails.site_setting_for_mail',
@@ -69,7 +68,6 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		//テストプラグインのロード
 		NetCommonsCakeTestCase::loadTestPlugin($this, 'Mails', 'TestMails');
 		$this->TestModel = ClassRegistry::init('TestMails.TestMailQueueBehaviorSaveModel');
-		$this->TestModel->plugin = 'dummy'; //試し
 	}
 
 /**
