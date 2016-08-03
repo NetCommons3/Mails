@@ -28,7 +28,7 @@
         },
         {
             "name": "NetCommons Community",
-            "homepage": "https://github.com/NetCommons3/Mails/graphs/contributors"
+            "homepage": "http://www.netcommons.org"
         }
     ],
     "type":        "cakephp-plugin",
