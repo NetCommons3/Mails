@@ -144,10 +144,12 @@ class MailQueueBehavior extends ModelBehavior {
 		$this->settings[$model->alias] =
 			Hash::merge($this->_defaultSettings, $this->settings[$model->alias]);
 
-		$model->MailSetting = ClassRegistry::init('Mails.MailSetting', true);
-		$model->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
-		$model->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
-		$model->SiteSetting = ClassRegistry::init('SiteManager.SiteSetting', true);
+		$model->loadModels([
+			'MailSetting' => 'Mails.MailSetting',
+			'MailQueue' => 'Mails.MailQueue',
+			'MailQueueUser' => 'Mails.MailQueueUser',
+			'SiteSetting' => 'SiteManager.SiteSetting',
+		]);
 	}
 
 /**
@@ -380,22 +382,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		return $sendTime;
 	}
-
-	///**
-	// * 承認つかうフラグ ゲット
-	// *
-	// * @param Model $model モデル
-	// * @return int 承認つかうフラグ
-	// */
-	//	private function __getUseWorkflow(Model $model) {
-	//		// 暫定対応：3/20現時点。今後見直し予定  https://github.com/NetCommons3/Mails/issues/44
-	//		$key = Hash::get($this->settings, $model->alias . '.useWorkflow');
-	//		$useWorkflow = 1;
-	//		if (isset($key)) {
-	//			$useWorkflow = Hash::get($model->data, $key);
-	//		}
-	//		return $useWorkflow;
-	//	}
 
 /**
  * プラグインのメール設定(定型文等) 取得
@@ -718,9 +704,10 @@ class MailQueueBehavior extends ModelBehavior {
 
 		$isMailSendApproval = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send_approval');
 		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		$settingPluginKey = $this->__getSettingPluginKey($model);
 
 		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
-		if (! $model->isSendMailQueueNotice($isMailSendApproval, $createdUserId)) {
+		if (! $model->isSendMailQueueNotice($isMailSendApproval, $createdUserId, $settingPluginKey)) {
 			return;
 		}
 
