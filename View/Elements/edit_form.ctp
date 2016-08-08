@@ -88,29 +88,41 @@ echo $this->NetCommonsHtml->css(array(
 									)); ?>
 								<?php endif; ?>
 
-								<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
-									'type' => ($editForm['permissionOnly']) ? 'hidden' :'text',
-									'label' => __d('mails', 'Subject'),
-									'required' => true,
-									'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
-								)); ?>
+								<?php
+									if ($editForm['permissionOnly']) {
+										//echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
+										//	'type' => 'hidden',
+										//	'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
+										//));
+									} else {
+										echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
+											'type' => 'text',
+											'label' => __d('mails', 'Subject'),
+											'required' => true,
+											'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
+											'div' => false,
+										));
+									}
+								?>
 
-								<div class="form-group">
-									<?php echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
-										'type' => ($editForm['permissionOnly']) ? 'hidden' :'textarea',
-										'label' => __d('mails', 'Body'),
-										'required' => true,
-										'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
-										'div' => '',
-									)); ?>
-									<?php
-									// popover説明
-									if ($editForm['permissionOnly'] === false) {
+								<?php
+									if ($editForm['permissionOnly']) {
+										//echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
+										//	'type' => 'hidden',
+										//	'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
+										//));
+									} else {
+										echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
+											'type' => 'textarea',
+											'label' => __d('mails', 'Body'),
+											'required' => true,
+											'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
+											'div' => false,
+										));
 										$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
 										echo $this->NetCommonsForm->help($mailHelp);
 									}
-									?>
-								</div>
+								?>
 							</div>
 						</div>
 					<?php endforeach; ?>
