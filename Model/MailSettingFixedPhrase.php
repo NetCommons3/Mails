@@ -61,14 +61,14 @@ class MailSettingFixedPhrase extends MailsAppModel {
 				'notBlank' => array(
 					'rule' => array('notBlank'),
 					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Subject')),
-					'required' => true,
+					'required' => false,
 				),
 			),
 			'mail_fixed_phrase_body' => array(
 				'notBlank' => array(
 					'rule' => array('notBlank'),
 					'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Body')),
-					'required' => true,
+					'required' => false,
 				),
 			),
 		));

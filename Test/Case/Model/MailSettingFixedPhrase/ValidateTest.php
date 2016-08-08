@@ -71,9 +71,9 @@ class MailSettingFixedPhraseValidateTest extends NetCommonsValidateTest {
 				'message' => __d('net_commons', 'Invalid request.')),
 			array('data' => $data, 'field' => 'language_id', 'value' => 'xxx',
 				'message' => __d('net_commons', 'Invalid request.')),
-			array('data' => $data, 'field' => 'mail_fixed_phrase_subject', 'value' => null,
+			array('data' => $data, 'field' => 'mail_fixed_phrase_subject', 'value' => '',
 				'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Subject'))),
-			array('data' => $data, 'field' => 'mail_fixed_phrase_body', 'value' => null,
+			array('data' => $data, 'field' => 'mail_fixed_phrase_body', 'value' => '',
 				'message' => sprintf(__d('net_commons', 'Please input %s.'), __d('mails', 'Body'))),
 		);
 	}
