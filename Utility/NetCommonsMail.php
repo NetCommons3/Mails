@@ -375,9 +375,9 @@ class NetCommonsMail extends CakeEmail {
 					continue;
 				}
 				if (empty($userEmail['email'])) {
-					$userId = Hash::get($user, 'User.id');
-					$logMessage = "Email is empty. userId=$userId";
-					CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+					//$userId = Hash::get($user, 'User.id');
+					//$logMessage = "Email is empty. userId=$userId";
+					//CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 					continue;
 				}
 				$this->setFrom($mailQueueLanguageId);
