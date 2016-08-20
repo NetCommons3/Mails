@@ -78,6 +78,11 @@ class NetCommonsMailAssignTag {
 	public $assignTags = array();
 
 /**
+ * @var array {X-BODY}はウィジウィグか
+ */
+	public $isXbodyWysiwyg = null;
+
+/**
  * @var array SiteSetting model data
  */
 	public $siteSetting = null;
@@ -122,6 +127,7 @@ class NetCommonsMailAssignTag {
 		if ($pluginName === null) {
 			$pluginName = Current::read('Plugin.name');
 		}
+
 		$from = SiteSettingUtil::read('Mail.from');
 		$fromName = SiteSettingUtil::read('Mail.from_name', null, $languageId);
 		$siteName = SiteSettingUtil::read('App.site_name', null, $languageId);
@@ -135,11 +141,11 @@ class NetCommonsMailAssignTag {
 		$siteNow = $date->format('Y/m/d H:i:s');
 
 		$this->assignTag('X-FROM_EMAIL', $from);
-		$this->assignTag('X-FROM_NAME', h($fromName));
-		$this->assignTag('X-SITE_NAME', h($siteName));
+		$this->assignTag('X-FROM_NAME', $fromName);
+		$this->assignTag('X-SITE_NAME', $siteName);
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
-		$this->assignTag('X-PLUGIN_NAME', h($pluginName));
-		$this->assignTag('X-BLOCK_NAME', h(Current::read('Block.name')));
+		$this->assignTag('X-PLUGIN_NAME', $pluginName);
+		$this->assignTag('X-BLOCK_NAME', Current::read('Block.name'));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
@@ -309,8 +315,14 @@ class NetCommonsMailAssignTag {
 		// 本文
 		if (array_key_exists('X-BODY', $this->assignTags)) {
 			if ($messageType == 'text') {
+				// ウィジウィグ以外なら、h()を使って不等号をコード化
+				$body = $this->isXbodyWysiwyg ? $this->assignTags['X-BODY'] : h($this->assignTags['X-BODY']);
+				$body = strip_tags($body);
+				// htmlspecialchar をテキストに戻す
+				$body = $this->__convertText($body);
+
 				$this->fixedPhraseBody = str_replace('{X-BODY}',
-													strip_tags($this->assignTags['X-BODY']),
+													$body,
 													$this->fixedPhraseBody);
 			} else {
 				$this->fixedPhraseBody = str_replace('{X-BODY}',
@@ -321,16 +333,87 @@ class NetCommonsMailAssignTag {
 		}
 
 		foreach ($this->assignTags as $key => $value) {
-			if ($messageType == 'text') {
-				$this->fixedPhraseBody = str_replace('{' . $key . '}', h($value), $this->fixedPhraseBody);
-			} else {
-				$this->fixedPhraseBody = str_replace('{' . $key . '}', $value, $this->fixedPhraseBody);
-			}
-			$this->fixedPhraseSubject = str_replace('{' . $key . '}', h($value), $this->fixedPhraseSubject);
+			$this->fixedPhraseBody = str_replace('{' . $key . '}', $value, $this->fixedPhraseBody);
+			$this->fixedPhraseSubject = str_replace('{' . $key . '}', $value, $this->fixedPhraseSubject);
 		}
 
 		// 改行処理 と テキストのブロックを決められた幅で折り返す
 		$this->fixedPhraseBody = $this->__textBrAndWrap($this->fixedPhraseBody);
+	}
+
+/**
+ * htmlspecialchar をテキストに変換
+ *
+ * strip_tagsの後で使う。
+ * ・{X-BODY}のウィジウィグのテキストは、不等号等が htmlspecialchar になっているため、変換する。
+ * ・{X-BODY}でウィジウィグじゃないテキストは、htmlspecialchar になっていないが、共通部分でstrip_tagsを使っているので、
+ * 　不等号等を h()(=htmlspecialchars())を使って事前にコード化して、ウィジウィグもどきのテキストにする。後はウィジウィグテキストと同じ。
+ * ※ strip_tagsで「<」、「>」があるとそれ以降の文字が消えるため、strip_tags後に変換。
+ *
+ * @param string $str 文字列
+ * @return string 変換した文字列
+ */
+	private function __convertText($str) {
+		$patterns = array();
+		$replacements = array();
+
+		//&npspを空白
+		$patterns[] = "/\&nbsp;/u";
+		$replacements[] = " ";
+
+		//&quot;を"
+		$patterns[] = "/\&quot;/u";
+		$replacements[] = "\"";
+
+		//&acute;を´
+		$patterns[] = "/\&acute;/u";
+		$replacements[] = "´";
+
+		//&cedil;を¸
+		$patterns[] = "/\&cedil;/u";
+		$replacements[] = "¸";
+
+		//&circ;を?
+		$patterns[] = "/\&circ;/u";
+		$replacements[] = "?";
+
+		//&lsquo;を‘
+		$patterns[] = "/\&lsquo;/u";
+		$replacements[] = "‘";
+
+		//&rsquo;を’
+		$patterns[] = "/\&rsquo;/u";
+		$replacements[] = "’";
+
+		//&ldquo;を“
+		$patterns[] = "/\&ldquo;/u";
+		$replacements[] = "“";
+
+		//&rdquo;を”
+		$patterns[] = "/\&rdquo;/u";
+		$replacements[] = "”";
+
+		//&apos;を'
+		$patterns[] = "/\&apos;/u";
+		$replacements[] = "'";
+
+		//&#039;を'
+		$patterns[] = "/\&#039;/u";
+		$replacements[] = "'";
+
+		//&amp;を&
+		$patterns[] = "/\&amp;/u";
+		$replacements[] = "&";
+
+		//&lt;を<
+		$patterns[] = "/\&lt;/u";
+		$replacements[] = "<";
+
+		//&gt;を>
+		$patterns[] = "/\&gt;/u";
+		$replacements[] = ">";
+
+		return preg_replace($patterns, $replacements, $str);
 	}
 
 /**

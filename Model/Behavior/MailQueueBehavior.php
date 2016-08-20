@@ -81,6 +81,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'sendTimes' => null,
 			'useReminder' => 0,
 		),
+		'isXbodyWysiwyg' => true,
 		self::MAIL_QUEUE_SETTING_PLUGIN_NAME => null,
 		self::MAIL_QUEUE_SETTING_USER_IDS => array(),
 		self::MAIL_QUEUE_SETTING_TO_ADDRESSES => null,
@@ -110,6 +111,8 @@ class MailQueueBehavior extends ModelBehavior {
  * 		//'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
  * 		// アンケートの未来公開日は指定
  * 		//'publishStartField' => 'answer_start_period',
+ * 		// 動画のような{X-BODY}がウィジウィグでない時に指定
+ * 		//'isXbodyWysiwyg' => false,
  *	),
  * ```
  * 注意事項：ワークフロー利用時はWorkflow.Workflowより下に記述
@@ -757,6 +760,9 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$mailAssignTag->initPlugin($languageId, $pluginName);
 		$mailAssignTag->setMailFixedPhrase($languageId, $fixedPhraseType, $mailSettingPlugin);
+
+		// {X-BODY}はウィジウィグか
+		$mailAssignTag->isXbodyWysiwyg = $this->settings[$model->alias]['isXbodyWysiwyg'];
 
 		// 末尾定型文
 		$mailAssignTag->setFixedPhraseBody($mailAssignTag->fixedPhraseBody . $fixedPhraseBodyAfter);
