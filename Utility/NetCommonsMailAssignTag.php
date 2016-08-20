@@ -317,9 +317,8 @@ class NetCommonsMailAssignTag {
 			if ($messageType == 'text') {
 				// ウィジウィグ以外なら、h()を使って不等号をコード化
 				$body = $this->isXbodyWysiwyg ? $this->assignTags['X-BODY'] : h($this->assignTags['X-BODY']);
-				$body = strip_tags($body);
-				// htmlspecialchar をテキストに戻す
-				$body = $this->__convertText($body);
+				// htmlspecialchar 等をデコード と strap_tags
+				$body = $this->__decodeAndStripTags($body);
 
 				$this->fixedPhraseBody = str_replace('{X-BODY}',
 													$body,
@@ -342,20 +341,22 @@ class NetCommonsMailAssignTag {
 	}
 
 /**
- * htmlspecialchar をテキストに変換
+ * htmlspecialchar 等をデコード と strap_tags
  *
- * strip_tagsの後で使う。
  * ・{X-BODY}のウィジウィグのテキストは、不等号等が htmlspecialchar になっているため、変換する。
  * ・{X-BODY}でウィジウィグじゃないテキストは、htmlspecialchar になっていないが、共通部分でstrip_tagsを使っているので、
  * 　不等号等を h()(=htmlspecialchars())を使って事前にコード化して、ウィジウィグもどきのテキストにする。後はウィジウィグテキストと同じ。
- * ※ strip_tagsで「<」、「>」があるとそれ以降の文字が消えるため、strip_tags後に変換。
  *
  * @param string $str 文字列
  * @return string 変換した文字列
  */
-	private function __convertText($str) {
+	private function __decodeAndStripTags($str) {
 		$patterns = array();
 		$replacements = array();
+
+		//brを\n
+		$patterns[] = "/<br(.|\s)*?>/u";
+		$replacements[] = "\n";
 
 		//&npspを空白
 		$patterns[] = "/\&nbsp;/u";
@@ -404,6 +405,13 @@ class NetCommonsMailAssignTag {
 		//&amp;を&
 		$patterns[] = "/\&amp;/u";
 		$replacements[] = "&";
+
+		$str = preg_replace($patterns, $replacements, $str);
+		$str = strip_tags($str);
+
+		// strip_tagsで「<」、「>」があるとそれ以降の文字が消えるため、strip_tags後に変換
+		$patterns = array();
+		$replacements = array();
 
 		//&lt;を<
 		$patterns[] = "/\&lt;/u";
