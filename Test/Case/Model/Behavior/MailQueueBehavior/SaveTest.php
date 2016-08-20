@@ -290,7 +290,9 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 
 		//debug($results);
 		$this->assertCount(1, $mailQueue);
-		$this->assertTextContains('担当者へのコメント:', $mailQueue[0]['MailQueue']['mail_body']);
+		//$this->assertTextContains('担当者への連絡:', $mailQueue[0]['MailQueue']['mail_body']);
+		$this->assertTextContains(__d('net_commons', 'Comments to the person in charge.'),
+			$mailQueue[0]['MailQueue']['mail_body']);
 	}
 
 /**
