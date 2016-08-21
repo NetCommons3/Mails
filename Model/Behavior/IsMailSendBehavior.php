@@ -11,6 +11,7 @@
 
 App::uses('ModelBehavior', 'Model');
 App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
+App::uses('MailSend', 'Mails.Utility');
 App::uses('BlockSettingBehavior', 'Blocks.Model/Behavior');
 
 /**
@@ -211,6 +212,12 @@ class IsMailSendBehavior extends ModelBehavior {
 
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		// cakeコマンドに実行権限なければ、メール送らない
+		if (!MailSend::isExecutableCake()) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}

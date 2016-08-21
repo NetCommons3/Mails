@@ -28,4 +28,13 @@ class MailSend {
 		// コマンド例) ./cake Mails.mailSend
 		exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
 	}
+
+/**
+ * cakeコマンドに実行権限あるか
+ *
+ * @return bool
+ */
+	public static function isExecutableCake() {
+		return is_executable(APP . 'Console' . DS . 'cake');
+	}
 }
