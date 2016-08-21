@@ -45,6 +45,8 @@ class MailsUtilityMailSendSendTest extends NetCommonsCakeTestCase {
  * @return void
  */
 	public function testSend() {
+		// メール送信させない
+		SiteSettingUtil::write('Mail.transport', 'Debug', 0);
 		//テスト実施
 		MailSend::send();
 
