@@ -25,7 +25,9 @@ class MailSend {
 	public static function send() {
 		// バックグラウンドでメール送信
 		// コマンド例) ./app/Console/cake Mails.mailSend
-		if (stristr($_SERVER['HTTP_USER_AGENT'], 'Windows')) {
+		// HTTP_USER_AGENTはコマンドライン実行のphpunitでセットされないので、Hash::get()で取得
+		$httpUserAgent = Hash::get($_SERVER, 'HTTP_USER_AGENT');
+		if (strpos($httpUserAgent, 'Windows') !== false) {
 			// Windowsの場合
 			exec(APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
 		} else {
