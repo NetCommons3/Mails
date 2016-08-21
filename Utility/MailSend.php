@@ -25,7 +25,7 @@ class MailSend {
 	public static function send() {
 		// バックグラウンドでメール送信
 		// コマンド例) ./app/Console/cake Mails.mailSend
-		if (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')) {
+		if (MailSend::isWindows()) {
 			// Windowsの場合
 			exec(APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
 		} else {
@@ -33,6 +33,18 @@ class MailSend {
 			// logrotate問題対応 http://dqn.sakusakutto.jp/2012/08/php_exec_nohup_background.html
 			exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
 		}
+	}
+
+/**
+ * 動作しているOS がWindows かどうかを返す。
+ *
+ * @return bool
+ */
+	public static function isWindows() {
+		if (DIRECTORY_SEPARATOR == '\\') {
+			return true;
+		}
+		return false;
 	}
 
 /**
