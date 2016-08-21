@@ -102,4 +102,30 @@ class MailsUtilityNetCommonsMailSendMailDirectTest extends NetCommonsCakeTestCas
 		$this->assertFalse($result);
 	}
 
+	///**
+	// * cakeMail 実際にメール送るテスト
+	// *
+	// * @return void
+	// */
+	//	public function testCakeMail() {
+	//		$email = new CakeEmail();
+	//		//debug($email->config());
+	//		// sakuraインターネット例
+	//		$sakura = array(
+	//			'transport' => 'Smtp',
+	//			'from' => array('site@localhost' => 'NetCommons管理者'),
+	//			'host' => '______.sakura.ne.jp',  // 初期ドメイン
+	//			'port' => 587,
+	//			'username' => 'username@______.sakura.ne.jp', // ユーザ名：
+	//			// 初期ドメインのメールアドレスもしくは、独自ドメインのメールアドレス
+	//			'password' => 'password',           // メールパスワード
+	//			'tls' => true,	// STARTTLS
+	//		);
+	//
+	//		$email->config($sakura);
+	//		$email->to('reciever@domain.com');	// 送信先
+	//		$email->subject('メールタイトル');
+	//
+	//		$email->send('メール本文');
+	//	}
 }
