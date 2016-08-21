@@ -131,7 +131,12 @@ class MailSendShell extends AppShell {
 			$mail = new NetCommonsMail();
 			$mail->initShell($mailQueue);
 
-			$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+			try {
+				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+			} catch (Exception $ex) {
+				// SMTPの設定間違い等で送れなくても、処理を続行。メールは破棄（設定間違いでメールがキューに溜まる事を防ぐ）
+				CakeLog::error($ex);
+			}
 
 			// 送信後にMailQueueUser削除
 			$this->MailQueueUser->delete($mailQueue['MailQueueUser']['id']);
