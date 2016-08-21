@@ -51,8 +51,8 @@ class NetCommonsMail extends CakeEmail {
 	public $mailAssignTag = null;
 
 /**
- * STARTTLSを使う
- * 使う場合は、trueに書き換える。
+ * STARTTLSを使用する
+ * 使用する場合は、trueに書き換える。
  *
  * @var bool
  */
@@ -139,9 +139,11 @@ class NetCommonsMail extends CakeEmail {
 			if (!empty($smtpUser) && !empty($smtpPass)) {
 				$config['username'] = $smtpUser;
 				$config['password'] = $smtpPass;
-				if ($smtpTls) {
-					$config['tls'] = $smtpTls;
-				}
+			}
+
+			// STARTTLSを使用する
+			if ($smtpTls) {
+				$config['tls'] = $smtpTls;
 			}
 
 		} elseif ($transport == SiteSetting::MAIL_TRANSPORT_PHPMAIL) {
