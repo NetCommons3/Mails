@@ -24,9 +24,15 @@ class MailSend {
  */
 	public static function send() {
 		// バックグラウンドでメール送信
-		// logrotate問題対応 http://dqn.sakusakutto.jp/2012/08/php_exec_nohup_background.html
 		// コマンド例) ./app/Console/cake Mails.mailSend
-		exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
+		if (stristr($_SERVER['HTTP_USER_AGENT'], 'Windows')) {
+			// Windowsの場合
+			exec(APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
+		} else {
+			// Linuxの場合
+			// logrotate問題対応 http://dqn.sakusakutto.jp/2012/08/php_exec_nohup_background.html
+			exec('nohup ' . APP . 'Console' . DS . 'cake Mails.mailSend send > /dev/null &');
+		}
 	}
 
 /**
