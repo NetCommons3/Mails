@@ -127,8 +127,8 @@ class NetCommonsMail extends CakeEmail {
 			$smtpPort = SiteSettingUtil::read('Mail.smtp.port');
 			$smtpUser = SiteSettingUtil::read('Mail.smtp.user');
 			$smtpPass = SiteSettingUtil::read('Mail.smtp.pass');
-			//$smtpTls = SiteSettingUtil::read('Mail.smtp.tls');
-			$smtpTls = $this->smtpTls;
+			$smtpTls = SiteSettingUtil::read('Mail.smtp.tls');
+			$thisSmtpTls = $this->smtpTls;
 
 			$config['transport'] = 'Smtp';
 			$config['host'] = $smtpHost;
@@ -142,7 +142,7 @@ class NetCommonsMail extends CakeEmail {
 			}
 
 			// STARTTLSを使用する
-			if ($smtpTls) {
+			if ($smtpTls || $thisSmtpTls) {
 				$config['tls'] = $smtpTls;
 			}
 
