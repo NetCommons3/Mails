@@ -80,7 +80,7 @@ class NetCommonsMailAssignTag {
 /**
  * @var array 埋め込みタグのウィジウィグ対象
  */
-	public $embedTagsWysiwyg = null;
+	public $embedTagsWysiwyg = array();
 
 /**
  * @var array SiteSetting model data
