@@ -380,19 +380,6 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
- * save時のメール送信日時 ゲット
- *
- * @param string $sendTime 送信日時
- * @return string 送信日時
- */
-	private function __getSaveSendTime($sendTime = null) {
-		if (empty($sendTime)) {
-			$sendTime = NetCommonsTime::getNowDatetime();
-		}
-		return $sendTime;
-	}
-
-/**
  * プラグインのメール設定(定型文等) 取得
  *
  * @param Model $model モデル
@@ -436,22 +423,6 @@ class MailQueueBehavior extends ModelBehavior {
 		}
 		// 通常
 		return Current::read('Plugin.key');
-	}
-
-/**
- * ルーム配信で送るパーミッション ゲット
- *
- * @param string $typeKey メール定型文の種類
- * @return string コンテンツキー
- */
-	private function __getSendRoomPermission($typeKey) {
-		if ($typeKey == MailSettingFixedPhrase::ANSWER_TYPE) {
-			// 回答タイプ
-			return 'mail_answer_receivable';
-		} else {
-			// 通常
-			return 'mail_content_receivable';
-		}
 	}
 
 /**
@@ -532,7 +503,7 @@ class MailQueueBehavior extends ModelBehavior {
 										$toAddresses = null, $roomId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 		if ($sendTimes === null) {
-			$sendTimes[] = $this->__getSaveSendTime();
+			$sendTimes[] = $model->MailQueue->getSaveSendTime();
 		}
 		// 末尾定型文 なし
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey);
@@ -569,7 +540,7 @@ class MailQueueBehavior extends ModelBehavior {
 				return;
 			}
 
-			$sendTime = $this->__getSaveSendTime($sendTime);
+			$sendTime = $model->MailQueue->getSaveSendTime($sendTime);
 
 			if (!empty($userIds)) {
 				// メール内容save
@@ -610,7 +581,8 @@ class MailQueueBehavior extends ModelBehavior {
 				$notSendRoomUserIds = $this->settings[$model->alias][$key];
 
 				// ルーム配信で送るパーミッション
-				$sendRoomPermission = $this->__getSendRoomPermission($typeKey);
+				/** @see MailQueueUser::getSendRoomPermission() */
+				$sendRoomPermission = $model->MailQueueUser->getSendRoomPermission($typeKey);
 
 				// ルーム配信
 				/** @see MailQueueUser::addMailQueueUserInRoom() */
@@ -726,7 +698,7 @@ class MailQueueBehavior extends ModelBehavior {
 		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status);
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
-		$mailQueue['MailQueue']['send_time'] = $this->__getSaveSendTime();
+		$mailQueue['MailQueue']['send_time'] = $model->MailQueue->getSaveSendTime();
 
 		/** @see MailQueue::saveMailQueue() */
 		if (! $mailQueueResult = $model->MailQueue->saveMailQueue($mailQueue)) {

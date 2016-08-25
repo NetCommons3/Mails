@@ -94,6 +94,19 @@ class MailQueue extends MailsAppModel {
 	);
 
 /**
+ * save時のメール送信日時 ゲット
+ *
+ * @param string $sendTime 送信日時
+ * @return string 送信日時
+ */
+	public function getSaveSendTime($sendTime = null) {
+		if (empty($sendTime)) {
+			$sendTime = NetCommonsTime::getNowDatetime();
+		}
+		return $sendTime;
+	}
+
+/**
  * メールキューデータ保存 - （メール生文を）
  *
  * @param array $data received post data

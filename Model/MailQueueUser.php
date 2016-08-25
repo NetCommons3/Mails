@@ -10,6 +10,7 @@
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
+App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
 App::uses('DefaultRolePermission', 'Roles.Model');
@@ -316,6 +317,22 @@ class MailQueueUser extends MailsAppModel {
 		$notSendRoomUserIds = Hash::merge($notSendRoomUserIds, $notSendUserIds);
 
 		return $notSendRoomUserIds;
+	}
+
+/**
+ * ルーム配信で送るパーミッション ゲット
+ *
+ * @param string $typeKey メール定型文の種類
+ * @return string コンテンツキー
+ */
+	public function getSendRoomPermission($typeKey) {
+		if ($typeKey == MailSettingFixedPhrase::ANSWER_TYPE) {
+			// 回答タイプ
+			return 'mail_answer_receivable';
+		} else {
+			// 通常
+			return 'mail_content_receivable';
+		}
 	}
 
 /**
