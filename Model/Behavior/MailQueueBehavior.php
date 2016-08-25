@@ -70,6 +70,7 @@ class MailQueueBehavior extends ModelBehavior {
 			'X-BODY' => null,
 		),
 		'addEmbedTagsValues' => array(),
+		'embedTagsWysiwyg' => array(),
 		'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
 		'keyField' => 'key',
 		'editablePermissionKey' => 'content_editable',
@@ -81,7 +82,6 @@ class MailQueueBehavior extends ModelBehavior {
 			'sendTimes' => null,
 			'useReminder' => 0,
 		),
-		'isXbodyWysiwyg' => true,
 		self::MAIL_QUEUE_SETTING_PLUGIN_NAME => null,
 		self::MAIL_QUEUE_SETTING_USER_IDS => array(),
 		self::MAIL_QUEUE_SETTING_TO_ADDRESSES => null,
@@ -111,8 +111,10 @@ class MailQueueBehavior extends ModelBehavior {
  * 		//'workflowType' => MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_ANSWER,
  * 		// アンケートの未来公開日は指定
  * 		//'publishStartField' => 'answer_start_period',
- * 		// 動画のような{X-BODY}がウィジウィグでない時に指定
- * 		//'isXbodyWysiwyg' => false,
+ * 		// 動画のような{X-BODY}がウィジウィグでない時は指定
+ * 		//'embedTagsWysiwyg' => array(),
+ * 		// FAQのような{X-BODY}でない箇所がウィジウィグの時に指定
+ * 		//'embedTagsWysiwyg' => array('X-ANSWER'),
  *	),
  * ```
  * 注意事項：ワークフロー利用時はWorkflow.Workflowより下に記述
@@ -141,6 +143,10 @@ class MailQueueBehavior extends ModelBehavior {
 				// 回答タイプ
 				$this->settings[$model->alias]['typeKey'] = MailSettingFixedPhrase::ANSWER_TYPE;
 			}
+		}
+		// 埋め込みタグのウィジウィグ対象（メール送信プレーンテキストの時、strap_tagsされる対象）
+		if (!isset($this->settings[$model->alias]['embedTagsWysiwyg'])) {
+			$this->settings[$model->alias]['embedTagsWysiwyg'] = array('X-BODY');
 		}
 		$this->_defaultSettings['pluginKey'] = Current::read('Plugin.key');
 		$this->_defaultSettings[self::MAIL_QUEUE_SETTING_PLUGIN_NAME] = Current::read('Plugin.Name');
@@ -761,8 +767,8 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailAssignTag->initPlugin($languageId, $pluginName);
 		$mailAssignTag->setMailFixedPhrase($languageId, $fixedPhraseType, $mailSettingPlugin);
 
-		// {X-BODY}はウィジウィグか
-		$mailAssignTag->isXbodyWysiwyg = $this->settings[$model->alias]['isXbodyWysiwyg'];
+		// 埋め込みタグのウィジウィグ対象
+		$mailAssignTag->embedTagsWysiwyg = $this->settings[$model->alias]['embedTagsWysiwyg'];
 
 		// 末尾定型文
 		$mailAssignTag->setFixedPhraseBody($mailAssignTag->fixedPhraseBody . $fixedPhraseBodyAfter);

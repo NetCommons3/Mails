@@ -78,9 +78,9 @@ class NetCommonsMailAssignTag {
 	public $assignTags = array();
 
 /**
- * @var array {X-BODY}はウィジウィグか
+ * @var array 埋め込みタグのウィジウィグ対象
  */
-	public $isXbodyWysiwyg = null;
+	public $embedTagsWysiwyg = null;
 
 /**
  * @var array SiteSetting model data
@@ -313,22 +313,16 @@ class NetCommonsMailAssignTag {
 		}
 
 		// 本文
-		if (array_key_exists('X-BODY', $this->assignTags)) {
-			if ($messageType == 'text') {
-				// ウィジウィグ以外なら、h()を使って不等号をコード化
-				$body = $this->isXbodyWysiwyg ? $this->assignTags['X-BODY'] : h($this->assignTags['X-BODY']);
-				// htmlspecialchar 等をデコード と strap_tags
-				$body = $this->__decodeAndStripTags($body);
-
-				$this->fixedPhraseBody = str_replace('{X-BODY}',
-													$body,
-													$this->fixedPhraseBody);
-			} else {
-				$this->fixedPhraseBody = str_replace('{X-BODY}',
-													$this->assignTags['X-BODY'],
-													$this->fixedPhraseBody);
+		foreach ($this->embedTagsWysiwyg as $xbodyTag) {
+			if (array_key_exists($xbodyTag, $this->assignTags)) {
+				$body = $this->assignTags[$xbodyTag];
+				if ($messageType == 'text') {
+					// htmlspecialchar 等をデコード と strap_tags
+					$body = $this->__decodeAndStripTags($body);
+				}
+				$this->fixedPhraseBody = str_replace('{' . $xbodyTag . '}', $body, $this->fixedPhraseBody);
+				unset($this->assignTags[$xbodyTag]);
 			}
-			unset($this->assignTags['X-BODY']);
 		}
 
 		foreach ($this->assignTags as $key => $value) {
@@ -343,9 +337,7 @@ class NetCommonsMailAssignTag {
 /**
  * htmlspecialchar 等をデコード と strap_tags
  *
- * ・{X-BODY}のウィジウィグのテキストは、不等号等が htmlspecialchar になっているため、変換する。
- * ・{X-BODY}でウィジウィグじゃないテキストは、htmlspecialchar になっていないが、共通部分でstrip_tagsを使っているので、
- * 　不等号等を h()(=htmlspecialchars())を使って事前にコード化して、ウィジウィグもどきのテキストにする。後はウィジウィグテキストと同じ。
+ * ・{X-BODY}のウィジウィグのテキストは、不等号等が htmlspecialchar になっているため、変換する
  *
  * @param string $str 文字列
  * @return string 変換した文字列
