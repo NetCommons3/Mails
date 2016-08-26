@@ -10,4 +10,6 @@ Mails Plugin for NetCommons
 
 ### [phpdoc](https://netcommons3.github.io/NetCommons3Docs/phpdoc/Mails/)
 
+* [自動セットする埋め込みタグ一覧](https://netcommons3.github.io/NetCommons3Docs/phpdoc/Mails/classes/NetCommonsMailAssignTag.html)
+
 ### [メール機能の組み込み](https://github.com/NetCommons3/NetCommons3/wiki/メール組み込み)
