@@ -652,10 +652,14 @@ class MailQueueBehavior extends ModelBehavior {
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
 		$permissionKey = $this->settings[$model->alias]['editablePermissionKey'];
 
+		// 既に登録者に配信セット済みの人には送らない
+		$notSendKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
+		$notSendRoomUserIds = $this->settings[$model->alias][$notSendKey];
+
 		// 編集者達(編集許可ありユーザ)
 		/** @see MailQueueUser::addMailQueueUserInRoomByPermission() */
 		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomByPermission($mailQueueId,
-			$contentKey, $pluginKey, $permissionKey);
+			$contentKey, $pluginKey, $permissionKey, $notSendRoomUserIds);
 
 		// 承認者達(公開許可ありユーザ)
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
@@ -664,9 +668,8 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
 		// ルーム配信で送らないユーザID セット
-		$key = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$this->settings[$model->alias][$key] =
-			Hash::merge($this->settings[$model->alias][$key], $notSendRoomUserIds);
+		$this->settings[$model->alias][$notSendKey] =
+			Hash::merge($this->settings[$model->alias][$notSendKey], $notSendRoomUserIds);
 	}
 
 /**
