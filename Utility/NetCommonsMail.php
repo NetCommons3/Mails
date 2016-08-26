@@ -317,7 +317,7 @@ class NetCommonsMail extends CakeEmail {
 				'RolesRoom.role_key' => $roleKeys,
 			);
 			$rolesRoomsUsers = $this->RolesRoomsUser->getRolesRoomsUsers($conditions);
-			$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.roles_room_id');
+			$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
 
 			// 送らないユーザIDをルーム配信ユーザIDから排除
 			$notSendRoomUserIds = Hash::get($mailQueueUser, 'not_send_room_user_ids');
