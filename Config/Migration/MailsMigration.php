@@ -19,6 +19,13 @@ App::uses('NetCommonsMigration', 'NetCommons.Config/Migration');
 class MailsMigration extends NetCommonsMigration {
 
 /**
+ * plugin data
+ *
+ * @var array $migration
+ */
+	public $records = array();
+
+/**
  * マイグレーションupの更新と,downの削除
  *
  * @param string $direction Direction of migration process (up or down)
@@ -28,15 +35,19 @@ class MailsMigration extends NetCommonsMigration {
 	public function updateAndDelete($direction, $pluginKey) {
 		$this->loadModels(array(
 			'MailSetting' => 'Mails.MailSetting',
-			'MailSettingFixedPhrase' => 'Mails.MailSettingFixedPhrase',
 		));
+		$conditions = array(
+			'plugin_key' => $pluginKey,
+			'block_key' => null,
+		);
+		// コールバックoff
+		$validate = array(
+			'validate' => false,
+			'callbacks' => false,
+		);
 
 		foreach ($this->records as $model => $records) {
-			$conditions = array(
-				'plugin_key' => $pluginKey,
-				'block_key' => null,
-			);
-
+			$Model = $this->generateModel($model);
 			if ($direction == 'up') {
 				if ($model == 'MailSettingFixedPhrase') {
 					// mail_setting_id セット
@@ -49,15 +60,17 @@ class MailsMigration extends NetCommonsMigration {
 						$record['mail_setting_id'] = $data['MailSetting']['id'];
 					}
 				}
-				if (!$this->updateRecords($model, $records)) {
-					return false;
+
+				// 登録
+				foreach ($records as $record2) {
+					$Model->create();
+					if (!$Model->save($record2, $validate)) {
+						return false;
+					}
 				}
 
 			} elseif ($direction == 'down') {
-				if (!$this->MailSettingFixedPhrase->deleteAll($conditions, false, false)) {
-					return false;
-				}
-				if (!$this->MailSetting->deleteAll($conditions, false, false)) {
+				if (!$Model->deleteAll($conditions, false, false)) {
 					return false;
 				}
 			}
