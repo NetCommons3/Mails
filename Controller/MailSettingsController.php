@@ -98,10 +98,12 @@ class MailSettingsController extends AppController {
 			}
 			$this->NetCommons->handleValidationError($this->MailSetting->validationErrors);
 			$this->NetCommons->handleValidationError($this->MailSettingFixedPhrase->validationErrors);
-			$this->request->data['BlockRolePermission'] = Hash::merge(
-				$this->viewVars['permissions']['BlockRolePermissions'],
-				$this->request->data['BlockRolePermission']
-			);
+			if (isset($this->request->data['BlockRolePermission'])) {
+				$this->request->data['BlockRolePermission'] = Hash::merge(
+					$this->viewVars['permissions']['BlockRolePermissions'],
+					$this->request->data['BlockRolePermission']
+				);
+			}
 		} else {
 			$mailSettingPlugin = $this->viewVars['mailSettingPlugin'];
 			$this->request->data['MailSetting'] = $mailSettingPlugin['MailSetting'];

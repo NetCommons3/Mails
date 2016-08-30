@@ -79,17 +79,31 @@ class MailFormHelper extends AppHelper {
  * ); ?>
  * ```
  *
+ * ##### template file(ctp file) - 承認メール通知機能を使う のみ表示
+ * ```php
+ * <?php echo $this->MailForm->editFrom(
+ *   array(),
+ *   NetCommonsUrl::backToIndexUrl('default_setting_action'),
+ *   0, // 問合せ先メールアドレス 非表示
+ *   0, // メール通知機能を使う ヘルプメッセージ 非表示
+ *   1, // 承認メール通知機能を使う 表示
+ *   0 // メール通知機能を使う 非表示
+ * ); ?>
+ * ```
+ *
  * @param array $editForms 編集フォーム設定
  * @param string $cancelUrl キャンセルボタン遷移先URL
  * @param int $useReplyTo 問合せ先メールアドレスを使う
  * @param int $isMailSendHelp メール通知機能を使うヘルプメッセージを表示するか
  * @param int $useMailSendApproval 承認メール通知機能を使う を表示するか
+ * @param int $useMailSend メール通知機能を使う 及び関連項目を表示するか
  * @param array $options フォームオプション
  * @param string $action 決定ボタン遷移先URL
  * @return string HTML tags
  */
 	public function editFrom($editForms = array(), $cancelUrl = null, $useReplyTo = 0,
-								$isMailSendHelp = 0, $useMailSendApproval = 1, $options = array(), $action = null) {
+								$isMailSendHelp = 0, $useMailSendApproval = 1, $useMailSend = 1,
+								$options = array(), $action = null) {
 		$output = '';
 		if (isset($action)) {
 			$options['url'] = $action;
@@ -135,6 +149,7 @@ class MailFormHelper extends AppHelper {
 			'useReplyTo' => $useReplyTo,
 			'isMailSendHelp' => $isMailSendHelp,
 			'useMailSendApproval' => $useMailSendApproval,
+			'useMailSend' => $useMailSend,
 			'cancelUrl' => $cancelUrl,
 			'options' => $options,
 		));

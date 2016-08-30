@@ -89,12 +89,14 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 		$useReplyTo = 1;
 		$isMailSendHelp = 1;
 		$useMailSendApproval = 1;
+		$useMailSend = 1;
 		$options = array();
 		$action = null;
 
 		//テスト実施
+		/** @see MailFormHelper::editFrom() */
 		$result = $this->MailForm->editFrom($editForms, $cancelUrl, $useReplyTo,
-			$isMailSendHelp, $useMailSendApproval, $options, $action);
+			$isMailSendHelp, $useMailSendApproval, $useMailSend, $options, $action);
 
 		//チェック
 		//debug($result);
@@ -120,16 +122,46 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 		$useReplyTo = 0;
 		$isMailSendHelp = 0;
 		$useMailSendApproval = 1;
+		$useMailSend = 1;
 		$options = array();
 		$action = 'http://localhost';
 
 		//テスト実施
+		/** @see MailFormHelper::editFrom() */
 		$result = $this->MailForm->editFrom($editForms, $cancelUrl, $useReplyTo,
-			$isMailSendHelp, $useMailSendApproval, $options, $action);
+			$isMailSendHelp, $useMailSendApproval, $useMailSend, $options, $action);
 
 		//チェック
 		//debug($result);
 		$this->assertTextContains(__d('mails', 'Posting mail'), $result);
 		$this->assertTextContains(__d('mails', 'Answer mail'), $result);
+	}
+
+/**
+ * editFrom()のメール承認を使うのみ表示テスト
+ *
+ * @return void
+ */
+	public function testUseMailSendApprovalOnly() {
+		//データ生成
+		$editForms = array();
+		$cancelUrl = null;
+		$useReplyTo = 0;
+		$isMailSendHelp = 0;
+		$useMailSendApproval = 1;
+		$useMailSend = 0;	// 非表示
+		$options = array();
+		$action = 'http://localhost';
+
+		//テスト実施
+		/** @see MailFormHelper::editFrom() */
+		$result = $this->MailForm->editFrom($editForms, $cancelUrl, $useReplyTo,
+			$isMailSendHelp, $useMailSendApproval, $useMailSend, $options, $action);
+
+		//チェック
+		//debug($result);
+		$this->assertTextNotContains(__d('mails', 'Posting mail'), $result);
+		$this->assertTextNotContains(__d('mails', 'Answer mail'), $result);
+		$this->assertTextContains(__d('mails', 'Use the approval mail notification function'), $result);
 	}
 }
