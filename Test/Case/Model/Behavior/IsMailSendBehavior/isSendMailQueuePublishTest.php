@@ -55,6 +55,7 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 		return array(
 			'true:正常ケース' => array(
 				'isMailSend' => '1',
+				'contentKey' => 'content_4',
 				'data' => array(
 					'TestIsMailSendBehaviorModel' => array(
 						'status' => 1,
@@ -64,6 +65,7 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 			),
 			'false:公開以外' => array(
 				'isMailSend' => '1',
+				'contentKey' => 'content_4',
 				'data' => array(
 					'TestIsMailSendBehaviorModel' => array(
 						'status' => 2,
@@ -73,6 +75,7 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 			),
 			'false:メール送らない' => array(
 				'isMailSend' => '0',
+				'contentKey' => 'content_4',
 				'data' => array(
 					'TestIsMailSendBehaviorModel' => array(
 						'status' => 1,
@@ -87,19 +90,21 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
  * isSendMailQueuePublish()のテスト
  *
  * @param strig $isMailSend メール通知機能を使うフラグ
+ * @param strig $contentKey コンテンツキー
  * @param array $data modelデータ
  * @param bool $expected テスト結果の想定
  * @dataProvider dataProvider
  * @return void
  */
 	public function testisSendMailQueuePublish($isMailSend,
+										$contentKey = null,
 										$data = array(),
 										$expected = null) {
 		$this->TestModel->data = $data;
 
 		//テスト実施
 		/** @see IsMailSendBehavior::isSendMailQueuePublish() */
-		$result = $this->TestModel->isSendMailQueuePublish($isMailSend);
+		$result = $this->TestModel->isSendMailQueuePublish($isMailSend, $contentKey);
 
 		//チェック
 		//debug($result);
