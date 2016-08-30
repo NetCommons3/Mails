@@ -56,11 +56,13 @@ class NetCommonsMailAssignTag {
  * @var string 承認依頼通知
  * @var string 差戻し通知
  * @var string 承認完了通知
+ * @var string 担当者への連絡通知
  */
 	const
 		SITE_SETTING_FIXED_PHRASE_APPROVAL = 'approval',
 		SITE_SETTING_FIXED_PHRASE_DISAPPROVAL = 'disapproval',
-		SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion';
+		SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION = 'approval_completion',
+		SITE_SETTING_FIXED_PHRASE_CONTACT_AFTER_APPROVAL = 'contact_after_approval';
 
 /**
  * @var string 件名(定型文)
@@ -109,6 +111,8 @@ class NetCommonsMailAssignTag {
 			'Workflow.disapproval_mail_body',
 			'Workflow.approval_completion_mail_subject',
 			'Workflow.approval_completion_mail_body',
+			'Workflow.contact_after_approval_mail_subject',
+			'Workflow.contact_after_approval_mail_body',
 			'Mail.body_header',
 			'Mail.signature',
 		));
@@ -195,7 +199,8 @@ class NetCommonsMailAssignTag {
  * @param array $mailSettingPlugin プラグイン側のメール設定データ
  * @return void
  */
-	public function setMailFixedPhraseSiteSetting($languageId, $fixedPhraseType,
+	public function setMailFixedPhraseSiteSetting($languageId,
+													$fixedPhraseType,
 													$mailSettingPlugin = null) {
 		$subject = SiteSettingUtil::read('Workflow.' . $fixedPhraseType . '_mail_subject',
 			null, $languageId);
@@ -455,12 +460,18 @@ class NetCommonsMailAssignTag {
  * SiteSettingの定型文の種類 ゲット
  *
  * @param string $status 承認ステータス
+ * @param string $comment 承認コメント
+ * @param bool $isPublishableEdit 公開許可あり（承認者、承認OFF時の一般）の編集か
  * @return string
  * @throws InternalErrorException
  */
-	public function getFixedPhraseType($status) {
+	public function getFixedPhraseType($status, $comment = null, $isPublishableEdit = null) {
 		if ($status == WorkflowComponent::STATUS_PUBLISHED) {
 			// --- 公開
+			if ($comment && $isPublishableEdit) {
+				// 担当者への連絡通知メール
+				return self::SITE_SETTING_FIXED_PHRASE_CONTACT_AFTER_APPROVAL;
+			}
 			// 承認完了通知メール
 			return self::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
 

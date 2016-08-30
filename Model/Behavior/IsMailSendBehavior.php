@@ -66,9 +66,15 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
+		// 承認コメントありなら、編集であっても通知メールを送る
+		$comment = Hash::get($model->data, 'WorkflowComment.comment');
+		if ($comment) {
+			return true;
+		}
+
 		// 公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
 		// 公開記事 編集フラグ
-		$isPublishableEdit = $this->__isPublishableEdit($model, $contentKey);
+		$isPublishableEdit = $this->isPublishableEdit($model, $contentKey);
 		if ($isPublishableEdit && $isMailSendPost === null) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
@@ -128,7 +134,7 @@ class IsMailSendBehavior extends ModelBehavior {
  * @param string $contentKey コンテンツキー
  * @return bool
  */
-	private function __isPublishableEdit(Model $model, $contentKey) {
+	public function isPublishableEdit(Model $model, $contentKey) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		// --- コンテンツコメント
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
@@ -317,6 +323,12 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
+		// 承認コメントありなら、承認者であっても通知メールを送る
+		$comment = Hash::get($model->data, 'WorkflowComment.comment');
+		if ($comment) {
+			return true;
+		}
+
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
 
 		// 投稿者がルーム内の承認者だったら、通知メール送らない
@@ -335,10 +347,11 @@ class IsMailSendBehavior extends ModelBehavior {
  * 公開メールを送るかどうか
  *
  * @param Model $model モデル
- * @param strig $isMailSend メール通知機能を使うフラグ
+ * @param string $isMailSend メール通知機能を使うフラグ
+ * @param string $contentKey コンテンツキー
  * @return bool
  */
-	public function isSendMailQueuePublish(Model $model, $isMailSend) {
+	public function isSendMailQueuePublish(Model $model, $isMailSend, $contentKey) {
 		// メール送らないなら、公開メール送らない
 		if (! $isMailSend) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
@@ -348,6 +361,18 @@ class IsMailSendBehavior extends ModelBehavior {
 		// 公開以外はメール送らない
 		$status = Hash::get($model->data, $model->alias . '.status');
 		if ($status != WorkflowComponent::STATUS_PUBLISHED) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		$isMailSendPost = Hash::get($this->settings,
+			$model->alias . '.' . MailQueueBehavior::MAIL_QUEUE_SETTING_IS_MAIL_SEND_POST);
+
+		// 公開メールだけども、編集時にもここを通るようになったので、編集チェックを追加
+		// ・公開許可あり（承認者、承認OFF時の一般）の編集 and 投稿メールフラグが未設定の場合、メール送らない
+		// ・公開記事 編集フラグ
+		$isPublishableEdit = $this->isPublishableEdit($model, $contentKey);
+		if ($isPublishableEdit && $isMailSendPost === null) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}

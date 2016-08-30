@@ -208,6 +208,42 @@ class SiteSettingForMailFixture extends SiteSettingFixture {
 		//
 		//{X-PLUGIN_MAIL_BODY}',
 		//		),
+		// ** 担当者への連絡メールの件名
+		// *** 日本語
+		array(
+			'language_id' => '2',
+			'key' => 'Workflow.contact_after_approval_mail_subject',
+			'value' => '(担当者への連絡){X-PLUGIN_MAIL_SUBJECT}',
+		),
+		// *** 英語
+		//		array(
+		//			'language_id' => '1',
+		//			'key' => 'Workflow.contact_after_approval_mail_subject',
+		//			'value' => '(contact the person in charge){X-PLUGIN_MAIL_SUBJECT}',
+		//		),
+		// ** 担当者への連絡メールの本文
+		// *** 日本語
+		array(
+			'language_id' => '2',
+			'key' => 'Workflow.contact_after_approval_mail_body',
+			'value' => '{X-USER}さんから{X-PLUGIN_NAME}の担当者への連絡があったことをお知らせします。
+
+{X-WORKFLOW_COMMENT}
+
+
+{X-PLUGIN_MAIL_BODY}',
+		),
+		// *** 英語
+		//		array(
+		//			'language_id' => '1',
+		//			'key' => 'Workflow.contact_after_approval_mail_body',
+		//			'value' => 'Let you know that there was a report from {X-USER} \'s to the person in charge of {X-PLUGIN_NAME}.
+		//
+		//{X-WORKFLOW_COMMENT}
+		//
+		//
+		//{X-PLUGIN_MAIL_BODY}',
+		//		),
 	);
 
 }

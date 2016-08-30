@@ -461,9 +461,10 @@ class MailQueueBehavior extends ModelBehavior {
 
 			$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
 			$isMailSend = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send');
+			$contentKey = $this->__getContentKey($model);
 
 			/** @see IsMailSendBehavior::isSendMailQueuePublish() */
-			if (! $model->isSendMailQueuePublish($isMailSend)) {
+			if (! $model->isSendMailQueuePublish($isMailSend, $contentKey)) {
 				return;
 			}
 
@@ -695,10 +696,16 @@ class MailQueueBehavior extends ModelBehavior {
 			return;
 		}
 
+		// 承認コメント
+		$comment = Hash::get($model->data, 'WorkflowComment.comment');
+		$contentKey = $this->__getContentKey($model);
+		/** @see IsMailSendBehavior::isPublishableEdit() */
+		$isPublishableEdit = $model->isPublishableEdit($contentKey);
+
 		// 定型文の種類
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$status = Hash::get($model->data, $model->alias . '.status');
-		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status);
+		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status, $comment, $isPublishableEdit);
 
 		$mailQueue = $this->__createMailQueue($model, $languageId, $typeKey, $fixedPhraseType);
 		$mailQueue['MailQueue']['send_time'] = $model->MailQueue->getSaveSendTime();
@@ -726,7 +733,8 @@ class MailQueueBehavior extends ModelBehavior {
  * @param string $fixedPhraseBodyAfter 末尾定型文
  * @return array メールキューデータ
  */
-	private function __createMailQueue(Model $model, $languageId,
+	private function __createMailQueue(Model $model,
+										$languageId,
 										$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
 										$fixedPhraseType = null,
 										$fixedPhraseBodyAfter = '') {
