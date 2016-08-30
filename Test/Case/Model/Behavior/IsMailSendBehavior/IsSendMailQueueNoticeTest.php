@@ -25,6 +25,7 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
  * @var array
  */
 	public $fixtures = array(
+		'plugin.blocks.block_setting',
 		'plugin.rooms.default_role_permission4test',
 		'plugin.rooms.room_role',
 		'plugin.mails.room_role_permission_for_mail',
@@ -96,8 +97,10 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
 		$roomId = 1;
 		Current::write('Room.id', $roomId);
 		$pluginKey = 'dummy';
+		Current::write('Block.key', 'block_1');
 
 		//テスト実施
+		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
 		$result = $this->TestModel->isSendMailQueueNotice($isMailSendApproval, $createdUserId, $pluginKey);
 
 		//チェック

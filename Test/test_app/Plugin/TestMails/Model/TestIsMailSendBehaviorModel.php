@@ -26,6 +26,7 @@ class TestIsMailSendBehaviorModel extends AppModel {
  */
 	public $actsAs = array(
 		'Mails.IsMailSend' => array(
+			'workflowType' => 'workflow',
 			'publishablePermissionKey' => 'content_publishable',
 			'keyField' => 'key',
 			'reminder' => array(
