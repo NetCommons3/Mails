@@ -299,22 +299,18 @@ class IsMailSendBehavior extends ModelBehavior {
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
 			// --- ワークフロー
 			// 承認しないなら、通知メール送らない
-			$useWorkflow = $model->BlockSetting->getBlockSettingValue(
-				BlockSettingBehavior::FIELD_USE_WORKFLOW, $pluginKey);
-			if (! $useWorkflow) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
+			$fieldNameApproval = BlockSettingBehavior::FIELD_USE_WORKFLOW;
 
 		} elseif ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT) {
 			// --- コンテンツコメント
 			// コメント承認しないなら、通知メール送らない
-			$useCommentApproval = $model->BlockSetting->getBlockSettingValue(
-				BlockSettingBehavior::FIELD_USE_COMMENT_APPROVAL, $pluginKey);
-			if (! $useCommentApproval) {
-				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-				return false;
-			}
+			$fieldNameApproval = BlockSettingBehavior::FIELD_USE_COMMENT_APPROVAL;
+		}
+		/** @see BlockSetting::getBlockSettingValue() */
+		$useApproval = $model->BlockSetting->getBlockSettingValue($fieldNameApproval, $pluginKey);
+		if (! $useApproval) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
 		}
 
 		// 承認メール使わないなら、通知メール送らない
