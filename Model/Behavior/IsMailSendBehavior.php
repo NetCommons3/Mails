@@ -35,6 +35,7 @@ class IsMailSendBehavior extends ModelBehavior {
 
 		$model->loadModels([
 			'MailSetting' => 'Mails.MailSetting',
+			'MailQueue' => 'Mails.MailQueue',
 			'MailQueueUser' => 'Mails.MailQueueUser',
 			'SiteSetting' => 'SiteManager.SiteSetting',
 			'BlockSetting' => 'Blocks.BlockSetting',
@@ -247,6 +248,14 @@ class IsMailSendBehavior extends ModelBehavior {
 			return false;
 		}
 
+		$block = Current::read('Block');
+
+		// ブロック非公開、期間外はメール送らない
+		if (!$model->MailQueue->isSendBlockType($block, '')) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
 		return true;
 	}
 
@@ -258,30 +267,9 @@ class IsMailSendBehavior extends ModelBehavior {
  * @return bool
  */
 	public function isMailSendTime(Model $model, $sendTime) {
-		if ($sendTime === null) {
-			return true;
-		}
-
-		// SiteSettingからメール設定を取得する
-		$useCron = SiteSettingUtil::read('Mail.use_cron');
-		$now = NetCommonsTime::getNowDatetime();
-
-		// クーロンが使えなくて未来日なら、未来日メールなので送らない
-		if (empty($useCron) && strtotime($now) < strtotime($sendTime)) {
-			return false;
-		}
-
 		$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
-		if (! $useReminder) {
-			return true;
-		}
-
-		// リマインダーで日時が過ぎてたら、メール送らない
-		if (strtotime($now) > strtotime($sendTime)) {
-			return false;
-		}
-
-		return true;
+		/** @see MailQueue::isMailSendTime() */
+		return $model->MailQueue->isMailSendTime($sendTime, $useReminder);
 	}
 
 /**

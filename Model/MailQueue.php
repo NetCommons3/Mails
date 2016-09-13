@@ -10,6 +10,7 @@
  */
 
 App::uses('MailsAppModel', 'Mails.Model');
+App::uses('Block', 'Blocks.Model');
 
 /**
  * メールキュー
@@ -139,5 +140,88 @@ class MailQueue extends MailsAppModel {
 		}
 
 		return $mailQueue;
+	}
+
+/**
+ * ブロック状態によってメール送る、送らないチェック
+ * （ブロック非公開、期間限定チェック）
+ *
+ * @param array $block ブロックデータ
+ * @param string $alias ブロックデータのテーブル別名
+ * @return bool
+ */
+	public function isSendBlockType($block, $alias = 'Block.') {
+		if (!$block) {
+			// 空はメール送る
+			return true;
+		}
+
+		$publicType = Hash::get($block, $alias . 'public_type');
+
+		if ($publicType == Block::TYPE_PUBLIC) {
+			// ブロック公開はメール送る
+			return true;
+		}
+
+		// ブロック非公開はメール送らない
+		if ($publicType === Block::TYPE_PRIVATE) {
+			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+			return false;
+		}
+
+		$publishStart = Hash::get($block, $alias . 'publish_start');
+		$publishEnd = Hash::get($block, $alias . 'publish_end');
+
+		$now = NetCommonsTime::getNowDatetime();
+
+		// ブロック期間限定で期間外はメール送らない
+		if ($publicType == Block::TYPE_LIMITED) {
+			// 開始日=空はチェックしない
+			if ($publishStart && strtotime($now) < strtotime($publishStart)) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+			// 終了日=空はチェックしない
+			if ($publishEnd && strtotime($publishEnd) < strtotime($now)) {
+				CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+/**
+ * メール送信日時で送るかどうか
+ *
+ * @param date $sendTime メール送信日時
+ * @param int $useReminder リマインダーを使うか
+ * @return bool
+ */
+	public function isMailSendTime($sendTime, $useReminder) {
+		if ($sendTime === null) {
+			return true;
+		}
+
+		// SiteSettingからメール設定を取得する
+		$useCron = SiteSettingUtil::read('Mail.use_cron');
+		$now = NetCommonsTime::getNowDatetime();
+
+		// クーロンが使えなくて未来日なら、未来日メールなので送らない
+		if (empty($useCron) && strtotime($now) < strtotime($sendTime)) {
+			return false;
+		}
+
+		//$useReminder = $this->settings[$model->alias]['reminder']['useReminder'];
+		if (! $useReminder) {
+			return true;
+		}
+
+		// リマインダーで日時が過ぎてたら、メール送らない
+		if (strtotime($now) > strtotime($sendTime)) {
+			return false;
+		}
+
+		return true;
 	}
 }

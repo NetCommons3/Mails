@@ -36,6 +36,7 @@ class MailSendShell extends AppShell {
  * @link http://book.cakephp.org/2.0/ja/console-and-shells.html#Shell::$uses
  */
 	public $uses = array(
+		'Blocks.Block',
 		'Mails.MailQueue',
 		'Mails.MailQueueUser',
 		'M17n.Language',
@@ -128,22 +129,48 @@ class MailSendShell extends AppShell {
 				$this->MailQueue->delete($beforeId);
 			}
 
-			$mail = new NetCommonsMail();
-			$mail->initShell($mailQueue);
+			// ブロック非公開、期間限定の対応
+			if ($this->_isSendBlockType($mailQueue)) {
 
-			try {
-				$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
-			} catch (Exception $ex) {
-				// SMTPの設定間違い等で送れなくても、処理を続行。メールは破棄（設定間違いでメールがキューに溜まる事を防ぐ）
-				CakeLog::error($ex);
+				$mail = new NetCommonsMail();
+				$mail->initShell($mailQueue);
+
+				try {
+					$mail->sendQueueMail($mailQueue['MailQueueUser'], $mailQueue['MailQueue']['language_id']);
+				} catch (Exception $ex) {
+					// SMTPの設定間違い等で送れなくても、処理を続行。メールは破棄（設定間違いでメールがキューに溜まる事を防ぐ）
+					CakeLog::error($ex);
+				}
 			}
 
-			// 送信後にMailQueueUser削除
+			// MailQueueUser削除
 			$this->MailQueueUser->delete($mailQueue['MailQueueUser']['id']);
 			$beforeId = $mailQueue['MailQueue']['id'];
 		}
 
 		// 後始末 - MailQueue削除
 		$this->MailQueue->delete($beforeId);
+	}
+
+/**
+ * ブロック状態によってメール送るか（ブロック非公開、期間外はメール送らない）
+ *
+ * @param array $mailQueue メールキューデータ
+ * @return bool
+ */
+	protected function _isSendBlockType($mailQueue) {
+		// ブロック非公開、期間限定の対応
+		$query = array(
+			'recursive' => -1,
+			'conditions' => array(
+				'Block.language_id' => $mailQueue['MailQueue']['language_id'],
+				'Block.plugin_key' => $mailQueue['MailQueue']['plugin_key'],
+				'Block.key' => $mailQueue['MailQueue']['block_key'],
+			),
+		);
+		$block = $this->Block->find('first', $query);
+
+		// ブロック非公開、期間外はメール送らない
+		return $this->MailQueue->isSendBlockType($block);
 	}
 }
