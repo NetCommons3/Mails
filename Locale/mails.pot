@@ -96,3 +96,6 @@ msgstr ""
 
 msgid "not login"
 msgstr ""
+
+msgid "There is errors in the mail settings. It was not able to send mail."
+msgstr ""
