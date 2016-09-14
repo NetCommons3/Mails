@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"PO-Revision-Date: 2016-09-14 10:30+0900\n"
+"PO-Revision-Date: 2016-09-14 10:40+0900\n"
 "Language-Team: EMAIL@ADDRESS\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -57,9 +57,8 @@ msgstr ""
 
 msgid "MailSetting.mail_fixed_phrase_body.popover"
 msgstr ""
-"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名"
-"<br>{X-SUBJECT} : タイトル<br>{X-USER} : 投稿者<br>{X-TO_DATE} : 投稿日時<br>{X-BODY} : 投稿内容<br>{X-URL} : 投稿"
-"内容のURL"
+"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル"
+"<br>{X-USER} : 投稿者<br>{X-TO_DATE} : 投稿日時<br>{X-BODY} : 投稿内容<br>{X-URL} : 投稿内容のURL"
 
 msgid "MailSetting.mail_fixed_phrase_subject.answer"
 msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}回答"
@@ -77,8 +76,8 @@ msgstr ""
 
 msgid "MailSetting.mail_fixed_phrase_body.popover.answer"
 msgstr ""
-"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-SUBJECT} : タイトル<br>{X-"
-"USER} : 回答者<br>{X-TO_DATE} : 回答日時<br>{X-URL} : 回答結果のURL"
+"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-SUBJECT} : タイトル<br>{X-USER} : 回答者<br>{X-"
+"TO_DATE} : 回答日時<br>{X-URL} : 回答結果のURL"
 
 #: Plugin/Mails/View/Elements/edit_form.ctp:47
 msgid "Use the mail notification function"
