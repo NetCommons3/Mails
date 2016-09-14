@@ -122,16 +122,21 @@ class MailSendShell extends AppShell {
 		}
 
 		$beforeId = $mailQueues[0]['MailQueue']['id'];
+		$isSend = null;
 
 		foreach ($mailQueues as $mailQueue) {
 			// idが変わったら、MailQueue削除
 			if ($beforeId != $mailQueue['MailQueue']['id']) {
 				$this->MailQueue->delete($beforeId);
+				$isSend = null;
 			}
 
 			// ブロック非公開、期間限定の対応
-			if ($this->_isSendBlockType($mailQueue)) {
+			if (is_null($isSend)) {
+				$isSend = $this->_isSendBlockType($mailQueue);
+			}
 
+			if ($isSend) {
 				$mail = new NetCommonsMail();
 				$mail->initShell($mailQueue);
 
@@ -154,12 +159,12 @@ class MailSendShell extends AppShell {
 
 /**
  * ブロック状態によってメール送るか（ブロック非公開、期間外はメール送らない）
+ * リマインダーや未来日メールでブロック公開後、後からブロック非公開にしたらメールが残るケースに対応
  *
  * @param array $mailQueue メールキューデータ
  * @return bool
  */
 	protected function _isSendBlockType($mailQueue) {
-		// ブロック非公開、期間限定の対応
 		$query = array(
 			'recursive' => -1,
 			'conditions' => array(
