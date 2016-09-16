@@ -13,3 +13,19 @@ Mails Plugin for NetCommons
 * [自動セットする埋め込みタグ一覧](https://netcommons3.github.io/NetCommons3Docs/phpdoc/Mails/classes/NetCommonsMailAssignTag.html)
 
 ### [メール機能の組み込み](https://github.com/NetCommons3/NetCommons3/wiki/メール組み込み)
+
+### メールのcron設定
+
+未来日メールやリマインダーを送るためには、cron設定が必要です。<br />
+設定しない場合、未来日メールやリマインダーは送りません。<br />
+
+#### 設定例 - ubuntsu12.04LTS
+
+/etc/crontab
+```
+# nc3 reminder mail
+*/5 *	* * *	apache	cd /var/www/app/app && Console/cake Mails.mailSend
+```
+
+参考URL: http://book.cakephp.org/2.0/ja/console-and-shells/cron-jobs.html
+
