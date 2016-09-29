@@ -24,8 +24,7 @@ before_script:
   - cd $NETCOMMONS_BUILD_DIR
   - git checkout $NETCOMMONS_VERSION
   - . tools/build/plugins/cakephp/travis/pre.sh
-  - mkdir -p /home/travis/.phpenv/versions/$(phpenv version-name)/etc/conf.d
-  - phpenv config-add travis.php.ini
+  - phpenv config-add app/Plugin/$PLUGIN_NAME/travis.php.ini
 
 script:
   - travis_wait . tools/build/plugins/cakephp/travis/main.sh
