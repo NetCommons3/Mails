@@ -21,7 +21,7 @@ env:
 addons:
   apt:
     packages:
-    - sendmail
+    - postfix
 
 before_script:
   - export NETCOMMONS_BUILD_DIR=`dirname $TRAVIS_BUILD_DIR`/NetCommons3
