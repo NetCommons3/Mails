@@ -21,7 +21,7 @@ env:
 addons:
   apt:
     packages:
-    - postfix
+    - sendmail
 
 before_script:
   - export NETCOMMONS_BUILD_DIR=`dirname $TRAVIS_BUILD_DIR`/NetCommons3
@@ -29,6 +29,7 @@ before_script:
   - cd $NETCOMMONS_BUILD_DIR
   - git checkout $NETCOMMONS_VERSION
   - . tools/build/plugins/cakephp/travis/pre.sh
+  - phpenv config-add app/Plugin/$PLUGIN_NAME/travis.php.ini
 
 script:
   - travis_wait . tools/build/plugins/cakephp/travis/main.sh
