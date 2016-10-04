@@ -17,6 +17,13 @@ App::uses('SiteSettingFixture', 'SiteManager.Test/Fixture');
 class SiteSettingForMailFixture extends SiteSettingFixture {
 
 /**
+ * Name of the object
+ *
+ * @var string
+ */
+	public $name = 'SiteSetting';
+
+/**
  * Full Table Name
  *
  * @var string
