@@ -155,7 +155,7 @@ class IsMailSendBehaviorIsMailSendCommonTest extends NetCommonsModelTestCase {
 			$this->TestModel->Behaviors->load('Mails.IsMailSend', $settings);
 		}
 		if (Hash::get($data, 'Block')) {
-			Current::write('Block',$data['Block']);
+			Current::write('Block', $data['Block']);
 		}
 		$this->TestModel->data = $data;
 
