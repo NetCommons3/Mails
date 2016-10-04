@@ -14,6 +14,7 @@ App::uses('MailSettingFixedPhrase', 'Mails.Model');
 App::uses('MailQueueBehavior', 'Mails.Model/Behavior');
 App::uses('TestIsMailSendBehaviorModelFixture', 'Mails.Test/Fixture');
 App::uses('SiteSettingUtil', 'SiteManager.Utility');
+App::uses('Block', 'Blocks.Model');
 
 /**
  * IsMailSendBehavior::isMailSendCommon()のテスト
@@ -111,6 +112,18 @@ class IsMailSendBehaviorIsMailSendCommonTest extends NetCommonsModelTestCase {
 				),
 				'expected' => false,
 			),
+			'false:ブロック非公開はメール送らない' => array(
+				'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+				'settingPluginKey' => 'dummy',
+				'settings' => null,
+				'isFromEmpty' => null,
+				'data' => array(
+					'Block' => array(
+						'public_type' => Block::TYPE_PRIVATE,
+					)
+				),
+				'expected' => false,
+			),
 		);
 	}
 
@@ -133,13 +146,16 @@ class IsMailSendBehaviorIsMailSendCommonTest extends NetCommonsModelTestCase {
 										$data = array(),
 										$expected = null) {
 		if (isset($isFromEmpty)) {
-			SiteSettingUtil::write('Mail.from', null, 0);
+			SiteSettingUtil::write('Mail.from', '', 0);
 		}
 
 		if (isset($settings)) {
 			// ビヘイビアのsettingに isMailSendPost を設定
 			$this->TestModel->Behaviors->unload('Mails.IsMailSend');
 			$this->TestModel->Behaviors->load('Mails.IsMailSend', $settings);
+		}
+		if (Hash::get($data, 'Block')) {
+			Current::write('Block',$data['Block']);
 		}
 		$this->TestModel->data = $data;
 

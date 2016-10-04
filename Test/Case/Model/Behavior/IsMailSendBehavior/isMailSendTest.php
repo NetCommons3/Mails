@@ -73,6 +73,19 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
 				'data' => array(),
 				'expected' => true,
 			),
+			'true:承認コメントありケース' => array(
+				'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
+				'contentKey' => null,
+				'settingPluginKey' => 'dummy',
+				'settings' => null,
+				'permission' => null,
+				'data' => array(
+					'WorkflowComment' => array(
+						'comment' => '承認コメント'
+					)
+				),
+				'expected' => true,
+			),
 			'false:isMailSendCommon' => array(
 				'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
 				'contentKey' => null,
