@@ -24,7 +24,9 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
  *
  * @var array
  */
-	public $fixtures = array();
+	public $fixtures = array(
+		'plugin.mails.test_is_mail_send_behavior_model',
+	);
 
 /**
  * Plugin name
@@ -43,6 +45,7 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 
 		//テストプラグインのロード
 		NetCommonsCakeTestCase::loadTestPlugin($this, 'Mails', 'TestMails');
+		/** @see TestIsMailSendBehaviorModel */
 		$this->TestModel = ClassRegistry::init('TestMails.TestIsMailSendBehaviorModel');
 	}
 
@@ -62,6 +65,16 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 					),
 				),
 				'expected' => true,
+			),
+			'false:編集は公開メール送らない' => array(
+				'isMailSend' => '1',
+				'contentKey' => 'publish_key',
+				'data' => array(
+					'TestIsMailSendBehaviorModel' => array(
+						'status' => 1,
+					),
+				),
+				'expected' => false,
 			),
 			'false:公開以外' => array(
 				'isMailSend' => '1',
@@ -89,8 +102,8 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 /**
  * isSendMailQueuePublish()のテスト
  *
- * @param strig $isMailSend メール通知機能を使うフラグ
- * @param strig $contentKey コンテンツキー
+ * @param string $isMailSend メール通知機能を使うフラグ
+ * @param string $contentKey コンテンツキー
  * @param array $data modelデータ
  * @param bool $expected テスト結果の想定
  * @dataProvider dataProvider
@@ -100,6 +113,7 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 										$contentKey = null,
 										$data = array(),
 										$expected = null) {
+		Current::write('Permission.content_publishable.value', 1);
 		$this->TestModel->data = $data;
 
 		//テスト実施
