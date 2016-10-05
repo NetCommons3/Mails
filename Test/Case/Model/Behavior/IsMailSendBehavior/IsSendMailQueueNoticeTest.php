@@ -49,6 +49,7 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
 
 		//テストプラグインのロード
 		NetCommonsCakeTestCase::loadTestPlugin($this, 'Mails', 'TestMails');
+		/** @see TestIsMailSendBehaviorModel */
 		$this->TestModel = ClassRegistry::init('TestMails.TestIsMailSendBehaviorModel');
 	}
 
@@ -66,17 +67,71 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
 		$result = array(
 			'true:正常ケース' => array(
 				'isMailSendApproval' => 1,
+				'isContentComment' => 0,
 				'createdUserId' => 5,
+				'data' => array(
+					'Block' => array(
+						'key' => 'block_1'
+					),
+				),
 				'expected' => true,
+			),
+			'true:承認コメントあり' => array(
+				'isMailSendApproval' => 1,
+				'isContentComment' => 0,
+				'createdUserId' => 5,
+				'data' => array(
+					'WorkflowComment' => array(
+						'comment' => '承認コメントあり'
+					),
+					'Block' => array(
+						'key' => 'block_1'
+					),
+				),
+				'expected' => true,
+			),
+			'true:コンテンツコメントのケース' => array(
+				'isMailSendApproval' => 1,
+				'isContentComment' => 1,
+				'createdUserId' => 5,
+				'data' => array(
+					'Block' => array(
+						'key' => 'block_1'
+					),
+				),
+				'expected' => true,
+			),
+			'false:承認しない(BlockSettingデータなしでも)場合、通知メール送らない' => array(
+				'isMailSendApproval' => 0,
+				'isContentComment' => 0,
+				'createdUserId' => null,
+				'data' => array(
+					'Block' => array(
+						'key' => null	// BlockSettingデータなし条件
+					),
+				),
+				'expected' => false,
 			),
 			'false:承認メール使わないなら、通知メール送らない' => array(
 				'isMailSendApproval' => 0,
+				'isContentComment' => 0,
 				'createdUserId' => null,
+				'data' => array(
+					'Block' => array(
+						'key' => 'block_1'
+					),
+				),
 				'expected' => false,
 			),
 			'false:投稿者がルーム内の承認者だったら、通知メール送らない' => array(
 				'isMailSendApproval' => 1,
+				'isContentComment' => 0,
 				'createdUserId' => 1,
+				'data' => array(
+					'Block' => array(
+						'key' => 'block_1'
+					),
+				),
 				'expected' => false,
 			),
 		);
@@ -87,17 +142,37 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
 /**
  * isSendMailQueueNotice()のテスト
  *
- * @param strig $isMailSendApproval 承認メール通知機能を使うフラグ
+ * @param int $isMailSendApproval 承認メール通知機能を使うフラグ
+ * @param int $isContentComment 承認タイプはコンテンツコメントだフラグ
  * @param int $createdUserId 登録ユーザID
+ * @param array $data modelデータ
  * @param bool $expected テスト結果の想定
  * @dataProvider dataProvider
  * @return void
  */
-	public function testIsSendMailQueueNotice($isMailSendApproval, $createdUserId, $expected) {
+	public function testIsSendMailQueueNotice($isMailSendApproval,
+												$isContentComment,
+												$createdUserId,
+												$data,
+												$expected) {
 		$roomId = 1;
 		Current::write('Room.id', $roomId);
 		$pluginKey = 'dummy';
-		Current::write('Block.key', 'block_1');
+		$blockKey = Hash::get($data, 'Block.key');
+		Current::write('Block.key', $blockKey);
+		$this->TestModel->data = $data;
+		if ($isContentComment) {
+			// コンテンツコメントの時
+			$this->TestModel->Behaviors->load('Mails.IsMailSend', array(
+				'workflowType' => 'contentComment',
+				'publishablePermissionKey' => 'content_publishable',
+				'keyField' => 'key',
+				'reminder' => array(
+					'sendTimes' => null,
+					'useReminder' => 0,
+				),
+			));
+		}
 
 		//テスト実施
 		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
