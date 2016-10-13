@@ -235,15 +235,15 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		// 準備1で1通
 		// 承認完了なので２通（承認完了メール、ルーム配信メール）
 		// 計３通
-		//$mailQueue = $this->MailQueue->find('all', array(
-		$this->MailQueue->find('all', array(
+		$mailQueue = $this->MailQueue->find('all', array(
 			'recursive' => -1,
 			'conditions' => array('plugin_key' => $pluginKey)
 		));
 
 		// チェック
-		//debug($mailQueue);
+		debug($mailQueue);
 		//$this->assertCount(3, $mailQueue);
+		$this->assertCount(2, $mailQueue);
 	}
 
 /**
