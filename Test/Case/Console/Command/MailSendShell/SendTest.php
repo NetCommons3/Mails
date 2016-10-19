@@ -109,8 +109,8 @@ class MailsConsoleCommandMailSendShellSendTest extends NetCommonsConsoleTestCase
  * @return void
  */
 	public function testSendMailQueueEmpty() {
-		$this->MailQueue->query('TRUNCATE mail_queues;');
-		$this->MailQueueUser->query('TRUNCATE mail_queue_users;');
+		$this->MailQueue->query('TRUNCATE ' . $this->MailQueue->tablePrefix . 'mail_queues;');
+		$this->MailQueueUser->query('TRUNCATE ' . $this->MailQueueUser->tablePrefix . 'mail_queue_users;');
 
 		$shell = $this->_shellName;
 		$this->$shell = $this->loadShell($shell);

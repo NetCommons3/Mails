@@ -113,8 +113,8 @@ class MailSendShell extends AppShell {
 		// http://d.hatena.ne.jp/fat47/20140212/1392171784
 		// 下記SQL（テーブル結合＆範囲条件）でSELECT FOR UPDATEを実行すると、テーブルロック
 		$sql = 'SELECT * FROM ' .
-			'mail_queues MailQueue, ' .
-			'mail_queue_users MailQueueUser ' .
+			$this->MailQueue->tablePrefix . 'mail_queues MailQueue, ' .
+			$this->MailQueueUser->tablePrefix . 'mail_queue_users MailQueueUser ' .
 			'WHERE ' .
 			'MailQueue.id = MailQueueUser.mail_queue_id ' .
 			'AND MailQueue.send_time <= ? ' .
