@@ -48,7 +48,7 @@ class MailSendShell extends AppShell {
  * Cronからメール送信 - Cronからコールするのはこちらを使ってください
  * ### コマンド
  * ```
- * ./app/Console/cake Mails.mailSend
+ * Console/cake Mails.mailSend
  * ```
  *
  * @return void
@@ -78,6 +78,10 @@ class MailSendShell extends AppShell {
 
 /**
  * メール送信
+ * ### コマンド
+ * ```
+ * Console/cake Mails.mailSend send
+ * ```
  *
  * @return void
  */
