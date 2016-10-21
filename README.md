@@ -15,3 +15,5 @@ Mails Plugin for NetCommons
 ### [メール機能の組み込み](https://github.com/NetCommons3/NetCommons3/wiki/メール組み込み)
 
 ### [メールのcron設定](https://github.com/NetCommons3/NetCommons3/wiki/メールのcron設定)
+
+### [メール通知タイミング（外部リンク）](https://docs.google.com/spreadsheets/d/1CinNbVGHD7tYI1xY4id08PzhrGDQtoNTpWbzkNTdiKs/edit?usp=sharing)
