@@ -60,7 +60,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		Current::write('Block.name', 'テストメールブロック');
 		Current::write('Plugin.key', 'dummy');
 		Current::write('Plugin.name', 'ダミー');
-		Current::write('Room.id', 1);
+		Current::write('Room.id', '2');
 		SiteSettingUtil::write('App.default_timezone', 'Asia/Tokyo', 0);
 		// メール送信させない
 		SiteSettingUtil::write('Mail.transport', 'Debug', 0);

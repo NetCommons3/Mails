@@ -67,7 +67,7 @@ class MailQueueUserAddMailQueueUserInRoomByPermissionTest extends NetCommonsMode
 
 		Current::$current['Plugin']['key'] = 'dummy';
 		Current::$current['Block']['key'] = 'block_key999';
-		Current::$current['Room']['id'] = 1;
+		Current::$current['Room']['id'] = '2';
 	}
 
 /**

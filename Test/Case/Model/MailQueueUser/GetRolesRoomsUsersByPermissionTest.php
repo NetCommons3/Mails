@@ -63,7 +63,7 @@ class MailQueueUserGetRolesRoomsUsersByPermissionTest extends NetCommonsGetTest 
 
 		//データ生成
 		$permissionKey = 'content_publishable';
-		$roomId = 1;
+		$roomId = '2';
 
 		//テスト実施
 		$result = $this->$model->$methodName($permissionKey, $roomId);
@@ -84,7 +84,7 @@ class MailQueueUserGetRolesRoomsUsersByPermissionTest extends NetCommonsGetTest 
 
 		//データ生成
 		$permissionKey = 'content_publishable';
-		Current::write('Room.id', 1);
+		Current::write('Room.id', '2');
 
 		//テスト実施
 		$result = $this->$model->$methodName($permissionKey);

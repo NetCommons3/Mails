@@ -83,7 +83,7 @@ class MailQueueBehaviorSaveQueuePostMailTest extends NetCommonsModelTestCase {
 			'sendTimes' => null,
 			'userIds' => array(10),
 			'toAddresses' => array('dummy@dummy.com'),
-			'roomId' => 1,
+			'roomId' => '2',
 			'typeKey' => MailSettingFixedPhrase::DEFAULT_TYPE,
 		);
 
