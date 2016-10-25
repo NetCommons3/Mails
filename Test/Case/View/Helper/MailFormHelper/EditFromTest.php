@@ -164,4 +164,35 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 		$this->assertTextNotContains(__d('mails', 'Answer mail'), $result);
 		$this->assertTextContains(__d('mails', 'Use the approval mail notification function'), $result);
 	}
+
+/**
+ * editFrom()の通知を受け取る権限のみ表示テスト
+ *
+ * @return void
+ */
+	public function testPermissionOnly() {
+		//データ生成
+		$editForms = array(
+			array(
+				'permissionOnly' => true,	// 通知を受け取る権限のみ表示
+			),
+		);
+		$cancelUrl = null;
+		$useReplyTo = 1;
+		$isMailSendHelp = 1;
+		$useMailSendApproval = 1;
+		$useMailSend = 1;
+		$options = array();
+		$action = null;
+
+		//テスト実施
+		/** @see MailFormHelper::editFrom() */
+		$result = $this->MailForm->editFrom($editForms, $cancelUrl, $useReplyTo,
+			$isMailSendHelp, $useMailSendApproval, $useMailSend, $options, $action);
+
+		//チェック
+		debug($result);
+		$this->assertTextContains(__d('mails', 'Posting mail'), $result);
+	}
+
 }
