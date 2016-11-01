@@ -688,11 +688,11 @@ class MailQueueBehavior extends ModelBehavior {
 		$mailSettingPlugin = $this->__getMailSettingPlugin($model, $languageId, $typeKey);
 
 		$isMailSendApproval = Hash::get($mailSettingPlugin, 'MailSetting.is_mail_send_approval');
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		$modifiedUserId = Hash::get($model->data, $model->alias . '.modified_user');
 		$settingPluginKey = $this->__getSettingPluginKey($model);
 
 		/** @see IsMailSendBehavior::isSendMailQueueNotice() */
-		if (! $model->isSendMailQueueNotice($isMailSendApproval, $createdUserId, $settingPluginKey)) {
+		if (! $model->isSendMailQueueNotice($isMailSendApproval, $modifiedUserId, $settingPluginKey)) {
 			return;
 		}
 

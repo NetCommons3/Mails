@@ -277,11 +277,11 @@ class IsMailSendBehavior extends ModelBehavior {
  *
  * @param Model $model モデル
  * @param int $isMailSendApproval 承認メール通知機能を使うフラグ
- * @param int $createdUserId 登録ユーザID
+ * @param int $modifiedUserId 更新ユーザID
  * @param string $pluginKey プラグインキー
  * @return bool
  */
-	public function isSendMailQueueNotice(Model $model, $isMailSendApproval, $createdUserId,
+	public function isSendMailQueueNotice(Model $model, $isMailSendApproval, $modifiedUserId,
 											$pluginKey) {
 		$workflowType = Hash::get($this->settings, $model->alias . '.workflowType');
 		if ($workflowType == MailQueueBehavior::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW) {
@@ -319,7 +319,7 @@ class IsMailSendBehavior extends ModelBehavior {
 		/** @see MailQueueUser::getRolesRoomsUsersByPermission() */
 		$rolesRoomsUsers = $model->MailQueueUser->getRolesRoomsUsersByPermission($permissionKey);
 		$rolesRoomsUserIds = Hash::extract($rolesRoomsUsers, '{n}.RolesRoomsUser.user_id');
-		if (in_array($createdUserId, $rolesRoomsUserIds)) {
+		if (in_array($modifiedUserId, $rolesRoomsUserIds)) {
 			CakeLog::debug('[' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
 			return false;
 		}
