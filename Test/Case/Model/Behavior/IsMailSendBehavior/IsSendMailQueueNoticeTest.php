@@ -155,7 +155,7 @@ class IsMailSendBehaviorIsSendMailQueueNoticeTest extends NetCommonsModelTestCas
 												$modifiedUserId,
 												$data,
 												$expected) {
-		$roomId = 1;
+		$roomId = '2';
 		Current::write('Room.id', $roomId);
 		$pluginKey = 'dummy';
 		$blockKey = Hash::get($data, 'Block.key');

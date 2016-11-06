@@ -46,7 +46,7 @@ class BlockSettingForMailFixture extends BlockSettingFixture {
 		// ブロック設定後 - room_idあり、block_keyあり
 		array(
 			'plugin_key' => 'dummy',
-			'room_id' => 1,
+			'room_id' => '2',
 			'block_key' => 'block_1',
 			'field_name' => BlockSettingBehavior::FIELD_USE_WORKFLOW,
 			'value' => '1',
@@ -54,7 +54,7 @@ class BlockSettingForMailFixture extends BlockSettingFixture {
 		),
 		array(
 			'plugin_key' => 'dummy',
-			'room_id' => 1,
+			'room_id' => '2',
 			'block_key' => 'block_1',
 			'field_name' => BlockSettingBehavior::FIELD_USE_COMMENT_APPROVAL,
 			'value' => '1',

@@ -58,7 +58,7 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 		//		/home/travis/build/NetCommons3/NetCommons3/app/Plugin/Mails/View/Elements/edit_form.ctp:121
 		Current::write('Plugin.type', '');
 
-		$roomId = 1;
+		$roomId = '2';
 		$blockKey = null;
 		$WorkflowComponent = new WorkflowComponent(new ComponentCollection());
 		$permissions = $WorkflowComponent->getBlockRolePermissions(array('mail_content_receivable'),
