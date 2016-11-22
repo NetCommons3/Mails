@@ -25,15 +25,15 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 	public $fields = array(
 		'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary', 'comment' => ''),
 		'language_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'length' => 6, 'unsigned' => false),
-		'key' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8mb4_general_ci', 'comment' => '', 'charset' => 'utf8mb4'),
+		'key' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => '', 'charset' => 'utf8'),
 		'status' => array('type' => 'integer', 'null' => false, 'default' => null, 'length' => 4, 'unsigned' => false, 'comment' => ''),
 		'is_active' => array('type' => 'boolean', 'null' => false, 'default' => '0', 'comment' => ''),
 		'is_latest' => array('type' => 'boolean', 'null' => false, 'default' => '0', 'comment' => ''),
 		'plugin_key' => array('type' => 'string', 'null' => false, 'default' => null, 'key' => 'index',
-			'collate' => 'utf8mb4_general_ci', 'comment' => 'コンテンツコメント送信のみ利用 ', 'charset' => 'utf8mb4'),
+			'collate' => 'utf8_general_ci', 'comment' => 'コンテンツコメント送信のみ利用 ', 'charset' => 'utf8'),
 		'title' => array('type' => 'string', 'null' => false, 'default' => null,
-			'collate' => 'utf8mb4_general_ci', 'comment' => 'メール送信の件名で利用', 'charset' => 'utf8mb4'),
-		'content' => array('type' => 'text', 'null' => true, 'default' => null, 'collate' => 'utf8mb4_general_ci', 'comment' => '', 'charset' => 'utf8mb4'),
+			'collate' => 'utf8_general_ci', 'comment' => 'メール送信の件名で利用', 'charset' => 'utf8'),
+		'content' => array('type' => 'text', 'null' => true, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => '', 'charset' => 'utf8'),
 		'public_type' => array('type' => 'integer', 'null' => false, 'default' => '2', 'length' => 4, 'unsigned' => false),
 		'publish_start' => array('type' => 'datetime', 'null' => true, 'default' => null),
 		'publish_end' => array('type' => 'datetime', 'null' => true, 'default' => null),
@@ -44,7 +44,7 @@ class TestMailQueueBehaviorSaveModelFixture extends CakeTestFixture {
 		'indexes' => array(
 			'PRIMARY' => array('column' => 'id', 'unique' => 1),
 		),
-		'tableParameters' => array('charset' => 'utf8mb4', 'collate' => 'utf8mb4_general_ci', 'engine' => 'InnoDB'),
+		'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_general_ci', 'engine' => 'InnoDB'),
 	);
 
 /**
