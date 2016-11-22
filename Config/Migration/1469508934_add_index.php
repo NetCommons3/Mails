@@ -36,7 +36,7 @@ class AddIndex extends CakeMigration {
 					'mail_queue_id' => array('type' => 'integer', 'null' => true, 'default' => null, 'unsigned' => false, 'key' => 'index', 'comment' => '個別送信パターン用（user_id,to_address）'),
 				),
 				'mail_queues' => array(
-					'send_time' => array('type' => 'datetime', 'null' => false, 'default' => null, 'key' => 'index', 'comment' => 'sent date and time | 送信日時 | | '),
+					'send_time' => array('type' => 'datetime', 'null' => false, 'default' => null, 'key' => 'index', 'comment' => '送信日時'),
 				),
 			),
 			'drop_field' => array(
@@ -74,7 +74,7 @@ class AddIndex extends CakeMigration {
 					'mail_queue_id' => array('type' => 'integer', 'null' => true, 'default' => null, 'unsigned' => false, 'comment' => '個別送信パターン用（user_id,to_address）'),
 				),
 				'mail_queues' => array(
-					'send_time' => array('type' => 'datetime', 'null' => false, 'default' => null, 'comment' => 'sent date and time | 送信日時 | | '),
+					'send_time' => array('type' => 'datetime', 'null' => false, 'default' => null, 'comment' => '送信日時'),
 				),
 			),
 			'create_field' => array(
