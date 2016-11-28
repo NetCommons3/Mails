@@ -57,7 +57,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		parent::setUp();
 
 		Current::write('Block.key', 'block_1');
-		Current::write('Block.name', 'テストメールブロック');
+		Current::write('BlocksLanguage.name', 'テストメールブロック');
 		Current::write('Plugin.key', 'dummy');
 		Current::write('Plugin.name', 'ダミー');
 		Current::write('Room.id', '2');
@@ -112,7 +112,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		// ルーム名
 		//$this->assertTextContains('Room name', $mailSubject);
 		// ブロック名
-		$this->assertTextContains(Current::read('Block.name'), $mailSubject);
+		$this->assertTextContains(Current::read('BlocksLanguage.name'), $mailSubject);
 		// 埋め込みタグが、消えている事
 		$this->assertTextNotContains('X-', $mailSubject);
 
@@ -131,7 +131,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 			// コンテンツの本文
 			$this->assertTextContains($data['TestMailQueueBehaviorSaveModel']['content'], $mailBody);
 			// ブロック名
-			$this->assertTextContains(Current::read('Block.name'), $mailBody);
+			$this->assertTextContains(Current::read('BlocksLanguage.name'), $mailBody);
 		}
 
 		// コンテンツのタイトル

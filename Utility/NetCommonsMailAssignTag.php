@@ -24,7 +24,7 @@ App::uses('NetCommonsExtentionTag', 'Mails.Utility');
  * | `X-SITE_NAME`           | サイト名 | SiteSettingUtil::read('App.site_name'); |
  * | `X-SITE_URL`            | サイトURL | Router::fullbaseUrl()); |
  * | `X-PLUGIN_NAME`         | プラグイン名 | Current::read('Plugin.name'); |
- * | `X-BLOCK_NAME`          | ブロック名 | Current::read('Block.name'); |
+ * | `X-BLOCK_NAME`          | ブロック名 | Current::read('BlocksLanguage.name'); |
  * | `X-TO_DATE`             | 今日日付 'Y/m/d H:i:s' |  |
  * | `X-BODY_HEADER`         | 本文ヘッダー | SiteSettingUtil::read('Mail.body_header'); |
  * | `X-SIGNATURE`           | 署名 | SiteSettingUtil::read('Mail.signature'); |
@@ -149,7 +149,7 @@ class NetCommonsMailAssignTag {
 		$this->assignTag('X-SITE_NAME', $siteName);
 		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
 		$this->assignTag('X-PLUGIN_NAME', $pluginName);
-		$this->assignTag('X-BLOCK_NAME', Current::read('Block.name'));
+		$this->assignTag('X-BLOCK_NAME', Current::read('BlocksLanguage.name'));
 		$this->assignTag('X-TO_DATE', $siteNow);
 		$this->assignTag('X-BODY_HEADER', $bodyHeader);
 		$this->assignTag('X-SIGNATURE', $signature);
