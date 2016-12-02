@@ -1,124 +1,120 @@
 # LANGUAGE translation of CakePHP Application
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 #
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"PO-Revision-Date: 2016-09-14 10:51+0900\n"
-"Language-Team: EMAIL@ADDRESS\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"POT-Creation-Date: \n"
-"X-Generator: Poedit 1.8.8\n"
-"Last-Translator: \n"
-"Language: en\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150
-#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
+#: Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150
+#: Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
 msgid "Mail settings"
 msgstr ""
 
-#: Plugin/Mails/Model/MailSetting.php:68
+#: Mails/Model/MailSetting.php:73
+#: Mails/Test/Case/Model/MailSetting/ValidateTest.php:75
+#: Registrations/Model/Registration.php:308
+#: Registrations/Model/RegistrationAnswer.php:160
 msgid "%s, please enter by e-mail format"
-msgstr "%s, please enter by e-mail format."
-
-#: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
-msgid "E-mail address to receive a reply"
-msgstr "Contact mail address"
-
-#: Plugin/Mails/Model/MailSetting.php:75 Plugin/Mails/View/Elements/edit_form.ctp:71
-msgid "Subject"
-msgstr "Subject"
-
-#: Plugin/Mails/Model/MailSetting.php:82 Plugin/Mails/View/Elements/edit_form.ctp:78
-msgid "Body"
-msgstr "Text"
-
-#: Plugin/Mails/Model/MailSetting.php:123
-msgid "MailSetting.mail_fixed_phrase_subject"
-msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}({X-ROOM} {X-BLOCK_NAME})"
-
-#: Plugin/Mails/Model/MailSetting.php:126
-msgid "MailSetting.mail_fixed_phrase_body"
 msgstr ""
-"{X-PLUGIN_NAME} to let you know because the content has been posted.\n"
-"Room name: {X-ROOM}\n"
-"Block Name: {X-BLOCK_NAME}\n"
-"Title: {X-SUBJECT}\n"
-"Posted: {X-USER}\n"
-"Post time: {X-TO_DATE}\n"
-"\n"
-"{X-BODY}\n"
-"\n"
-"Please click on the link below to check this post content.\n"
-"{X-URL}"
 
+#: Mails/Model/MailSetting.php:74
+#: Mails/Test/Case/Model/MailSetting/ValidateTest.php:76
+#: Mails/View/Elements/edit_form.ctp:63
+#: Registrations/Model/Registration.php:309
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:31
+msgid "E-mail address to receive a reply"
+msgstr ""
+
+#: Mails/Model/MailSettingFixedPhrase.php:63
+#: Mails/Test/Case/Model/MailSettingFixedPhrase/ValidateTest.php:75
+#: Mails/View/Elements/edit_form.ctp:103
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:46
+msgid "Subject"
+msgstr ""
+
+#: Mails/Model/MailSettingFixedPhrase.php:70
+#: Mails/Test/Case/Model/MailSettingFixedPhrase/ValidateTest.php:77
+#: Mails/View/Elements/edit_form.ctp:120
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:54
+msgid "Body"
+msgstr ""
+
+#: Mails/Model/MailSettingFixedPhrase.php:153;155
+msgid "MailSetting."
+msgstr ""
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:103;136;163;195
+#: Mails/View/Helper/MailFormHelper.php:117;138
+msgid "Posting mail"
+msgstr ""
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:137;164
+#: Mails/View/Helper/MailFormHelper.php:125
+msgid "Answer mail"
+msgstr ""
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:165
+#: Mails/View/Elements/edit_form.ctp:44
+msgid "Use the approval mail notification function"
+msgstr ""
+
+#: Mails/Utility/NetCommonsExtentionTag.php:43
+msgid "not login"
+msgstr ""
+
+#: Mails/View/Elements/edit_form.ctp:37
+msgid "Use the mail notification function"
+msgstr ""
+
+#: Mails/View/Elements/edit_form.ctp:51
+msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
+msgstr ""
+
+#: Mails/View/Elements/edit_form.ctp:65
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:33
+msgid "You can specify if you want to change the e-mail address to receive a reply"
+msgstr ""
+
+#: Mails/View/Elements/edit_form.ctp:89
+msgid "Notification to the authority"
+msgstr ""
+
+#: Mails/View/Helper/MailFormHelper.php:118;139
+#: Quizzes/View/QuizMailSettings/edit.ctp:22
 msgid "MailSetting.mail_fixed_phrase_body.popover"
 msgstr ""
-"{X-SITE_NAME} : Site name<br>{X-PLUGIN_NAME} : Plugin name<br>{X-ROOM} : Room name<br>{X-BLOCK_NAME} : Block name<br>{X-"
-"SUBJECT}  : Title<br>{X-USER} : Posted<br>{X-TO_DATE} : Post time<br>{X-BODY} : Posted content<br>{X-URL} : Content of the "
-"posts URL"
 
-msgid "MailSetting.mail_fixed_phrase_subject.answer"
-msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT} answer"
-
-msgid "MailSetting.mail_fixed_phrase_body.answer"
-msgstr ""
-"{X-PLUGIN_NAME} we've been responded to.\n"
-"Room name: {X-ROOM}\n"
-"Title: {X-SUBJECT}\n"
-"Respondents: {X-USER}\n"
-"Answer time: {X-TO_DATE}\n"
-"\n"
-"Answer to see the results click on the link below.\n"
-"{X-URL}"
-
+#: Mails/View/Helper/MailFormHelper.php:126
+#: Questionnaires/View/QuestionnaireMailSettings/edit.ctp:26
+#: Quizzes/View/QuizMailSettings/edit.ctp:25
+#: Registrations/View/RegistrationMailSettings/edit.ctp:27
 msgid "MailSetting.mail_fixed_phrase_body.popover.answer"
 msgstr ""
-"{X-SITE_NAME}: Site name<br> {X-PLUGIN_NAME}: Plugin name<br> {X-ROOM}: Room name<br> {X-SUBJECT}: title<br> {X-USER}: "
-"Respondents<br> {X-TO_DATE}: Answer time<br> {X-URL}: URL of answers"
 
-#: Plugin/Mails/View/Elements/edit_form.ctp:47
-msgid "Use the mail notification function"
-msgstr "Use the mail notification function"
-
-msgid "Use the approval mail notification function"
-msgstr "Use the approval mail notification function"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:49
-msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr "If you do not want to use the mail notification function, and removes any mail was scheduled to be sent to the future."
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:56
-msgid "Notification to the authority"
-msgstr "Authority to receive the notification"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:66
-msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "For registration, you can specify the mail address of the contact details."
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:83
-msgid "Can use an embedded keyword in the subject line and body"
-msgstr "Can use an embedded keyword in the subject line and body."
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:90
-msgid "Embedded keyword?"
-msgstr "Embedded keyword?"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:91
+#: Mails/View/Helper/MailsHtmlHelper.php:37
 msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
-msgstr "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
+msgstr ""
 
-msgid "Posting mail"
-msgstr "Posting mail"
+#: Mails/View/Helper/MailsHtmlHelper.php:40
+msgid "Can use an embedded keyword in the subject line and body"
+msgstr ""
 
-msgid "Answer mail"
-msgstr "Answer mail"
+#: Mails/View/Helper/MailsHtmlHelper.php:42
+#: Pages/View/Helper/PagesEditHelper.php:97
+#: SiteManager/View/Helper/SiteManagerHelper.php:375
+msgid "Embedded keyword?"
+msgstr ""
 
-msgid "not login"
-msgstr "not login"
-
+#: UserManager/Controller/UserAddController.php:288
+#: UserManager/Test/Case/Controller/UserAddController/NotifyTest.php:228
 msgid "There is errors in the mail settings. It was not able to send mail."
-msgstr "There is errors in the mail settings. It was not able to send mail."
+msgstr ""
+
