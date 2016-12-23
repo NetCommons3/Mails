@@ -15,26 +15,119 @@ msgstr ""
 "Last-Translator: \n"
 "Language: ja_JP\n"
 
-#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150
-#: Plugin/Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
+#: Blocks/Test/Case/View/Helper/BlockTabsHelper/BlockTest.php:150
+#: Blocks/Test/Case/View/Helper/BlockTabsHelper/MainTest.php:162
 msgid "Mail settings"
 msgstr "メール設定"
 
-#: Plugin/Mails/Model/MailSetting.php:68
+#: Mails/Model/MailSetting.php:73
+#: Mails/Test/Case/Model/MailSetting/ValidateTest.php:75
+#: Registrations/Model/Registration.php:308
+#: Registrations/Model/RegistrationAnswer.php:160
 msgid "%s, please enter by e-mail format"
 msgstr "%s はメール形式で入力してください。"
 
-#: Plugin/Mails/Model/MailSetting.php:68 Plugin/Mails/View/Elements/edit_form.ctp:63
+#: Mails/Model/MailSetting.php:74
+#: Mails/Test/Case/Model/MailSetting/ValidateTest.php:76
+#: Mails/View/Elements/edit_form.ctp:63
+#: Registrations/Model/Registration.php:309
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:31
 msgid "E-mail address to receive a reply"
 msgstr "問合せ先メールアドレス"
 
-#: Plugin/Mails/Model/MailSetting.php:75 Plugin/Mails/View/Elements/edit_form.ctp:71
+#: Mails/Model/MailSettingFixedPhrase.php:63
+#: Mails/Test/Case/Model/MailSettingFixedPhrase/ValidateTest.php:75
+#: Mails/View/Elements/edit_form.ctp:103
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:46
 msgid "Subject"
 msgstr "件名"
 
-#: Plugin/Mails/Model/MailSetting.php:82 Plugin/Mails/View/Elements/edit_form.ctp:78
+#: Mails/Model/MailSettingFixedPhrase.php:70
+#: Mails/Test/Case/Model/MailSettingFixedPhrase/ValidateTest.php:77
+#: Mails/View/Elements/edit_form.ctp:120
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:54
 msgid "Body"
 msgstr "本文"
+
+#: Mails/Model/MailSettingFixedPhrase.php:153;155
+msgid "MailSetting."
+msgstr ""
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:103;136;163;195
+#: Mails/View/Helper/MailFormHelper.php:117;138
+msgid "Posting mail"
+msgstr "投稿メール"
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:137;164
+#: Mails/View/Helper/MailFormHelper.php:125
+msgid "Answer mail"
+msgstr "回答メール"
+
+#: Mails/Test/Case/View/Helper/MailFormHelper/EditFromTest.php:165
+#: Mails/View/Elements/edit_form.ctp:44
+msgid "Use the approval mail notification function"
+msgstr "承認メール通知機能を使う"
+
+#: Mails/Utility/NetCommonsExtentionTag.php:43
+msgid "not login"
+msgstr "ログインしていないユーザ"
+
+#: Mails/View/Elements/edit_form.ctp:37
+msgid "Use the mail notification function"
+msgstr "メール通知機能を使う"
+
+#: Mails/View/Elements/edit_form.ctp:51
+msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
+msgstr "メール通知機能を使用しない場合、未来に送る予定だったメールがあれば削除します。"
+
+#: Mails/View/Elements/edit_form.ctp:65
+#: Registrations/View/Elements/RegistrationEdit/Edit/mail_setting.ctp:33
+msgid "You can specify if you want to change the e-mail address to receive a reply"
+msgstr "登録に関して、問合せ先のメールアドレスを指定できます。"
+
+#: Mails/View/Elements/edit_form.ctp:89
+msgid "Notification to the authority"
+msgstr "通知を受け取る権限"
+
+#: Mails/View/Helper/MailFormHelper.php:118;139
+#: Quizzes/View/QuizMailSettings/edit.ctp:22
+msgid "MailSetting.mail_fixed_phrase_body.popover"
+msgstr ""
+"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル"
+"<br>{X-USER} : 投稿者<br>{X-TO_DATE} : 投稿日時<br>{X-BODY} : 投稿内容<br>{X-URL} : 投稿内容のURL"
+
+#: Mails/View/Helper/MailFormHelper.php:126
+#: Questionnaires/View/QuestionnaireMailSettings/edit.ctp:26
+#: Quizzes/View/QuizMailSettings/edit.ctp:25
+#: Registrations/View/RegistrationMailSettings/edit.ctp:27
+msgid "MailSetting.mail_fixed_phrase_body.popover.answer"
+msgstr ""
+"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-SUBJECT} : タイトル<br>{X-USER} : 回答者<br>{X-"
+"TO_DATE} : 回答日時<br>{X-URL} : 回答結果のURL"
+
+#: Mails/View/Helper/MailsHtmlHelper.php:37
+msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
+msgstr "それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />"
+
+#: Mails/View/Helper/MailsHtmlHelper.php:40
+msgid "Can use an embedded keyword in the subject line and body"
+msgstr ""
+
+#: Mails/View/Helper/MailsHtmlHelper.php:42
+#: Pages/View/Helper/PagesEditHelper.php:97
+#: SiteManager/View/Helper/SiteManagerHelper.php:375
+msgid "Embedded keyword?"
+msgstr "埋め込みキーワードとは？"
+
+#: UserManager/Controller/UserAddController.php:288
+#: UserManager/Test/Case/Controller/UserAddController/NotifyTest.php:228
+msgid "There is errors in the mail settings. It was not able to send mail."
+msgstr "メール設定に誤りがあるため、メール送信ができませんでした。"
+
+##### 下記は、おそらく使われていないと思われるが念のため、残しておく。
+
+msgid "MailSetting.mail_fixed_phrase_subject.answer"
+msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}回答"
 
 #: Plugin/Mails/Model/MailSetting.php:123
 msgid "MailSetting.mail_fixed_phrase_subject"
@@ -55,14 +148,6 @@ msgstr ""
 "この投稿内容を確認するには下記のリンクをクリックしてください。\n"
 "{X-URL}"
 
-msgid "MailSetting.mail_fixed_phrase_body.popover"
-msgstr ""
-"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-BLOCK_NAME} : ブロック名<br>{X-SUBJECT} : タイトル"
-"<br>{X-USER} : 投稿者<br>{X-TO_DATE} : 投稿日時<br>{X-BODY} : 投稿内容<br>{X-URL} : 投稿内容のURL"
-
-msgid "MailSetting.mail_fixed_phrase_subject.answer"
-msgstr "[{X-SITE_NAME}-{X-PLUGIN_NAME}]{X-SUBJECT}回答"
-
 msgid "MailSetting.mail_fixed_phrase_body.answer"
 msgstr ""
 "{X-PLUGIN_NAME}に回答されたのでお知らせします。\n"
@@ -73,51 +158,3 @@ msgstr ""
 "\n"
 "回答結果を参照するには下記のリンクをクリックしてください。\n"
 "{X-URL}"
-
-msgid "MailSetting.mail_fixed_phrase_body.popover.answer"
-msgstr ""
-"{X-SITE_NAME} : サイト名<br>{X-PLUGIN_NAME} : プラグイン名<br>{X-ROOM} : ルーム名<br>{X-SUBJECT} : タイトル<br>{X-USER} : 回答者<br>{X-"
-"TO_DATE} : 回答日時<br>{X-URL} : 回答結果のURL"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:47
-msgid "Use the mail notification function"
-msgstr "メール通知機能を使う"
-
-msgid "Use the approval mail notification function"
-msgstr "承認メール通知機能を使う"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:49
-msgid "If you do not want to use, and removes any mail was scheduled to be sent to the future"
-msgstr "メール通知機能を使用しない場合、未来に送る予定だったメールがあれば削除します。"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:56
-msgid "Notification to the authority"
-msgstr "通知を受け取る権限"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:66
-msgid "You can specify if you want to change the e-mail address to receive a reply"
-msgstr "登録に関して、問合せ先のメールアドレスを指定できます。"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:83
-msgid "Can use an embedded keyword in the subject line and body"
-msgstr "件名と本文には埋め込みキーワードが使えます。"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:90
-msgid "Embedded keyword?"
-msgstr "埋め込みキーワードとは？"
-
-#: Plugin/Mails/View/Elements/edit_form.ctp:91
-msgid "Each of the embedded keywords, will be sent is converted to the corresponding content. <br />"
-msgstr "それぞれの埋め込みキーワードは、対応する内容に変換されて送信されます。<br />"
-
-msgid "Posting mail"
-msgstr "投稿メール"
-
-msgid "Answer mail"
-msgstr "回答メール"
-
-msgid "not login"
-msgstr "ログインしていないユーザ"
-
-msgid "There is errors in the mail settings. It was not able to send mail."
-msgstr "メール設定に誤りがあるため、メール送信ができませんでした。"

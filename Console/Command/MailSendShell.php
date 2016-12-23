@@ -172,7 +172,7 @@ class MailSendShell extends AppShell {
 		$query = array(
 			'recursive' => -1,
 			'conditions' => array(
-				'Block.language_id' => $mailQueue['MailQueue']['language_id'],
+				//'Block.language_id' => $mailQueue['MailQueue']['language_id'],
 				'Block.plugin_key' => $mailQueue['MailQueue']['plugin_key'],
 				'Block.key' => $mailQueue['MailQueue']['block_key'],
 			),
