@@ -39,7 +39,7 @@ class NetCommonsExtentionTag {
  */
 	public function getXUser($createdUserId) {
 		if (empty($createdUserId)) {
-			// コンテンツコメントで、参観者まで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなし
+			// コンテンツコメントで、ゲストまで投稿を許可していると、ログインしていない人もコメント書ける。その時はuser_idなし
 			$handlename = __d('mails', 'not login');
 		} else {
 			$user = $this->User->findById($createdUserId);
