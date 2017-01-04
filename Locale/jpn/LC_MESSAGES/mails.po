@@ -111,7 +111,7 @@ msgstr "それぞれの埋め込みキーワードは、対応する内容に変
 
 #: Mails/View/Helper/MailsHtmlHelper.php:40
 msgid "Can use an embedded keyword in the subject line and body"
-msgstr ""
+msgstr "件名と本文には埋め込みキーワードが使えます。"
 
 #: Mails/View/Helper/MailsHtmlHelper.php:42
 #: Pages/View/Helper/PagesEditHelper.php:97
