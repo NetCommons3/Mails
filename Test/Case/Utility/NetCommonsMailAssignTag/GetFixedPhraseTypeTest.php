@@ -55,7 +55,7 @@ class MailsUtilityNetCommonsMailAssignTagGetFixedPhraseTypeTest extends NetCommo
 	public function testGetFixedPhraseTypeApproval() {
 		//データ生成
 		$mailAssignTag = new NetCommonsMailAssignTag();
-		$status = WorkflowComponent::STATUS_APPROVED;
+		$status = WorkflowComponent::STATUS_APPROVAL_WAITING;
 
 		//テスト実施
 		$result = $mailAssignTag->getFixedPhraseType($status);

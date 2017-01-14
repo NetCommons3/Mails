@@ -60,7 +60,7 @@ class MailsUtilityNetCommonsMailAssignTagSetMailFixedPhraseSiteSettingTest exten
 		//データ生成
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$languageId = 2;
-		$status = WorkflowComponent::STATUS_APPROVED;
+		$status = WorkflowComponent::STATUS_APPROVAL_WAITING;
 		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status);
 
 		/** @see MailSetting::getMailSettingPlugin() */
@@ -91,7 +91,7 @@ class MailsUtilityNetCommonsMailAssignTagSetMailFixedPhraseSiteSettingTest exten
 		//データ生成
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$languageId = 2;
-		$status = WorkflowComponent::STATUS_APPROVED;
+		$status = WorkflowComponent::STATUS_APPROVAL_WAITING;
 		$fixedPhraseType = $mailAssignTag->getFixedPhraseType($status);
 		$mailSettingPlugin = null;
 

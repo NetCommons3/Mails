@@ -475,7 +475,7 @@ class NetCommonsMailAssignTag {
 			// 承認完了通知メール
 			return self::SITE_SETTING_FIXED_PHRASE_APPROVAL_COMPLETION;
 
-		} elseif ($status == WorkflowComponent::STATUS_APPROVED) {
+		} elseif ($status == WorkflowComponent::STATUS_APPROVAL_WAITING) {
 			// --- 承認依頼
 			// 承認依頼通知メール
 			return self::SITE_SETTING_FIXED_PHRASE_APPROVAL;
