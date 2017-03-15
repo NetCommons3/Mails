@@ -93,22 +93,22 @@ class MailQueueUser extends MailsAppModel {
  * @var array
  */
 	public $belongsTo = array(
-		'Mails.MailQueue' => array(
-			'className' => 'MailQueue',
+		'MailQueue' => array(
+			'className' => 'Mails.MailQueue',
 			'foreignKey' => 'mail_queue_id',
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
 		),
-		'Users.User' => array(
-			'className' => 'User',
+		'User' => array(
+			'className' => 'Users.User',
 			'foreignKey' => 'user_id',
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
 		),
-		'Rooms.Room' => array(
-			'className' => 'Room',
+		'Room' => array(
+			'className' => 'Rooms.Room',
 			'foreignKey' => 'room_id',
 			'conditions' => '',
 			'fields' => '',
