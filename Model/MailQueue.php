@@ -91,7 +91,7 @@ class MailQueue extends MailsAppModel {
  * @var array
  */
 	public $hasMany = array(
-		'MailQueueUser',
+		'Mails.MailQueueUser',
 	);
 
 /**
