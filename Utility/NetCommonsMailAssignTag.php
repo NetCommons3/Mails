@@ -22,7 +22,7 @@ App::uses('NetCommonsExtentionTag', 'Mails.Utility');
  * | `X-FROM_EMAIL`          | 送信者メールアドレス | SiteSettingUtil::read('Mail.from'); |
  * | `X-FROM_NAME`           | 送信者名 | SiteSettingUtil::read('Mail.from_name'); |
  * | `X-SITE_NAME`           | サイト名 | SiteSettingUtil::read('App.site_name'); |
- * | `X-SITE_URL`            | サイトURL | Router::fullbaseUrl()); |
+ * | `X-SITE_URL`            | サイトURL | Router::url('/', true); |
  * | `X-PLUGIN_NAME`         | プラグイン名 | Current::read('Plugin.name'); |
  * | `X-BLOCK_NAME`          | ブロック名 | Current::read('BlocksLanguage.name'); |
  * | `X-TO_DATE`             | 今日日付 'Y/m/d H:i:s' |  |
@@ -147,7 +147,7 @@ class NetCommonsMailAssignTag {
 		$this->assignTag('X-FROM_EMAIL', $from);
 		$this->assignTag('X-FROM_NAME', $fromName);
 		$this->assignTag('X-SITE_NAME', $siteName);
-		$this->assignTag('X-SITE_URL', Router::fullbaseUrl());
+		$this->assignTag('X-SITE_URL', Router::url('/', true));
 		$this->assignTag('X-PLUGIN_NAME', $pluginName);
 		$this->assignTag('X-BLOCK_NAME', Current::read('BlocksLanguage.name'));
 		$this->assignTag('X-TO_DATE', $siteNow);
