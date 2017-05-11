@@ -172,6 +172,7 @@ class IsMailSendBehavior extends ModelBehavior {
 			'conditions' => $conditions,
 			'order' => array($model->alias . '.modified DESC'),
 			'callbacks' => false,
+			'limit' => 2,
 		));
 
 		if (count($result) <= 1) {
