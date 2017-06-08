@@ -134,12 +134,15 @@ class MailSettingsControllerEditTest extends NetCommonsControllerTestCase {
 		$blockId = '2';
 		$blockKey = 'block_1';
 		$pluginKey = 'dummy2';
+		$languageId = 2;
 		$this->controller->backUrl = $backUrl;
 		//$this->controller->request->data['BlockRolePermission'] = '';
+		Current::write('Block.key', $blockKey);
+		Current::write('Plugin.key', $pluginKey);
 
 		/** @see MailSetting::getMailSettingPlugin() */
 		$mailSettingPlugin = $this->MailSetting->getMailSettingPlugin(
-			null,
+			$languageId,
 			MailSettingFixedPhrase::DEFAULT_TYPE,
 			$pluginKey
 		);
@@ -165,8 +168,10 @@ class MailSettingsControllerEditTest extends NetCommonsControllerTestCase {
 			null,
 			'result'
 		);
+		// PostするとなんでかBlock.keyが消えてたので再セット
+		Current::write('Block.key', $blockKey);
 		$mailSettingPlugin = $this->MailSetting->getMailSettingPlugin(
-			null,
+			$languageId,
 			MailSettingFixedPhrase::DEFAULT_TYPE,
 			$pluginKey
 		);
