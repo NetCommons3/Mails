@@ -317,7 +317,7 @@ class NetCommonsMailAssignTag {
 			unset($this->assignTags['X-URL']);
 		}
 
-		// 本文
+		// Wysiwygの本文
 		foreach ($this->embedTagsWysiwyg as $xbodyTag) {
 			if (array_key_exists($xbodyTag, $this->assignTags)) {
 				$body = $this->assignTags[$xbodyTag];
@@ -325,8 +325,7 @@ class NetCommonsMailAssignTag {
 					// htmlspecialchar 等をデコード と strap_tags
 					$body = $this->__decodeAndStripTags($body);
 				}
-				$this->fixedPhraseBody = str_replace('{' . $xbodyTag . '}', $body, $this->fixedPhraseBody);
-				unset($this->assignTags[$xbodyTag]);
+				$this->assignTags[$xbodyTag] = $body;
 			}
 		}
 
