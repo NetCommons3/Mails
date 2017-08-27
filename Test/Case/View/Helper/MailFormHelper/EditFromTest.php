@@ -75,6 +75,9 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 
 		//BlockRolePermissionFormロード
 		$this->MailForm->_View->Helpers->load('Blocks.BlockRolePermissionForm');
+
+		$this->MailForm->_View->Helpers->load('NetCommons.NetCommonsHtml');
+		$this->MailForm->_View->Helpers->load('NetCommons.NetCommonsForm');
 	}
 
 /**
@@ -191,7 +194,6 @@ class MailFormHelperEditFromTest extends NetCommonsHelperTestCase {
 			$isMailSendHelp, $useMailSendApproval, $useMailSend, $options, $action);
 
 		//チェック
-		debug($result);
 		$this->assertTextContains(__d('mails', 'Posting mail'), $result);
 	}
 
