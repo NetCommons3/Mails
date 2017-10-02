@@ -208,7 +208,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 		// --- 通常メール
 		/** @see IsMailSendBehavior::isMailSend() */
-		if ($model->isMailSend(MailSettingFixedPhrase::DEFAULT_TYPE, $contentKey,
+		if ($model->isMailSend($typeKey, $contentKey,
 				$settingPluginKey)) {
 			$this->saveQueue($model, array($sendTimePublish), $typeKey);
 
