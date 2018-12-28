@@ -389,13 +389,13 @@ class MailQueueBehavior extends ModelBehavior {
  */
 	private function __getMailSettingPlugin(Model $model, $languageId,
 											$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
-		if (!$this->_mailSettingPlugin) {
-			$settingPluginKey = $this->__getSettingPluginKey($model);
+		$settingPluginKey = $this->__getSettingPluginKey($model);
+		if (!isset($this->_mailSettingPlugin[$languageId][$typeKey][$settingPluginKey])) {
 			/** @see MailSetting::getMailSettingPlugin() */
-			$this->_mailSettingPlugin = $model->MailSetting->getMailSettingPlugin($languageId, $typeKey,
-				$settingPluginKey);
+			$this->_mailSettingPlugin[$languageId][$typeKey][$settingPluginKey] =
+				$model->MailSetting->getMailSettingPlugin($languageId, $typeKey, $settingPluginKey);
 		}
-		return $this->_mailSettingPlugin;
+		return $this->_mailSettingPlugin[$languageId][$typeKey][$settingPluginKey];
 	}
 
 /**
