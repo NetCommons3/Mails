@@ -39,7 +39,7 @@ class MailQueueUser extends MailsAppModel {
  * @see Model::save()
  */
 	public function beforeValidate($options = array()) {
-		$this->validate = Hash::merge($this->validate, array(
+		$this->validate = ValidateMerge::merge($this->validate, array(
 			'plugin_key' => array(
 				'notBlank' => array(
 					'rule' => array('notBlank'),
