@@ -158,7 +158,8 @@ class IsMailSendBehaviorisMailSendTest extends NetCommonsModelTestCase {
 												$data = array(),
 												$expected = null) {
 		if (isset($permission)) {
-			Current::write('Permission.' . $permission . '.value', 1);
+			Current::write('Room.id', '2');
+			Current::writePermission('2', $permission, true);
 		}
 
 		if (isset($settings)) {
