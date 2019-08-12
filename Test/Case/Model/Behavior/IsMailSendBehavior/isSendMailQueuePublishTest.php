@@ -113,7 +113,9 @@ class IsMailSendBehaviorIsSendMailQueuePublishTest extends NetCommonsModelTestCa
 										$contentKey = null,
 										$data = array(),
 										$expected = null) {
-		Current::write('Permission.content_publishable.value', 1);
+		Current::write('Room.id', '2');
+		Current::writePermission('2', 'content_publishable', true);
+
 		$this->TestModel->data = $data;
 
 		//テスト実施
