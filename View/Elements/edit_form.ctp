@@ -102,7 +102,8 @@ echo $this->NetCommonsHtml->css(array(
 												'type' => 'text',
 												'label' => __d('mails', 'Subject'),
 												'required' => true,
-												'value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'],
+												'value' => (isset($mailSettingFixedPhrase['mail_fixed_phrase_subject']) ?
+															$mailSettingFixedPhrase['mail_fixed_phrase_subject'] : null),
 												'div' => false,
 											));
 										}
@@ -143,7 +144,10 @@ echo $this->NetCommonsHtml->css(array(
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.language_id', array('value' => Current::read('Language.id'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.plugin_key', array('value' => Current::read('Plugin.key'))); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.block_key', array('value' => Current::read('Block.key'))); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.type_key', array('value' => $editForm['mailTypeKey'])); ?>
+					<?php echo $this->NetCommonsForm->hidden(
+							'MailSettingFixedPhrase.' . $index . '.type_key',
+							array('value' => (isset($editForm['mailTypeKey']) ? $editForm['mailTypeKey'] : null))
+					); ?>
 					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array('value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'])); ?>
 					<?php
 					// hiddenに複数行入れるとセキュリティコンポーネントに引っかかるので、display:none;で対応
