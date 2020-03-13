@@ -120,7 +120,8 @@ echo $this->NetCommonsHtml->css(array(
 												'type' => 'textarea',
 												'label' => __d('mails', 'Body'),
 												'required' => true,
-												'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
+												'value' => (isset($mailSettingFixedPhrase['mail_fixed_phrase_body']) ?
+															$mailSettingFixedPhrase['mail_fixed_phrase_body'] : null),
 												'div' => false,
 											));
 											$mailHelp = $this->NetCommonsHtml->mailHelp($editForm['mailBodyPopoverMessage']);
