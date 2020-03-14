@@ -149,13 +149,16 @@ echo $this->NetCommonsHtml->css(array(
 							'MailSettingFixedPhrase.' . $index . '.type_key',
 							array('value' => (isset($editForm['mailTypeKey']) ? $editForm['mailTypeKey'] : null))
 					); ?>
-					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array('value' => $mailSettingFixedPhrase['mail_fixed_phrase_subject'])); ?>
+					<?php echo $this->NetCommonsForm->hidden('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_subject', array(
+						'value' => (isset($mailSettingFixedPhrase['mail_fixed_phrase_subject']) ?
+								$mailSettingFixedPhrase['mail_fixed_phrase_subject'] : null))); ?>
 					<?php
 					// hiddenに複数行入れるとセキュリティコンポーネントに引っかかるので、display:none;で対応
 					echo $this->NetCommonsForm->input('MailSettingFixedPhrase.' . $index . '.mail_fixed_phrase_body', array(
 						'type' => 'textarea',
 						'style' => 'display:none;',
-						'value' => $mailSettingFixedPhrase['mail_fixed_phrase_body'],
+						'value' => (isset($mailSettingFixedPhrase['mail_fixed_phrase_body']) ?
+									$mailSettingFixedPhrase['mail_fixed_phrase_body'] : null),
 						'div' => false,
 					));
 					?>
