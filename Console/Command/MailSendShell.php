@@ -100,6 +100,14 @@ class MailSendShell extends AppShell {
 		));
 		$from = SiteSettingUtil::read('Mail.from');
 
+		// bugfix: NCのメモリ設定によって、メモリ設定128M & メール文面が長い & ルーム会員4500越えでメモリオーバーが発生し、
+		// メール送信処理が異常終了、NC3のDBメールキューにメールが残り続け、同じメールが何度も送信される不具合が発生した。
+		// そのため、メール送信処理はメモリ無制限に設定する
+		//
+		// [メモリオーバーエラー] error.log
+		// Allowed memory size of 134217728 bytes exhausted (tried to allocate 8970 bytes) in [public_html/vendors/cakephp/cakephp/lib/Cake/Network/Email/CakeEmail.php line 1381]
+		ini_set('memory_limit', '-1');
+
 		// Fromが空ならメール未設定のため、メール送らない
 		if (empty($from)) {
 			$this->out('<error>From Address is empty. [' . __METHOD__ . ']</error>');
