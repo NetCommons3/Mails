@@ -96,6 +96,13 @@ class MailQueueBehavior extends ModelBehavior {
 	protected $_mailSettingPlugin = null;
 
 /**
+ * コンテンツ編集前の作成者・更新者を保持(ワークフローで使用するため)
+ *
+ * @var array
+ */
+	protected $_dataBeforeModified = [];
+
+/**
  * setup
  *
  * #### サンプルコード
@@ -159,6 +166,73 @@ class MailQueueBehavior extends ModelBehavior {
 			'MailQueueUser' => 'Mails.MailQueueUser',
 			'SiteSetting' => 'SiteManager.SiteSetting',
 		]);
+	}
+
+/**
+ * beforeSave is called before a model is saved. Returning false from a beforeSave callback
+ * will abort the save operation.
+ *
+ * @param Model $model Model using this behavior
+ * @param array $options Options passed from Model::save().
+ * @return mixed False if the operation should abort. Any other result will continue.
+ * @see Model::save()
+ */
+	public function beforeSave(Model $model, $options = array()) {
+		$this->beforeSaveQueue($model);
+		return true;
+	}
+
+/**
+ * saveQueue() の前に呼び出す。基本beforeSave()で呼び出されるが、
+ * 手動でsaveQueue()を呼び出すときは、このメソッドを呼び出すこと
+ *
+ * @param Model $model Model using this behavior
+ * @return void
+ */
+	public function beforeSaveQueue(Model $model) {
+		if (isset($this->settings[$model->alias][self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE])) {
+			$workflowType = $this->settings[$model->alias][self::MAIL_QUEUE_SETTING_WORKFLOW_TYPE];
+		} else {
+			$workflowType = null;
+		}
+
+		$workflowTypeCheck = array(
+			self::MAIL_QUEUE_WORKFLOW_TYPE_WORKFLOW,
+			self::MAIL_QUEUE_WORKFLOW_TYPE_COMMENT,
+		);
+
+		if (in_array($workflowType, $workflowTypeCheck, true)) {
+			//ワークフローは、keyカラムがあることが前提
+			$contentKeyField = $this->settings[$model->alias]['keyField'];
+			if (! $model->hasField($contentKeyField) ||
+					! isset($model->data[$model->alias][$contentKeyField])) {
+				return true;
+			}
+
+			$contentKeyValue = $model->data[$model->alias]['key'];
+			$conditions = [
+				$contentKeyField => $contentKeyValue,
+			];
+			if ($model->hasField('block_id')) {
+				//ブログ等はブロックIDにインデックスが張られているため、
+				//それを使うようにするために条件に追加する
+				$conditions['block_id'] = Current::read('Block.id');
+			}
+
+			$modified = $model->find('first', array(
+				'recursive' => -1,
+				'fields' => array('created_user', 'modified_user'),
+				'conditions' => $conditions,
+				'order' => [$model->primaryKey => 'desc'],
+				'callbacks' => false,
+			));
+
+			if ($modified) {
+				$this->_dataBeforeModified[$model->alias][$contentKeyValue] = $modified[$model->alias];
+			}
+		}
+
+		return true;
 	}
 
 /**
@@ -620,25 +694,39 @@ class MailQueueBehavior extends ModelBehavior {
  * @return void
  */
 	private function __addMailQueueUserInCreatedUser(Model $model, $mailQueueId) {
-		$createdUserId = Hash::get($model->data, $model->alias . '.created_user');
+		$contentKey = $this->__getContentKey($model);
 
-		// ルーム配信で送らないユーザID にセット済みであれば、既に登録者に配信セット済みのため、セットしない
-		$notSendKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
-		$notSendRoomUserIds = $this->settings[$model->alias][$notSendKey];
-		if (in_array($createdUserId, $notSendRoomUserIds)) {
-			return;
+		$mailUserIds = [];
+		if (isset($this->_dataBeforeModified[$model->alias][$contentKey])) {
+			$mailUserIds[] =
+				$this->_dataBeforeModified[$model->alias][$contentKey]['created_user'];
+			$mailUserIds[] =
+				$this->_dataBeforeModified[$model->alias][$contentKey]['modified_user'];
+		}
+		if (isset($model->data[$model->alias]['created_user'])) {
+			$mailUserIds[] = $model->data[$model->alias]['created_user'];
+		}
+		if (isset($model->data[$model->alias]['modified_user'])) {
+			$mailUserIds[] = $model->data[$model->alias]['modified_user'];
 		}
 
-		$contentKey = $this->__getContentKey($model);
+		$notSendKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 		$pluginKey = $this->settings[$model->alias]['pluginKey'];
+		foreach ($mailUserIds as $createdUserId) {
+			// ルーム配信で送らないユーザID にセット済みであれば、既に登録者に配信セット済みのため、セットしない
+			$notSendRoomUserIds = $this->settings[$model->alias][$notSendKey];
+			if (in_array($createdUserId, $notSendRoomUserIds)) {
+				continue;
+			}
 
-		/** @see MailQueueUser::addMailQueueUserInCreatedUser() */
-		$model->MailQueueUser->addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey,
-			$pluginKey);
+			/** @see MailQueueUser::addMailQueueUserInCreatedUser() */
+			$model->MailQueueUser->addMailQueueUserInCreatedUser($mailQueueId, $createdUserId, $contentKey,
+				$pluginKey);
 
-		// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
-		// ルーム配信で送らないユーザID セット
-		$this->settings[$model->alias][$notSendKey][] = $createdUserId;
+			// 承認完了時に2通（承認完了とルーム配信）を送らず1通にする対応
+			// ルーム配信で送らないユーザID セット
+			$this->settings[$model->alias][$notSendKey][] = $createdUserId;
+		}
 	}
 
 /**
@@ -657,10 +745,10 @@ class MailQueueBehavior extends ModelBehavior {
 		$notSendKey = self::MAIL_QUEUE_SETTING_NOT_SEND_ROOM_USER_IDS;
 		$notSendRoomUserIds = $this->settings[$model->alias][$notSendKey];
 
-		// 編集者達(編集許可ありユーザ)
-		/** @see MailQueueUser::addMailQueueUserInRoomByPermission() */
-		$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomByPermission($mailQueueId,
-			$contentKey, $pluginKey, $permissionKey, $notSendRoomUserIds);
+		//// 編集者達(編集許可ありユーザ)
+		///** @see MailQueueUser::addMailQueueUserInRoomByPermission() */
+		//$notSendRoomUserIds = $model->MailQueueUser->addMailQueueUserInRoomByPermission($mailQueueId,
+		//	$contentKey, $pluginKey, $permissionKey, $notSendRoomUserIds);
 
 		// 承認者達(公開許可ありユーザ)
 		$permissionKey = $this->settings[$model->alias]['publishablePermissionKey'];
