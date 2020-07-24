@@ -304,6 +304,11 @@ class NetCommonsMailAssignTag {
 		// html or text
 		$messageType = SiteSettingUtil::read('Mail.messageType');
 
+		//HTML形式の場合、\nを改行に置換
+		if ($messageType == 'html') {
+			$this->fixedPhraseBody = nl2br($this->fixedPhraseBody);
+		}
+
 		// URL
 		if (array_key_exists('X-URL', $this->assignTags)) {
 			if ($messageType == 'text') {
@@ -448,8 +453,18 @@ class NetCommonsMailAssignTag {
 		// 各行末空白も自動削除するため、メール署名"-- "(RFC2646)を書いても機能しなくなるので対応
 		$signature = str_replace("--\n", "-- \n", $signature);
 
-		// メール本文の共通ヘッダー文、署名追加
-		$body = $bodyHeader . "\n" . $body . "\n" . $signature;
+		// html or text
+		$messageType = SiteSettingUtil::read('Mail.messageType');
+		if ($messageType == 'html') {
+			$bodyHeader = nl2br($bodyHeader);
+			$signature = nl2br($signature);
+			// メール本文の共通ヘッダー文、署名追加
+			$body = $bodyHeader . "<br />\n" . $body . "<br />\n" . $signature;
+		} else {
+			// メール本文の共通ヘッダー文、署名追加
+			$body = $bodyHeader . "\n" . $body . "\n" . $signature;
+		}
+
 		unset($this->assignTags['X-BODY_HEADER'], $this->assignTags['X-SIGNATURE']);
 
 		return $body;

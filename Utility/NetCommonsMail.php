@@ -269,7 +269,8 @@ class NetCommonsMail extends CakeEmail {
 			// text形式は配列にすると改行される
 			$this->body = explode("\n", $this->body);
 		} else {
-			$this->body = str_replace("\n", '<br />', $this->body);
+			App::uses('NetCommonsMailHtmlCleansing', 'Mails.Utility');
+			$this->body = (new NetCommonsMailHtmlCleansing())->cleanse($this->body);
 		}
 	}
 
