@@ -306,7 +306,7 @@ class NetCommonsMailAssignTag {
 
 		//HTML形式の場合、\nを改行に置換
 		if ($messageType == 'html') {
-			$this->fixedPhraseBody = nl2br($this->fixedPhraseBody);
+			$this->fixedPhraseBody = nl2br(h($this->fixedPhraseBody));
 		}
 
 		// URL
