@@ -80,7 +80,7 @@ class MailsUtilityNetCommonsMailBrReplaceTest extends NetCommonsCakeTestCase {
 		$this->mail->brReplace();
 
 		//チェック
-		$this->assertTextContains('<br />', $this->mail->body);
+		$this->assertTextContains("\n", $this->mail->body);
 	}
 
 }

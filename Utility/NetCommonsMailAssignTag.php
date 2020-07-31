@@ -289,6 +289,7 @@ class NetCommonsMailAssignTag {
  * 埋め込みタグ変換：定型文の埋め込みタグを変換して、メール生文にする
  *
  * @return array タグ
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  */
 	public function assignTagReplace() {
 		// 承認系メールのタグは先に置換

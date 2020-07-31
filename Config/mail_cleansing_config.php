@@ -9,14 +9,14 @@
  * @copyright Copyright 2014, NetCommons Project
  */
 
-$cachePath = CACHE . 'HTMLPurifier' . DS;
-if (! file_exists($cachePath)) {
-	//mkdirがumaskに依存して、ディレクトリが作成されてしまうため、
-	//グループにapache権限を与えてるときに書き込みができなくなることがある。
-	$old = umask(0);
-	@mkdir($cachePath, 0775);
-	umask($old);
-}
+//$cachePath = CACHE . 'HTMLPurifier' . DS;
+//if (! file_exists($cachePath)) {
+//	//mkdirがumaskに依存して、ディレクトリが作成されてしまうため、
+//	//グループにapache権限を与えてるときに書き込みができなくなることがある。
+//	$old = umask(0);
+//	@mkdir($cachePath, 0775);
+//	umask($old);
+//}
 
 $config['mail_cleansing_config'] = [
 	'Attr' => [
@@ -44,9 +44,9 @@ $config['mail_cleansing_config'] = [
 		],
 		'EnableID' => true,
 	],
-//	'Cache' => [
-//		'SerializerPath' => $cachePath,
-//	],
+	//'Cache' => [
+	//	'SerializerPath' => $cachePath,
+	//],
 	'CSS' => [
 		'AllowDuplicates' => true,
 		'AllowImportant' => true,
@@ -125,7 +125,7 @@ $config['mail_cleansing_config'] = [
 		'Encoding' => 'UTF-8',
 		'MaintainLineNumbers' => false,
 	],
-	'HTML' =>[
+	'HTML' => [
 		'Doctype' => 'XHTML 1.0 Transitional',
 		'SafeIframe' => true,
 		'FlashAllowFullScreen' => true,

@@ -10,6 +10,7 @@
  */
 
 App::uses('HTMLPurifier_Filter_Comment', 'Wysiwyg.Utility/Filter');
+App::uses('WysiwygBehavior', 'Wysiwyg.Model/Behavior');
 
 /**
  * NetCommonsメールの本文のエスケープ Utility
@@ -57,11 +58,38 @@ class NetCommonsMailHtmlCleansing {
  * @return string
  */
 	public function cleanse(string $mailBody) {
+		$baseUrl = h(substr(Router::url('/', true), 0, -1));
+		$mailBody = $this->__replaceContent(
+			WysiwygBehavior::REPLACE_BASE_URL, $baseUrl, $mailBody
+		);
+
 		$HTMLPurifier = new HTMLPurifier($this->__HTMLPurifierConfig);
 		$mailBody = $HTMLPurifier->purify($mailBody);
 		return $mailBody;
 	}
 
+/**
+ * Wysiwygフィールド内の「ファイル／画像」のパスの変換処理
+ *
+ * @param String $search 検索する文字列
+ * @param String $replace 置換する文字列
+ * @param string $content 置換対象文字列
+ * @return string 置換した内容を返す
+ */
+	private function __replaceContent($search, $replace, $content) {
+		// 検索対象に / があるとデリミタエラーが発生するので置換する
+		$search = str_replace('/', '\/', $search);
+
+		// 定義フィールドが存在しない場合は無視する
+		if ($content) {
+			$pattern = sprintf('/%s\/(%s)\/([0-9]*)/', $search, WysiwygBehavior::WYSIWYG_REPLACE_PATH);
+			$replacement = sprintf('%s/\1/\2', $replace);
+
+			$content = preg_replace($pattern, $replacement, $content);
+		}
+
+		return $content;
+	}
 /**
  * CSS定義を追加
  *

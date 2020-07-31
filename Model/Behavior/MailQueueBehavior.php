@@ -20,6 +20,7 @@ App::uses('Current', 'NetCommons.Utility');
  *
  * @author Mitsuru Mutaguchi <mutaguchi@opensource-workshop.jp>
  * @package NetCommons\Mails\Model\Behavior
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class MailQueueBehavior extends ModelBehavior {
 

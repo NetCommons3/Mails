@@ -64,6 +64,7 @@ class MailQueueBehaviorSaveTest extends NetCommonsModelTestCase {
 		SiteSettingUtil::write('App.default_timezone', 'Asia/Tokyo', 0);
 		// メール送信させない
 		SiteSettingUtil::write('Mail.transport', 'Debug', 0);
+		SiteSettingUtil::write('Mail.messageType', 'text', 0);
 
 		$this->MailQueue = ClassRegistry::init('Mails.MailQueue', true);
 		$this->MailQueueUser = ClassRegistry::init('Mails.MailQueueUser', true);
