@@ -376,6 +376,26 @@ class MailQueueBehavior extends ModelBehavior {
 	}
 
 /**
+ * self::$_mailSettingPlugin にメール設定をセットする
+ *
+ * @param Model $model Model
+ * @param int|string $languageId Language.id
+ * @param string $typeKey answer|contents
+ * @param string $pluginKey プラグインキー
+ * @param array $mailSetting セットするメール設定値
+ * @return void
+ */
+	public function setMailSettingPlugin(
+		Model $model,
+		$languageId,
+		string $typeKey,
+		string $pluginKey,
+		array $mailSetting
+	) {
+		$this->_mailSettingPlugin[$languageId][$typeKey][$pluginKey] = $mailSetting;
+	}
+
+/**
  * リマインダー送信日時 セット
  *
  * #### サンプルコード
