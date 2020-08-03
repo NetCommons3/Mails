@@ -384,7 +384,13 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $mailSetting セットするメール設定値
  * @return void
  */
-	public function setMailSettingPlugin(Model $model, $languageId, string $typeKey, string $pluginKey, array $mailSetting) {
+	public function setMailSettingPlugin(
+		Model $model,
+		$languageId,
+		string $typeKey,
+		string $pluginKey,
+		array $mailSetting
+	) {
 		$this->_mailSettingPlugin[$languageId][$typeKey][$pluginKey] = $mailSetting;
 	}
 
