@@ -371,8 +371,8 @@ class NetCommonsMail extends CakeEmail {
 					'is_email_reception' => Hash::get($user, 'User.is_email_reception'),
 				),
 				array(
-					'email' => Hash::get($user, 'User.mobile_mail'),
-					'is_email_reception' => Hash::get($user, 'User.is_mobile_mail_reception'),
+					'email' => Hash::get($user, 'User.moblie_mail'),
+					'is_email_reception' => Hash::get($user, 'User.is_moblie_mail_reception'),
 				),
 			);
 
