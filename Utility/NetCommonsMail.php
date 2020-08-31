@@ -51,6 +51,11 @@ class NetCommonsMail extends CakeEmail {
 	public $mailAssignTag = null;
 
 /**
+ * @var array|null  Userのemailフィールドリスト
+ */
+	private $__userEmailFields;
+
+/**
  * Constructor
  *
  * @param array|string $config Array of configs, or string to load configs from email.php
@@ -359,38 +364,16 @@ class NetCommonsMail extends CakeEmail {
  *
  * @param array $users ユーザ 配列
  * @param int $mailQueueLanguageId キューの言語ID
- * @return array 送信メール文配列
+ * @return array|null 送信メール文配列
  */
 	private function __sendUserEmails($users, $mailQueueLanguageId) {
 		$messages = null;
 
 		foreach ($users as $user) {
-			$userEmails = array(
-				array(
-					'email' => Hash::get($user, 'User.email'),
-					'is_email_reception' => Hash::get($user, 'User.is_email_reception'),
-				),
-				array(
-					'email' => Hash::get($user, 'User.moblie_mail'),
-					'is_email_reception' => Hash::get($user, 'User.is_moblie_mail_reception'),
-				),
-			);
+			$receivableEmails = $this->__getReceivableEmailsFromUser($user);
 
-			foreach ($userEmails as $userEmail) {
-				// 個人のメール受け取らない
-				if (!$userEmail['is_email_reception']) {
-					continue;
-				}
-				if (empty($userEmail['email'])) {
-					//$userId = Hash::get($user, 'User.id');
-					//$logMessage = "Email is empty. userId=$userId";
-					//CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
-					continue;
-				}
-				$this->setFrom($mailQueueLanguageId);
-				parent::to($userEmail['email']);
-				parent::subject($this->subject);
-				$messages[] = parent::send($this->body);
+			foreach ($receivableEmails as $email) {
+				$messages[] = $this->__send($mailQueueLanguageId, $email, $messages);
 			}
 		}
 		return $messages;
@@ -422,5 +405,54 @@ class NetCommonsMail extends CakeEmail {
 		parent::subject($this->subject);
 		$messages = parent::send($this->body);
 		return $messages;
+	}
+
+/**
+ * __send
+ *
+ * @param int|string $mailQueueLanguageId 言語ID
+ * @param string $email メールアドレス
+ * @return array
+ */
+	private function __send($mailQueueLanguageId, $email) {
+		$this->setFrom($mailQueueLanguageId);
+		parent::to($email);
+		parent::subject($this->subject);
+		return parent::send($this->body);
+	}
+
+/**
+ * __getReceivableEmailsFromUser
+ *
+ * @param array $user User data
+ * @return string[] メールを受け取るメールアドレスリスト
+ */
+	private function __getReceivableEmailsFromUser($user) : array {
+		if ($this->__userEmailFields === null) {
+			$this->__userEmailFields = $this->User->getEmailFields();
+		}
+		$userEmails = [];
+		foreach ($this->__userEmailFields as $emailField) {
+			$userEmails[] = [
+				'email' => Hash::get($user, 'User.' . $emailField),
+				'is_email_reception' => Hash::get($user, 'User.is_' . $emailField . '_reception'),
+			];
+		}
+		// メールを受け取る設定にしているメールリスト
+		$receivableEmails = [];
+		foreach ($userEmails as $userEmail) {
+			// 個人のメール受け取らない
+			if (!$userEmail['is_email_reception']) {
+				continue;
+			}
+			if (empty($userEmail['email'])) {
+				//$userId = Hash::get($user, 'User.id');
+				//$logMessage = "Email is empty. userId=$userId";
+				//CakeLog::debug($logMessage . ' [' . __METHOD__ . '] ' . __FILE__ . ' (line ' . __LINE__ . ')');
+				continue;
+			}
+			$receivableEmails[] = $userEmail['email'];
+		}
+		return $receivableEmails;
 	}
 }
