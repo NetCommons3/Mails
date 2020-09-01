@@ -32,6 +32,7 @@ class MailsUtilityNetCommonsMailSendQueueMailTest extends NetCommonsCakeTestCase
 		'plugin.rooms.default_role_permission4test',
 		'plugin.rooms.room_role',
 		'plugin.rooms.room_role_permission4test',
+		'plugin.mails.user_attribute_setting_for_mail'
 	);
 
 /**
