@@ -858,15 +858,12 @@ class MailQueueBehavior extends ModelBehavior {
 		$blockKey = Current::read('Block.key');
 
 		// メール生文の作成
-		\CakeLog::debug(__METHOD__ . '(' . __LINE__ . ') ' . var_export($mailSettingPlugin, true));
-
 		$mailAssignTag = new NetCommonsMailAssignTag();
 		$mailAssignTag->initPlugin($languageId, $pluginName);
 		$mailAssignTag->setMailFixedPhrase($languageId, $fixedPhraseType, $mailSettingPlugin);
 
 		// 埋め込みタグのウィジウィグ対象
 		$mailAssignTag->embedTagsWysiwyg = $this->settings[$model->alias]['embedTagsWysiwyg'];
-		\CakeLog::debug(__METHOD__ . '(' . __LINE__ . ') ' . var_export($mailAssignTag->fixedPhraseBody, true));
 
 		// 末尾定型文
 		$mailAssignTag->setFixedPhraseBody($mailAssignTag->fixedPhraseBody . $fixedPhraseBodyAfter);
