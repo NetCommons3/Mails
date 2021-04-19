@@ -371,6 +371,9 @@ class MailQueueBehavior extends ModelBehavior {
  * @see MailQueueBehavior::MAIL_QUEUE_SETTING_MAIL_BODY_AFTER
  */
 	public function setSetting(Model $model, $settingKey, $settingValue) {
+		if ($settingKey === self::MAIL_QUEUE_SETTING_MAIL_BODY_AFTER) {
+			$settingValue = "\n\n" . $settingValue;
+		}
 		$this->settings[$model->alias][$settingKey] = $settingValue;
 		return $this->settings;
 	}
