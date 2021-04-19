@@ -15,6 +15,7 @@ App::uses('SiteSetting', 'SiteManager.Model');
 App::uses('WorkflowComponent', 'Workflow.Controller/Component');
 App::uses('ComponentCollection', 'Controller');
 App::uses('NetCommonsMailAssignTag', 'Mails.Utility');
+App::uses('UserAttributeChoice', 'UserAttributes.Model');
 
 /**
  * NetCommonsメール Utility
@@ -332,7 +333,7 @@ class NetCommonsMail extends CakeEmail {
 
 			$users = $this->User->find('all', array(
 				'recursive' => -1,
-				'conditions' => array('id' => $userIds),
+				'conditions' => array('id' => $userIds, 'status' => UserAttributeChoice::STATUS_CODE_ACTIVE),
 				'callbacks' => false,
 			));
 
@@ -342,7 +343,7 @@ class NetCommonsMail extends CakeEmail {
 			// --- user単位でメール配信
 			$user = $this->User->find('first', array(
 				'recursive' => -1,
-				'conditions' => array('id' => $userId),
+				'conditions' => array('id' => $userId, 'status' => UserAttributeChoice::STATUS_CODE_ACTIVE),
 				'callbacks' => false,
 			));
 
