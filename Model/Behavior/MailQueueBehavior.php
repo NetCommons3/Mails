@@ -210,7 +210,7 @@ class MailQueueBehavior extends ModelBehavior {
 				return true;
 			}
 
-			$contentKeyValue = $model->data[$model->alias]['key'];
+			$contentKeyValue = $model->data[$model->alias][$contentKeyField];
 			$conditions = [
 				$contentKeyField => $contentKeyValue,
 			];
