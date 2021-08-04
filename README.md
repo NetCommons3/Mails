@@ -1,12 +1,9 @@
-# Mails
-Mails Plugin for NetCommons
+Mails
+========
 
-[![Build Status](https://travis-ci.org/NetCommons3/Mails.svg?branch=master)](https://travis-ci.org/NetCommons3/Mails)
-[![Coverage Status](https://img.shields.io/coveralls/NetCommons3/Mails.svg)](https://coveralls.io/r/NetCommons3/Mails?branch=master)
-
-| dependencies | status |
-| ------------ | ------ |
-| composer.json | [![Dependency Status](https://www.versioneye.com/user/projects/5665251b846d41000a000471/badge.svg?style=flat)](https://www.versioneye.com/user/projects/5665251b846d41000a000471) |
+[![Tests Status](https://github.com/NetCommons3/Mails/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/NetCommons3/Mails/actions/workflows/tests.yml)
+[![Coverage Status](https://coveralls.io/repos/NetCommons3/Mails/badge.svg?branch=master)](https://coveralls.io/r/NetCommons3/Mails?branch=master)
+[![Stable Version](https://img.shields.io/packagist/v/netcommons/mails.svg?label=stable)](https://packagist.org/packages/netcommons/mails)
 
 ### [phpdoc](https://netcommons3.github.io/NetCommons3Docs/phpdoc/Mails/)
 
