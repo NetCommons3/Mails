@@ -106,19 +106,21 @@ class MailSendShell extends AppShell {
 			return $this->_stop();
 		}
 
-		$now = NetCommonsTime::getNowDatetime();
+		$now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 
-		// キュー取得＆ロック - シェル実行の排他を実現したいため、行ロックしている
-		// http://k-1blog.com/development/program/post-7407/
-		// http://d.hatena.ne.jp/fat47/20140212/1392171784
-		// 下記SQL（テーブル結合＆範囲条件）でSELECT FOR UPDATEを実行すると、テーブルロック
+		//メール送信する対象のメールキューの実行時間を更新する
+		$result = $this->_updateExecuteTime($now);
+		if (! $result) {
+			return $this->_stop();
+		}
+
+		//対象の実行時間のメールキューのみ処理する
 		$sql = 'SELECT * FROM ' .
 			$this->MailQueue->tablePrefix . 'mail_queues MailQueue, ' .
 			$this->MailQueueUser->tablePrefix . 'mail_queue_users MailQueueUser ' .
 			'WHERE ' .
 			'MailQueue.id = MailQueueUser.mail_queue_id ' .
-			'AND MailQueue.send_time <= ? ' .
-			'FOR UPDATE ';
+			'AND MailQueue.execute_time = ? ';
 		$mailQueues = $this->MailQueue->query($sql, array($now));
 		if (empty($mailQueues)) {
 			$this->out('MailQueue is empty. [' . __METHOD__ . '] ');
@@ -181,5 +183,54 @@ class MailSendShell extends AppShell {
 
 		// ブロック非公開、期間外はメール送らない
 		return $this->MailQueue->isSendBlockType($block);
+	}
+
+/**
+ * 実行時間を更新する
+ *
+ * @param string $now 現在時刻
+ * @return bool
+ */
+	protected function _updateExecuteTime($now) {
+		try {
+			//トランザクションBegin
+			$this->MailQueue->begin();
+
+			// キュー取得＆ロック - シェル実行の排他を実現したいため、行ロックしている
+			// http://k-1blog.com/development/program/post-7407/
+			// http://d.hatena.ne.jp/fat47/20140212/1392171784
+			// 下記SQL（テーブル結合＆範囲条件）でSELECT FOR UPDATEを実行すると、テーブルロック
+			$sql = 'SELECT COUNT(*) FROM ' .
+				$this->MailQueue->tablePrefix . 'mail_queues MailQueue ' .
+				'WHERE MailQueue.execute_time = ? ' .
+				'FOR UPDATE ';
+			$count = $this->MailQueue->query($sql, array($now));
+
+			//全くの同時刻に実行されたものは無視する
+			if (isset($count[0][0]['COUNT(*)']) &&
+					$count[0][0]['COUNT(*)'] > 0) {
+				$this->MailQueue->rollback();
+				$this->out('MailQueue is executing ' . $now . ' [' . __METHOD__ . '] ');
+				return false;
+			}
+
+			$update = [
+				'MailQueue.execute_time' => "'" . $now . "'"
+			];
+			$conditions = [
+				'MailQueue.execute_time' => null,
+				'MailQueue.send_time <=' => $now
+			];
+			$this->MailQueue->updateAll($update, $conditions);
+
+			//トランザクションCommit
+			$this->MailQueue->commit();
+		} catch (Exception $ex) {
+			//トランザクションRollback
+			$this->MailQueue->rollback($ex);
+			return false;
+		}
+
+		return true;
 	}
 }
