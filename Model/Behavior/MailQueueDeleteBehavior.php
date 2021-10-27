@@ -85,16 +85,16 @@ class MailQueueDeleteBehavior extends ModelBehavior {
 			'MailQueueUser' => 'Mails.MailQueueUser',
 		]);
 
-		// キューの配信先 削除
-		$conditions = array($model->MailQueueUser->alias . '.' . $deleteColum => $value);
-		if (! $model->MailQueueUser->deleteAll($conditions, false)) {
-			throw new InternalErrorException('Failed - MailQueueUser ' . __METHOD__);
-		}
-
 		// キュー 削除
 		$conditions = array($model->MailQueue->alias . '.' . $deleteColum => $value);
 		if (! $model->MailQueue->deleteAll($conditions, false)) {
 			throw new InternalErrorException('Failed - MailQueue  ' . __METHOD__);
+		}
+
+		// キューの配信先 削除
+		$conditions = array($model->MailQueueUser->alias . '.' . $deleteColum => $value);
+		if (! $model->MailQueueUser->deleteAll($conditions, false)) {
+			throw new InternalErrorException('Failed - MailQueueUser ' . __METHOD__);
 		}
 	}
 }

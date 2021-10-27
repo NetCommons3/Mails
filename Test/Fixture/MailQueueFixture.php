@@ -32,6 +32,7 @@ class MailQueueFixture extends CakeTestFixture {
 		'mail_subject' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => 'メール件名', 'charset' => 'utf8'),
 		'mail_body' => array('type' => 'text', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'comment' => 'メール本文', 'charset' => 'utf8'),
 		'send_time' => array('type' => 'datetime', 'null' => false, 'default' => null, 'comment' => '送信日時'),
+		'execute_time' => array('type' => 'datetime', 'null' => true, 'default' => null, 'comment' => '実行日時'),
 		'created_user' => array('type' => 'integer', 'null' => true, 'default' => null, 'unsigned' => false, 'comment' => '作成者'),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => null, 'comment' => '作成日時'),
 		'modified_user' => array('type' => 'integer', 'null' => true, 'default' => null, 'unsigned' => false, 'comment' => '更新者'),
@@ -61,6 +62,7 @@ class MailQueueFixture extends CakeTestFixture {
 			'mail_subject' => '件名',
 			'mail_body' => "本文１\r\n本文２\r\n本文３\r\n",
 			'send_time' => '2016-03-22 12:22:15',
+			'execute_time' => null,
 		),
 		array(
 			'id' => 2,
@@ -72,6 +74,7 @@ class MailQueueFixture extends CakeTestFixture {
 			'mail_subject' => '件名2',
 			'mail_body' => "本文１\r\n本文２\r\n本文３\r\n",
 			'send_time' => '2016-03-22 12:22:15',
+			'execute_time' => null,
 		),
 	);
 

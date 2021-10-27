@@ -84,6 +84,7 @@ class MailsUtilityNetCommonsMailSendQueueMailTest extends NetCommonsCakeTestCase
 		$this->mail->initShell($mailQueue);
 
 		//テスト実施
+		$this->mail->emailFormat('text');
 		$result = $this->mail->sendQueueMail($mailQueueUser, $mailQueueLanguageId);
 
 		//チェック
@@ -134,6 +135,7 @@ class MailsUtilityNetCommonsMailSendQueueMailTest extends NetCommonsCakeTestCase
 		$mailQueueLanguageId = 2;
 
 		//テスト実施
+		$this->mail->emailFormat('text');
 		$result = $this->mail->sendQueueMail($mailQueueUser, $mailQueueLanguageId);
 
 		//チェック
