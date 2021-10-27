@@ -199,7 +199,6 @@ class MailSendShell extends AppShell {
 			// キュー取得＆ロック - シェル実行の排他を実現したいため、行ロックしている
 			// http://k-1blog.com/development/program/post-7407/
 			// http://d.hatena.ne.jp/fat47/20140212/1392171784
-			// 下記SQL（テーブル結合＆範囲条件）でSELECT FOR UPDATEを実行すると、テーブルロック
 			$sql = 'SELECT COUNT(*) FROM ' .
 				$this->MailQueue->tablePrefix . 'mail_queues MailQueue ' .
 				'WHERE MailQueue.execute_time = ? ' .
