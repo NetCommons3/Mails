@@ -77,7 +77,9 @@ class MailsUtilityNetCommonsMailBrReplaceTest extends NetCommonsCakeTestCase {
 		$this->mail->emailFormat('html');
 
 		//テスト実施
+		error_reporting(0);
 		$this->mail->brReplace();
+		error_reporting(-1);
 
 		//チェック
 		$this->assertTextContains("\n", $this->mail->body);
