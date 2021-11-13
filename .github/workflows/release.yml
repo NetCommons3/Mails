@@ -32,7 +32,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
           body: |
-            NetCommons ${{ github.ref }} released.
+            ${{ github.ref }} released.
           draft: false
           prerelease: false
 
