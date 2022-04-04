@@ -529,10 +529,12 @@ class MailQueueBehavior extends ModelBehavior {
  * @param Model $model モデル
  * @param array $sendTimes メール送信日時 配列
  * @param string $typeKey メールの種類
+ * @param string $sendRoomPermission 送信するルームの役割。ルームでないときは無視される
  * @return void
  */
 	public function saveQueue(Model $model, $sendTimes = null,
-								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+								$typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
+								$sendRoomPermission = null) {
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 
 		$languageId = Current::read('Language.id');
@@ -568,7 +570,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 			// 投稿メール - ルーム配信
 			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
-				$roomId, $typeKey);
+				$roomId, $typeKey, $sendRoomPermission);
 
 		} else {
 			//$workflowType == self::MAIL_QUEUE_WORKFLOW_TYPE_NONE ||
@@ -580,7 +582,7 @@ class MailQueueBehavior extends ModelBehavior {
 
 			// メールキューSave
 			$this->saveQueuePostMail($model, $languageId, $sendTimes, $userIds, $toAddresses,
-				$roomId, $typeKey);
+				$roomId, $typeKey, $sendRoomPermission);
 		}
 	}
 
@@ -595,11 +597,13 @@ class MailQueueBehavior extends ModelBehavior {
  * @param array $toAddresses 送信先メールアドレス 配列
  * @param int $roomId ルームID
  * @param string $typeKey メールの種類
+ * @param string $sendRoomPermission 送信するルームの役割。$roomIdとセットに使用する
  * @return void
  * @throws InternalErrorException
  */
 	public function saveQueuePostMail(Model $model, $languageId, $sendTimes = null, $userIds = null,
-										$toAddresses = null, $roomId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE) {
+					$toAddresses = null, $roomId = null, $typeKey = MailSettingFixedPhrase::DEFAULT_TYPE,
+					$sendRoomPermission = null) {
 		$model->Behaviors->load('Mails.IsMailSend', $this->settings[$model->alias]);
 		if ($sendTimes === null) {
 			$sendTimes[] = $model->MailQueue->getSaveSendTime();
@@ -681,7 +685,9 @@ class MailQueueBehavior extends ModelBehavior {
 
 				// ルーム配信で送るパーミッション
 				/** @see MailQueueUser::getSendRoomPermission() */
-				$sendRoomPermission = $model->MailQueueUser->getSendRoomPermission($typeKey);
+				if (! isset($sendRoomPermission)) {
+					$sendRoomPermission = $model->MailQueueUser->getSendRoomPermission($typeKey);
+				}
 
 				// ルーム配信
 				/** @see MailQueueUser::addMailQueueUserInRoom() */
